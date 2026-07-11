@@ -5,6 +5,12 @@ const MatematikaEngine = {
 
     osveziIzObjekta(povrsinaObj) {
         this.trenutnaPovrsina = povrsinaObj;
+        
+        // NOVO: Povlačenje i konverzija unesenih parametara pločica i fuge (iz mm u cm)
+        this.plocicaW = parseFloat(this.trenutnaPovrsina.plocicaW) || 60;
+        this.plocicaH = parseFloat(this.trenutnaPovrsina.plocicaH) || 30;
+        this.fuga = (parseFloat(this.trenutnaPovrsina.fuga) || 2) / 10; 
+
         this.iscrtajMrezuPlocica();
     },
 
@@ -79,10 +85,9 @@ const MatematikaEngine = {
         let sW = this.trenutnaPovrsina.w;
         let sH = this.trenutnaPovrsina.h;
 
-        // Ako je u pitanju sokl, radimo linearno rastezanje na ekranu
         if (this.trenutnaPovrsina.tip === 'Sokl') {
-            sW = this.trenutnaPovrsina.h; // opseg kupaonice postaje širina trake
-            sH = this.trenutnaPovrsina.w; // visina sokla postaje visina trake
+            sW = this.trenutnaPovrsina.h; 
+            sH = this.trenutnaPovrsina.w; 
         }
 
         const maxMoguciW = kontejner.parentElement.clientWidth;
@@ -91,13 +96,19 @@ const MatematikaEngine = {
         kontejner.style.width = (sW * skala) + 'px';
         kontejner.style.height = (sH * skala) + 'px';
 
-        // Prilagodba dimenzija rezanja ovisno o tipu pločice (Sokl režemo iz duljine)
-        let efektivnaSirina = (this.trenutnaPovrsina.tip === 'Sokl') ? this.plocicaW + this.fuga : this.plocicaW + this.fuga;
+        let efektivnaSirina = this.plocicaW + this.fuga;
         let efektivnaVisina = (this.trenutnaPovrsina.tip === 'Sokl') ? sH : this.plocicaH + this.fuga;
+        let minimalniRez = 8.0;
+
+        let ostatakKuta = sW % efektivnaSirina;
+        let pocetniPomakX = 0;
+        if (ostatakKuta > 0 && ostatakKuta < minimalniRez) {
+            pocetniPomakX = (efektivnaSirina - ostatakKuta) / 2;
+        }
 
         let tekuceY = 0;
         while (tekuceY < sH) {
-            let tekuceX = 0;
+            let tekuceX = pocetniPomakX > 0 ? -pocetniPomakX : 0;
             while (tekuceX < sW) {
                 let jeDekor = false;
                 if (this.trenutnaPovrsina.tip === 'Zid') {
@@ -106,8 +117,9 @@ const MatematikaEngine = {
                 }
 
                 let w = efektivnaSirina; let h = efektivnaVisina;
-                let stvarniX = tekuceX;
-                if (tekuceX + w > sW) w = sW - tekuceX;
+                let stvarniX = tekuceX < 0 ? 0 : tekuceX;
+                if (tekuceX < 0) { w = efektivnaSirina + tekuceX; } 
+                else if (tekuceX + w > sW) { w = sW - tekuceX; }
                 if (tekuceY + h > sH) h = sH - tekuceY;
 
                 let plocicaPotpunoUnutarOtvora = false;
@@ -143,7 +155,7 @@ const MatematikaEngine = {
                 plocicaDiv.style.height = (this.trenutnaPovrsina.tip === 'Sokl') ? (h * skala) + 'px' : ((h - this.fuga) * skala) + 'px';
                 plocicaDiv.style.border = '1px solid #0A0C0E';
                 
-                if (this.trenutnaPovrsina.tip === 'Sokl') plocicaDiv.style.backgroundColor = '#343D44'; // Izgled sokl pločica (Čelično siva)
+                if (this.trenutnaPovrsina.tip === 'Sokl') plocicaDiv.style.backgroundColor = '#343D44'; 
                 else if (plocicaSijeceOtvor) plocicaDiv.style.backgroundColor = '#4C3319';
                 else if (jeDekor) plocicaDiv.style.backgroundColor = '#1F2A33';
                 else if (jeRezana) plocicaDiv.style.backgroundColor = '#1A1D20';
@@ -157,7 +169,6 @@ const MatematikaEngine = {
             tekuceY += efektivnaVisina;
         }
 
-        // Iscrtavanje otvora (Vrata, prozori, podni slivnici)
         if (this.trenutnaPovrsina.popisOtvora) {
             for (let otvor of this.trenutnaPovrsina.popisOtvora) {
                 const otvorDiv = document.createElement('div');
@@ -172,7 +183,6 @@ const MatematikaEngine = {
             }
         }
 
-        // Zapisivanje proračuna u memoriju površine za zbirni PDF izvještaj
         this.trenutnaPovrsina.izracunCijelih = this.potrosenoCijelihPlocica;
         this.trenutnaPovrsina.kvadratura = (sW * sH) / 10000;
     },
@@ -207,4 +217,3 @@ const MatematikaEngine = {
         document.body.appendChild(modalDiv);
     }
 };
-            
