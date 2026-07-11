@@ -1,15 +1,16 @@
 const DokumentacijaModul = {
     generisiZbirniTroskovnik(projekt) {
-        const p = projekt.povrsines;
+        // ISPRAVLJENO: s povrsines na povrsine
+        const p = projekt.povrsine;
 
-        // Izračuni po stavkama
+        // Izračuni po stavkama površina
         let m2Zidovi = p.zid1.kvadratura + p.zid2.kvadratura + p.zid3.kvadratura + p.zid4.kvadratura;
         let komZidovi = p.zid1.izracunCijelih + p.zid2.izracunCijelih + p.zid3.izracunCijelih + p.zid4.izracunCijelih;
 
         let m2Pod = p.pod.kvadratura;
         let komPod = p.pod.izracunCijelih;
 
-        let dužinaSokla = p.sokl.h; // opseg u cm
+        let dužinaSokla = p.sokl.h; 
         let komSokla = p.sokl.izracunCijelih;
 
         const pdfProzor = window.open('', '_blank');
@@ -28,7 +29,6 @@ const DokumentacijaModul = {
                     th, td { padding: 12px; text-align: left; border-bottom: 1px solid #E0E0E0; font-size: 13px; }
                     th { background-color: #2C3236; color: #FFFFFF; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
                     .istaknuto { background-color: #EAEDEF; font-weight: bold; }
-                    .ukupno-box { background-color: #111417; color: #4EFA9E; padding: 20px; text-align: right; font-weight: bold; font-size: 18px; }
                 </style>
             </head>
             <body>
@@ -69,7 +69,7 @@ const DokumentacijaModul = {
                 </table>
 
                 <div style="background-color:#2C3236; color:#FFF; padding:15px; font-weight:bold; font-size:14px; text-transform:uppercase; letter-spacing:1px;">
-                    ZAKLJUČAK NARUDŽBENICE ZA SALON KERAMIKE
+                    ZAKLJUČAK NARUDŽBENICE FOR SALON KERAMIKE
                 </div>
                 <div style="border:2px solid #2C3236; padding:20px; font-size:15px; line-height:2;">
                     • Ukupno zidne keramike za narudžbu: <strong>${(komZidovi * 0.18).toFixed(2)} m² (${komZidovi} komada)</strong><br>
