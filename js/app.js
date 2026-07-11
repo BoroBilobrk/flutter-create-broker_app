@@ -1,6 +1,5 @@
 const App = {
     init() {
-        // Početne radnje aplikacije
         console.log("BRO-KER Sustav Inicijaliziran.");
     },
 
@@ -28,7 +27,8 @@ const App = {
     },
 
     otvoriDokumentaciju() {
-        alert("Generiranje troškovnika na temelju izračuna...");
+        // POVEZNICA: Umjesto starog alerta, sada pokrećemo pravi PDF modul!
+        DokumentacijaModul.generisiTroskovnik();
     }
 };
 
