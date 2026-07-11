@@ -1,123 +1,160 @@
-/* Osnovne postavke sustava */
+/* RESET I OSNOVNE POSTAVKE SVRŠENE PRECIZNOSTI */
+* {
+    box-sizing: border-box;
+    border-radius: 0 !important; /* STROGO OŠTRI RUBOVI ZA SVE KOMPONENTE */
+}
+
 body {
     margin: 0;
     padding: 0;
-    background-color: #0F1113;
-    color: #E0E0E0;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #0A0C0E; /* Duboka mat crna */
+    color: #E6E8EA; /* Svijetli sivo-bijeli tekst za maksimalan kontrast */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     overflow-x: hidden;
 }
 
-/* Zaglavlje */
+/* PREMIUM ZAGLAVLJE */
 .broker-header {
-    background-color: #1A1D20;
-    padding: 12px 20px;
+    background-color: #111417; /* Sjena tamnog škriljevca */
+    padding: 14px 24px;
     display: flex;
     align-items: center;
-    border-bottom: 2px solid #3A4349;
+    border-bottom: 2px solid #22282C;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
 }
+
 .mini-logo {
     display: flex;
     align-items: center;
-    font-weight: bold;
-    letter-spacing: 1px;
-}
-.logo-box {
-    width: 16px;
-    height: 16px;
-    background-color: #2C3236;
-    margin-right: 8px;
-    border: 1px solid #E0E0E0;
-}
-#naslov-prikaza {
+    font-weight: 700;
     font-size: 14px;
+    letter-spacing: 2px;
+    color: #FFFFFF;
+}
+
+.header-logo-img {
+    height: 24px;
+    width: 24px;
+    margin-right: 12px;
+    object-fit: contain;
+}
+
+#naslov-prikaza {
+    font-size: 11px;
     margin: 0;
     margin-left: auto;
-    color: #8A959E;
+    color: #6C7A84;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    font-weight: 600;
+}
+
+/* DIZAJN GLAVNOG IZBORNIKA I LOGOTIPA */
+.logo-kontejner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 50px 0 40px 0;
+    text-align: center;
+}
+
+.glavni-logo-img {
+    width: 180px;
+    height: 180px;
+    object-fit: contain;
+    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6));
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 5px;
+    background-color: #111417;
+}
+
+.logo-podnaslov {
+    margin-top: 15px;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: #6C7A84;
+    font-weight: bold;
     text-transform: uppercase;
 }
 
-/* Upravljanje zaslonima */
+/* UPRAVLJANJE ZASLONIMA */
 .zaslon {
     display: none;
-    padding: 20px;
+    padding: 16px;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
     flex-direction: column;
-    align-items: center;
 }
+
 .aktivni-zaslon {
     display: flex !important;
 }
 
-/* Stilovi gumbova - Strogo oštri rubovi */
+/* PREMIUM INDUSTRIJSKI GUMBOVI */
 .gumb-ostri {
-    background-color: #2C3236;
+    background-color: #161A1D;
     color: #FFFFFF;
-    border: 2px solid #3A4349;
-    padding: 16px 24px;
-    font-size: 13px;
-    font-weight: bold;
-    letter-spacing: 1.5px;
+    border: 1px solid #343D44;
+    padding: 18px 24px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
     cursor: pointer;
     width: 100%;
-    max-width: 320px;
-    margin-bottom: 12px;
     text-transform: uppercase;
-    transition: background 0.2s;
-}
-.gumb-ostri:hover {
-    background-color: #3A4349;
-}
-.gumb-sekundarni {
-    background-color: transparent;
-    color: #8A959E;
-}
-.gumb-kontra {
-    background-color: #4C3A3A;
-    border-color: #6E5353;
-}
-.gumb-zeleni {
-    color: #4EFA9E;
-    border-color: #2E7D52;
-}
-
-/* Veliki Logotip iz CSS strukture pločica */
-.logo-centar {
-    margin: 60px 0;
-}
-.veliki-logo {
-    width: 160px;
-    height: 160px;
-    background-color: #0F1113;
-    display: flex;
-    flex-direction: column;
-    border: 2px solid #0F1113;
-}
-.veliki-logo .red {
-    display: flex;
-    flex: 1;
-}
-.veliki-logo .p-pola, .veliki-logo .p-cijela {
-    background-color: #2C3236;
-    border: 2px solid #0F1113;
+    margin-bottom: 14px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: bold;
-    font-size: 18px;
-    color: #E0E0E0;
+    transition: all 0.15s ease;
 }
-.veliki-logo .p-pola { flex: 1; }
-.veliki-logo .p-cijela { flex: 2; }
 
-/* Video i Kamera prostor */
+.gumb-ostri:active {
+    background-color: #22282C;
+    border-color: #434E57;
+}
+
+.gumb-ikona {
+    margin-right: 10px;
+    font-size: 14px;
+}
+
+.gumb-sekundarni {
+    background-color: transparent;
+    border-color: #22282C;
+    color: #8C9BA5;
+}
+
+.gumb-kontra {
+    background-color: #2D1919;
+    border-color: #5C3434;
+    color: #FF8080;
+}
+
+.gumb-potvrda {
+    background-color: #19242D;
+    border-color: #34495C;
+    color: #80BFFF;
+}
+
+.gumb-zeleni {
+    background-color: #14281E;
+    border-color: #2E5C43;
+    color: #4EFA9E;
+}
+
+/* STRUKTURA ZA VIDEO / KAMERU */
 .video-okvir {
     position: relative;
     width: 100%;
-    max-width: 400px;
-    height: 450px;
+    height: 400px;
     background-color: #000000;
-    border: 2px solid #3A4349;
+    border: 1px solid #22282C;
+    box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
+    margin-bottom: 20px;
 }
+
 #web-kamera, #aruco-canvas {
     position: absolute;
     width: 100%;
@@ -126,14 +163,98 @@ body {
     left: 0;
     object-fit: cover;
 }
+
 .nstatus {
     position: absolute;
     bottom: 0;
     left: 0;
     right: 0;
-    background-color: rgba(26, 29, 32, 0.85);
-    padding: 10px;
-    font-size: 11px;
+    background-color: rgba(17, 20, 23, 0.9);
+    border-top: 1px solid #22282C;
+    padding: 14px;
+    font-size: 12px;
+    font-weight: 600;
     text-align: center;
-    color: #FFC107;
+    letter-spacing: 0.5px;
+}
+
+/* RADNI PROSTOR I GRID KARTICE */
+.canvas-prostor {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    padding: 20px 0;
+    background-color: #07080A;
+    border: 1px solid #161A1D;
+    margin-bottom: 16px;
+}
+
+.nadzorna-ploca {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.alat-kartica {
+    background-color: #111417;
+    border: 1px solid #1C2125;
+    padding: 16px;
+}
+
+/* PREMIUM KVADRATNI PREKIDAČI (SWITCHES) */
+.prekidac-kontejner {
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    cursor: pointer;
+    user-select: none;
+}
+
+.prekidac-tekst {
+    font-size: 11px;
+    color: #8C9BA5;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+}
+
+.prekidac-kontejner input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.kvadratni-prekidac {
+    height: 24px;
+    width: 44px;
+    background-color: #161A1D;
+    border: 1px solid #2A3237;
+    position: relative;
+    transition: background-color 0.2s;
+}
+
+.kvadratni-prekidac:after {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: 3px;
+    width: 16px;
+    height: 16px;
+    background-color: #434E57;
+    transition: transform 0.2s;
+}
+
+.prekidac-kontejner input:checked ~ .kvadratni-prekidac {
+    background-color: #1F2A33;
+    border-color: #3D5566;
+}
+
+.prekidac-kontejner input:checked ~ .kvadratni-prekidac:after {
+    transform: translateX(20px);
+    background-color: #59A6DC; /* Prepoznatljiva plava boja za aktivne elemente */
 }
