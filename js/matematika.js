@@ -6,7 +6,6 @@ const MatematikaEngine = {
     osveziIzObjekta(povrsinaObj) {
         this.trenutnaPovrsina = povrsinaObj;
         
-        // NOVO: Povlačenje i konverzija unesenih parametara pločica i fuge (iz mm u cm)
         this.plocicaW = parseFloat(this.trenutnaPovrsina.plocicaW) || 60;
         this.plocicaH = parseFloat(this.trenutnaPovrsina.plocicaH) || 30;
         this.fuga = (parseFloat(this.trenutnaPovrsina.fuga) || 2) / 10; 
@@ -93,8 +92,10 @@ const MatematikaEngine = {
         const maxMoguciW = kontejner.parentElement.clientWidth;
         const skala = maxMoguciW / sW;
 
+        // UKLJUČENO POZICIONIRANJE: Ovo fiksira lokaciju elemenata unutar crnog okvira
         kontejner.style.width = (sW * skala) + 'px';
         kontejner.style.height = (sH * skala) + 'px';
+        kontejner.style.position = 'relative'; 
 
         let efektivnaSirina = this.plocicaW + this.fuga;
         let efektivnaVisina = (this.trenutnaPovrsina.tip === 'Sokl') ? sH : this.plocicaH + this.fuga;
@@ -217,3 +218,4 @@ const MatematikaEngine = {
         document.body.appendChild(modalDiv);
     }
 };
+                    
