@@ -22,21 +22,20 @@
         <section id="zaslon-izbornik" class="zaslon aktivni-zaslon">
             <div class="logo-kontejner" style="margin: 30px 0 20px 0;">
                 <img src="logo.png" alt="BRO-KER" class="glavni-logo-img" style="width:130px; height:130px;">
-                <p class="logo-podnaslov">MANAGEMENT & OPTIMIZATION SYSTEM</p>
+                <p class="logo-podnaslov">MULTI-SURFACE ESTIMATION SYSTEM</p>
             </div>
             
             <div class="alat-kartica" style="width:100%; margin-bottom: 20px;">
                 <span style="font-size:10px; font-weight:700; color:#6C7A84; display:block; margin-bottom:10px; letter-spacing:1px;">NOVI PROJEKT</span>
                 <input type="text" id="input-klijent" placeholder="Ime klijenta / Lokacija" style="width:100%; background:#0A0C0E; border:1px solid #22282C; color:#FFF; padding:12px; margin-bottom:10px;">
-                <input type="text" id="input-prostorija" placeholder="Prostorija (npr. Kupaonica prizemlje)" style="width:100%; background:#0A0C0E; border:1px solid #22282C; color:#FFF; padding:12px; margin-bottom:15px;">
-                <button class="gumb-ostri" style="margin:0;" onclick="App.kreirajNoviProjekt()">KREIRAJ NACRT ZIDA</button>
+                <input type="text" id="input-prostorija" placeholder="Prostorija (npr. Kupaonica kat)" style="width:100%; background:#0A0C0E; border:1px solid #22282C; color:#FFF; padding:12px; margin-bottom:15px;">
+                <button class="gumb-ostri" style="margin:0;" onclick="App.kreirajNoviProjekt()">OTVORI PROJEKTNI NALOG</button>
             </div>
 
             <div style="width:100%; text-align:left; margin-bottom:10px;">
                 <span style="font-size:10px; font-weight:700; color:#6C7A84; letter-spacing:1px;">SPREMLJENI PROJEKTI NA MOBITELU</span>
             </div>
-            <div id="lista-projekata" style="width:100%; display:flex; flex-direction:column; gap:8px;">
-                </div>
+            <div id="lista-projekata" style="width:100%; display:flex; flex-direction:column; gap:8px;"></div>
         </section>
 
         <section id="zaslon-kamera" class="zaslon">
@@ -52,14 +51,27 @@
         </section>
 
         <section id="zaslon-radni" class="zaslon">
+            
+            <div style="width:100%; margin-bottom: 12px;">
+                <label style="font-size:10px; color:#6C7A84; font-weight:bold; display:block; margin-bottom:4px;">AKTIVNA POVRŠINA ZA OBRADU</label>
+                <select id="odabir-povrsine" style="width:100%; background:#161A1D; border:1px solid #343D44; color:#4EFA9E; padding:12px; font-weight:bold; font-size:13px; letter-spacing:1px;" onchange="App.promijeniAktivnuPovrsinu(this.value)">
+                    <option value="zid1">ZID 1 (Prednji / Glavni)</option>
+                    <option value="zid2">ZID 2 (Desni)</option>
+                    <option value="zid3">ZID 3 (Stražnji)</option>
+                    <option value="zid4">ZID 4 (Lijevi)</option>
+                    <option value="pod">POD KUPAONICE</option>
+                    <option value="sokl">SOKL / RUBNI REZOVI</option>
+                </select>
+            </div>
+
             <div class="alat-kartica" style="width:100%; margin-bottom: 10px; display: flex; gap: 10px;">
                 <div style="flex:1;">
-                    <label style="font-size:10px; color:#6C7A84; font-weight:bold;">ŠIRINA ZIDA (cm)</label>
-                    <input type="number" id="input-zid-w" style="width:100%; background:#161A1D; border:1px solid #343D44; color:#FFF; padding:8px; font-weight:bold;" onchange="MatematikaEngine.azurirajDimenzijeZida()">
+                    <label id="label-dim-w" style="font-size:10px; color:#6C7A84; font-weight:bold;">ŠIRINA / DULJINA (cm)</label>
+                    <input type="number" id="input-zid-w" style="width:100%; background:#0A0C0E; border:1px solid #22282C; color:#FFF; padding:8px; font-weight:bold;" onchange="App.sacuvajPoljaUObjekt()">
                 </div>
                 <div style="flex:1;">
-                    <label style="font-size:10px; color:#6C7A84; font-weight:bold;">VISINA ZIDA (cm)</label>
-                    <input type="number" id="input-zid-h" style="width:100%; background:#161A1D; border:1px solid #343D44; color:#FFF; padding:8px; font-weight:bold;" onchange="MatematikaEngine.azurirajDimenzijeZida()">
+                    <label id="label-dim-h" style="font-size:10px; color:#6C7A84; font-weight:bold;">VISINA (cm)</label>
+                    <input type="number" id="input-zid-h" style="width:100%; background:#0A0C0E; border:1px solid #22282C; color:#FFF; padding:8px; font-weight:bold;" onchange="App.sacuvajPoljaUObjekt()">
                 </div>
             </div>
 
@@ -67,33 +79,33 @@
                 <div id="mreza-zida" class="zid-mreza-kontejner"></div>
             </div>
             
-            <div class="nadzorna-ploca">
+            <div id="sekcija-zona" class="nadzorna-ploca">
                 <div class="alat-kartica">
-                    <label class="prekidac-kontejner">
+                    <label class="prekicka-kontejner">
                         <span class="prekidac-tekst">Visinska Zona</span>
-                        <input type="checkbox" id="check-visina" onchange="MatematikaEngine.toggleVisina(this.checked)">
+                        <input type="checkbox" id="check-visina" onchange="App.sacuvajPoljaUObjekt()">
                         <span class="kvadratni-prekidac"></span>
                     </label>
                 </div>
                 <div class="alat-kartica">
-                    <label class="prekidac-kontejner">
+                    <label class="prekicka-kontejner">
                         <span class="prekidac-tekst">Traka za Tuš</span>
-                        <input type="checkbox" id="check-tus" onchange="MatematikaEngine.toggleTus(this.checked)">
+                        <input type="checkbox" id="check-tus" onchange="App.sacuvajPoljaUObjekt()">
                         <span class="kvadratni-prekidac"></span>
                     </label>
                 </div>
             </div>
 
-            <button class="gumb-ostri gumb-potvrda" style="margin-bottom: 10px;" onclick="MatematikaEngine.prikažiDijalogZaOtvor()">
-                ➕ DODAJ OTVOR (VRATA / PROZOR)
+            <button id="gumb-dodaj-otvor" class="gumb-ostri gumb-potvrda" style="margin-bottom: 10px;" onclick="MatematikaEngine.prikažiDijalogZaOtvor()">
+                ➕ DODAJ OTVOR (VRATA / PROZOR / SLIVNIK)
             </button>
             <button class="gumb-ostri" style="margin-bottom: 20px; background-color: #1A221D; border-color: #2E5C38; color: #4EFA9E;" onclick="App.spasiTrenutnoStanjeUBazu()">
-                💾 SPREMI PROJEKT U MEMORIJU
+                💾 TRAJNO SPREMI CIJELU PROSTORIJU
             </button>
 
             <div class="kontrole-radne">
                 <button class="gumb-ostri gumb-sekundarni" onclick="App.promijeniZaslon('zaslon-izbornik')">ZATVORI</button>
-                <button class="gumb-ostri gumb-zeleni" onclick="App.otvoriDokumentaciju()">DOKUMENTACIJA / PDF</button>
+                <button class="gumb-ostri gumb-zeleni" onclick="App.otvoriDokumentaciju()">ZBIRNI TROŠKOVNIK (PDF)</button>
             </div>
         </section>
 
