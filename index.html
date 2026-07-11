@@ -48,6 +48,18 @@
         </section>
 
         <section id="zaslon-radni" class="zaslon">
+            
+            <div class="alat-kartica" style="width:100%; margin-bottom: 10px; display: flex; gap: 10px;">
+                <div style="flex:1;">
+                    <label style="font-size:10px; color:#6C7A84; font-weight:bold;">ŠIRINA ZIDA (cm)</label>
+                    <input type="number" id="input-zid-w" value="240" style="width:100%; background:#161A1D; border:1px solid #343D44; color:#FFF; padding:8px; font-weight:bold;" onchange="MatematikaEngine.azurirajDimenzijeZida()">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:10px; color:#6C7A84; font-weight:bold;">VISINA ZIDA (cm)</label>
+                    <input type="number" id="input-zid-h" value="200" style="width:100%; background:#161A1D; border:1px solid #343D44; color:#FFF; padding:8px; font-weight:bold;" onchange="MatematikaEngine.azurirajDimenzijeZida()">
+                </div>
+            </div>
+
             <div class="canvas-prostor">
                 <div id="mreza-zida" class="zid-mreza-kontejner">
                     </div>
@@ -56,19 +68,23 @@
             <div class="nadzorna-ploca">
                 <div class="alat-kartica">
                     <label class="prekidac-kontejner">
-                        <span class="prekidac-tekst">Visinska Zona (90cm)</span>
+                        <span class="prekidac-tekst">Visinska Zona</span>
                         <input type="checkbox" id="check-visina" onchange="MatematikaEngine.toggleVisina(this.checked)">
                         <span class="kvadratni-prekidac"></span>
                     </label>
                 </div>
                 <div class="alat-kartica">
                     <label class="prekidac-kontejner">
-                        <span class="prekidac-tekst">Traka za Tuš (Okomita)</span>
+                        <span class="prekidac-tekst">Traka za Tuš</span>
                         <input type="checkbox" id="check-tus" onchange="MatematikaEngine.toggleTus(this.checked)">
                         <span class="kvadratni-prekidac"></span>
                     </label>
                 </div>
             </div>
+
+            <button class="gumb-ostri gumb-potvrda" style="margin-bottom: 15px;" onclick="MatematikaEngine.prikažiDijalogZaOtvor()">
+                ➕ DODAJ OTVOR (VRATA / PROZOR)
+            </button>
 
             <div class="kontrole-radne">
                 <button class="gumb-ostri gumb-sekundarni" onclick="App.promijeniZaslon('zaslon-izbornik')">NAZAD</button>
@@ -85,3 +101,6 @@
     <script src="js/app.js"></script>
 </body>
 </html>
+
+
+            
