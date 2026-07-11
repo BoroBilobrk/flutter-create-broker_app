@@ -64,14 +64,29 @@
                 </select>
             </div>
 
-            <div class="alat-kartica" style="width:100%; margin-bottom: 10px; display: flex; gap: 10px;">
+            <div class="alat-kartica" style="width:100%; margin-bottom: 8px; display: flex; gap: 10px;">
                 <div style="flex:1;">
-                    <label id="label-dim-w" style="font-size:10px; color:#6C7A84; font-weight:bold;">ŠIRINA / DULJINA (cm)</label>
+                    <label id="label-dim-w" style="font-size:10px; color:#6C7A84; font-weight:bold;">ŠIRINA ZIDA (cm)</label>
                     <input type="number" id="input-zid-w" style="width:100%; background:#0A0C0E; border:1px solid #22282C; color:#FFF; padding:8px; font-weight:bold;" onchange="App.sacuvajPoljaUObjekt()">
                 </div>
                 <div style="flex:1;">
-                    <label id="label-dim-h" style="font-size:10px; color:#6C7A84; font-weight:bold;">VISINA (cm)</label>
+                    <label id="label-dim-h" style="font-size:10px; color:#6C7A84; font-weight:bold;">VISINA ZIDA (cm)</label>
                     <input type="number" id="input-zid-h" style="width:100%; background:#0A0C0E; border:1px solid #22282C; color:#FFF; padding:8px; font-weight:bold;" onchange="App.sacuvajPoljaUObjekt()">
+                </div>
+            </div>
+
+            <div id="sekcija-format-plocice" class="alat-kartica" style="width:100%; margin-bottom: 10px; display: flex; gap: 10px;">
+                <div style="flex:1;">
+                    <label style="font-size:10px; color:#6C7A84; font-weight:bold;">DULJINA PLOČE (cm)</label>
+                    <input type="number" id="input-plocica-w" style="width:100%; background:#0A0C0E; border:1px solid #22282C; color:#FFF; padding:8px; font-weight:bold;" onchange="App.sacuvajPoljaUObjekt()">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:10px; color:#6C7A84; font-weight:bold;">ŠIRINA PLOČE (cm)</label>
+                    <input type="number" id="input-plocica-h" style="width:100%; background:#0A0C0E; border:1px solid #22282C; color:#FFF; padding:8px; font-weight:bold;" onchange="App.sacuvajPoljaUObjekt()">
+                </div>
+                <div style="flex:1;">
+                    <label style="font-size:10px; color:#6C7A84; font-weight:bold;">FUGA (mm)</label>
+                    <input type="number" id="input-fuga" step="0.5" style="width:100%; background:#0A0C0E; border:1px solid #22282C; color:#FFF; padding:8px; font-weight:bold;" onchange="App.sacuvajPoljaUObjekt()">
                 </div>
             </div>
 
@@ -81,14 +96,14 @@
             
             <div id="sekcija-zona" class="nadzorna-ploca">
                 <div class="alat-kartica">
-                    <label class="prekicka-kontejner">
+                    <label class="prekidac-kontejner">
                         <span class="prekidac-tekst">Visinska Zona</span>
                         <input type="checkbox" id="check-visina" onchange="App.sacuvajPoljaUObjekt()">
                         <span class="kvadratni-prekidac"></span>
                     </label>
                 </div>
                 <div class="alat-kartica">
-                    <label class="prekicka-kontejner">
+                    <label class="prekidac-kontejner">
                         <span class="prekidac-tekst">Traka za Tuš</span>
                         <input type="checkbox" id="check-tus" onchange="App.sacuvajPoljaUObjekt()">
                         <span class="kvadratni-prekidac"></span>
@@ -97,10 +112,10 @@
             </div>
 
             <button id="gumb-dodaj-otvor" class="gumb-ostri gumb-potvrda" style="margin-bottom: 10px;" onclick="MatematikaEngine.prikažiDijalogZaOtvor()">
-                ➕ DODAJ OTVOR (VRATA / PROZOR / SLIVNIK)
+                ➕ DODAJ OTVOR (VRATA / PROZOR)
             </button>
             <button class="gumb-ostri" style="margin-bottom: 20px; background-color: #1A221D; border-color: #2E5C38; color: #4EFA9E;" onclick="App.spasiTrenutnoStanjeUBazu()">
-                💾 TRAJNO SPREMI CIJELU PROSTORIJU
+                💾 SPREMI PROJEKT U MEMORIJU
             </button>
 
             <div class="kontrole-radne">
