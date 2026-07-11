@@ -1,9 +1,7 @@
 const DokumentacijaModul = {
     generisiZbirniTroskovnik(projekt) {
-        // ISPRAVLJENO: s povrsines na povrsine
         const p = projekt.povrsine;
 
-        // Izračuni po stavkama površina
         let m2Zidovi = p.zid1.kvadratura + p.zid2.kvadratura + p.zid3.kvadratura + p.zid4.kvadratura;
         let komZidovi = p.zid1.izracunCijelih + p.zid2.izracunCijelih + p.zid3.izracunCijelih + p.zid4.izracunCijelih;
 
@@ -43,7 +41,7 @@ const DokumentacijaModul = {
                     Sustav: BRO-KER Multi-Surface CAD Proračun
                 </div>
 
-                <h3>1. SPECIFIKACIJA ZIDOVA (Zid 1 + Zid 2 + Zid 3 + Zid 4)</h3>
+                <h3>1. SPECIFIKACIJA ZIDOVA (Format: ${p.zid1.plocicaW}x${p.zid1.plocicaH} cm | Fuga: ${p.zid1.fuga} mm)</h3>
                 <table>
                     <thead>
                         <tr><th>Opis površine</th><th>Neto kvadratura</th><th>Potrebno pločica (kom)</th></tr>
@@ -57,23 +55,23 @@ const DokumentacijaModul = {
                     </tbody>
                 </table>
 
-                <h3>2. SPECIFIKACIJA PODA I SOKLA</h3>
+                <h3>2. SPECIFIKACIJA PODA I SOKLA (Format poda: ${p.pod.plocicaW}x${p.pod.plocicaH} cm | Fuga: ${p.pod.fuga} mm)</h3>
                 <table>
                     <thead>
                         <tr><th>Tip površine</th><th>Dimenzija / Opseg</th><th>Potrebna količina</th></tr>
                     </thead>
                     <tbody>
                         <tr><td>Podna površina (Neto)</td><td>${p.pod.w} x ${p.pod.h} cm</td><td>${m2Pod.toFixed(2)} m² (${komPod} kom)</td></tr>
-                        <tr><td>Sokl (Linearni metri dužina)</td><td>Opseg sobe: ${(dužinaSokla/100).toFixed(2)} m</td><td>${komSokla} komada (Visina: ${p.sokl.w} cm)</td></tr>
+                        <tr><td>Sokl (Linearni metri dužina)</td><td>Opseg sobe: ${(dužinaSokla/100).toFixed(2)} m</td><td>${komSokla} komada (Visina sokla: ${p.sokl.w} cm)</td></tr>
                     </tbody>
                 </table>
 
                 <div style="background-color:#2C3236; color:#FFF; padding:15px; font-weight:bold; font-size:14px; text-transform:uppercase; letter-spacing:1px;">
-                    ZAKLJUČAK NARUDŽBENICE FOR SALON KERAMIKE
+                    ZAKLJUČAK NARUDŽBENICE ZA SALON KERAMIKE
                 </div>
                 <div style="border:2px solid #2C3236; padding:20px; font-size:15px; line-height:2;">
-                    • Ukupno zidne keramike za narudžbu: <strong>${(komZidovi * 0.18).toFixed(2)} m² (${komZidovi} komada)</strong><br>
-                    • Ukupno podne keramike za narudžbu: <strong>${(komPod * 0.18).toFixed(2)} m² (${komPod} komada)</strong><br>
+                    • Ukupno zidne keramike za narudžbu (format ${p.zid1.plocicaW}x${p.zid1.plocicaH} cm): <strong>${m2Zidovi.toFixed(2)} m² (${komZidovi} komada)</strong><br>
+                    • Ukupno podne keramike za narudžbu (format ${p.pod.plocicaW}x${p.pod.plocicaH} cm): <strong>${m2Pod.toFixed(2)} m² (${komPod} komada)</strong><br>
                     • Ukupno elemenata za rezanje sokla: <strong>${komSokla} elemenata</strong>
                 </div>
 
