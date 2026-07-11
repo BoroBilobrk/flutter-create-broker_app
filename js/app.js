@@ -2,7 +2,7 @@ const App = {
     trenutniKlijent: '',
     trenutnaProstorija: '',
     aktivnaPovrsinaKey: 'zid1',
-    projektObjekt: null, // Ovdje držimo sve površine kupaonice
+    projektObjekt: null,
 
     init() {
         console.log("BRO-KER Sustav Inicijaliziran.");
@@ -40,7 +40,7 @@ const App = {
         this.aktivnaPovrsinaKey = 'zid1';
         document.getElementById('odabir-povrsine').value = 'zid1';
 
-        // STVARANJE 3D STRUKTURE PROSTORIJE (Sve površine na nuli ili zadano)
+        // ISPRAVLJENO: Struktura baze podataka kupaonice
         this.projektObjekt = {
             klijent: klijentInput,
             prostorija: prostorijaInput,
@@ -50,7 +50,7 @@ const App = {
                 zid3: { tip: 'Zid', w: 240, h: 200, popisOtvora: [], hZona: false, vZona: false },
                 zid4: { tip: 'Zid', w: 200, h: 200, popisOtvora: [], hZona: false, vZona: false },
                 pod:  { tip: 'Pod',  w: 240, h: 200, popisOtvora: [] },
-                sokl: { tip: 'Sokl', w: 8,    h: 0,   popisOtvora: [] } // w = visina sokla, h = automatski linearni metri
+                sokl: { tip: 'Sokl', w: 8,    h: 0,   popisOtvora: [] }
             }
         };
 
@@ -58,61 +58,74 @@ const App = {
     },
 
     promijeniAktivnuPovrsinu(kljuc) {
-        // Prije nego prebacimo, spremamo trenutno stanje s ekrana u stari ključ
         this.sacuvajPoljaUObjekt();
         this.aktivnaPovrsinaKey = kljuc;
         this.ucitajPovrsinuUUrednik();
     },
 
     ucitajPovrsinuUUrednik() {
-        const p = this.projektObjekt.povrsines[this.aktivnaPovrsinaKey] || this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
+        if (!this.projektObjekt || !this.projektObjekt.povrsine) return;
         
-        // Prilagodba kontrola formi ovisno o tipu (Zid vs Pod vs Sokl)
+        const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
+        if (!p) return;
+        
         const sekcijaZona = document.getElementById('sekcija-zona');
         const gumbOtvor = document.getElementById('gumb-dodaj-otvor');
         const lblW = document.getElementById('label-dim-w');
         const lblH = document.getElementById('label-dim-h');
 
         document.getElementById('input-zid-w').value = p.w;
-        document.getElementById('input-zid-h').value = p.h;
 
         if (p.tip === 'Zid') {
-            sekcijaZona.style.display = 'grid';
-            gumbOtvor.style.display = 'block';
-            gumbOtvor.innerText = "➕ DODAJ OTVOR (VRATA / PROZOR)";
-            lblW.innerText = "ŠIRINA ZIDA (cm)";
-            lblH.innerText = "VISINA ZIDA (cm)";
+            document.getElementById('input-zid-h').value = p.h;
+            if (sekcijaZona) sekcijaZona.style.display = 'grid';
+            if (gumbOtvor) {
+                gumbOtvor.style.display = 'block';
+                gumbOtvor.innerText = "➕ DODAJ OTVOR (VRATA / PROZOR)";
+            }
+            if (lblW) lblW.innerText = "ŠIRINA ZIDA (cm)";
+            if (lblH) lblH.innerText = "VISINA ZIDA (cm)";
+            
             document.getElementById('check-visina').checked = p.hZona;
             document.getElementById('check-tus').checked = p.vZona;
         } else if (p.tip === 'Pod') {
-            sekcijaZona.style.display = 'none';
-            gumbOtvor.style.display = 'block';
-            gumbOtvor.innerText = "➕ DODAJ OTVOR (PODNI SLIVNIK)";
-            lblW.innerText = "ŠIRINA PODA X (cm)";
-            lblH.innerText = "DULJINA PODA Y (cm)";
+            document.getElementById('input-zid-h').value = p.h;
+            if (sekcijaZona) sekcijaZona.style.display = 'none';
+            if (gumbOtvor) {
+                gumbOtvor.style.display = 'block';
+                gumbOtvor.innerText = "➕ DODAJ OTVOR (PODNI SLIVNIK)";
+            }
+            if (lblW) lblW.innerText = "ŠIRINA PODA X (cm)";
+            if (lblH) lblH.innerText = "DULJINA PODA Y (cm)";
         } else if (p.tip === 'Sokl') {
-            sekcijaZona.style.display = 'none';
-            gumbOtvor.style.display = 'none';
-            lblW.innerText = "VISINA SOKLA (cm)";
-            lblH.style.display = 'none';
+            if (sekcijaZona) sekcijaZona.style.display = 'none';
+            if (gumbOtvor) gumbOtvor.style.display = 'none';
+            if (lblW) lblW.innerText = "VISINA SOKLA (cm)";
+            if (lblH) lblH.style.display = 'none';
             document.getElementById('input-zid-h').style.display = 'none';
             
-            // Automatski izračun opsega kupaonice za sokl na temelju dimenzija svih zidova!
-            let opseg = this.projektObjekt.povrsines.zid1.w + this.projektObjekt.povrsines.zid2.w + this.projektObjekt.povrsines.zid3.w + this.projektObjekt.povrsines.zid4.w;
+            // Automatski proračun opsega na temelju četiri unnesena zida
+            let opseg = (parseFloat(this.projektObjekt.povrsine.zid1.w) || 0) + 
+                        (parseFloat(this.projektObjekt.povrsine.zid2.w) || 0) + 
+                        (parseFloat(this.projektObjekt.povrsine.zid3.w) || 0) + 
+                        (parseFloat(this.projektObjekt.povrsine.zid4.w) || 0);
             p.h = opseg;
         }
 
         if (p.tip !== 'Sokl') {
-            lblH.style.display = 'block';
+            if (lblH) lblH.style.display = 'block';
             document.getElementById('input-zid-h').style.display = 'block';
         }
 
-        // Pokretanje proračuna na platnu
         MatematikaEngine.osveziIzObjekta(p);
     },
 
     sacuvajPoljaUObjekt() {
-        const p = this.projektObjekt.povrsines[this.aktivnaPovrsinaKey] || this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
+        if (!this.projektObjekt || !this.projektObjekt.povrsine) return;
+        
+        const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
+        if (!p) return;
+        
         p.w = parseFloat(document.getElementById('input-zid-w').value) || 0;
         if (p.tip !== 'Sokl') {
             p.h = parseFloat(document.getElementById('input-zid-h').value) || 0;
@@ -129,13 +142,12 @@ const App = {
         BazaModul.spasiProjekt(
             this.trenutniKlijent,
             this.trenutnaProstorija,
-            this.projektObjekt.povrsines.zid1.w, // fallback za staru bazu
-            this.projektObjekt.povrsines.zid1.h,
-            this.projektObjekt.povrsines.zid1.popisOtvora,
-            this.projektObjekt // ŠALJEMO CIJELI MULTI-SURFACE OBJEKT U BAZU!
+            this.projektObjekt.povrsine.zid1.w,
+            this.projektObjekt.povrsine.zid1.h,
+            this.projektObjekt.povrsine.zid1.popisOtvora,
+            this.projektObjekt
         );
-        // Trik za spremanje cijele strukture pod napredni ključ
-        let kljuc = 'BROKER_COMP_ ' + this.trenutniKlijent;
+        let kljuc = 'BROKER_COMP_' + this.trenutniKlijent;
         localStorage.setItem(kljuc, JSON.stringify(this.projektObjekt));
         alert("Kompletna kupaonica (Svi zidovi, pod i sokl) spremljena!");
     },
@@ -148,15 +160,15 @@ const App = {
             this.trenutniKlijent = staro.klijent;
             this.trenutnaProstorija = staro.prostorija;
             
-            let kljuc = 'BROKER_COMP_ ' + staro.klijent;
+            let kljuc = 'BROKER_COMP_' + staro.klijent;
             const napredniPodaci = localStorage.getItem(kljuc);
             
             if (napredniPodaci) {
                 this.projektObjekt = JSON.parse(napredniPodaci);
             } else {
-                // Ako je stari nalog, konvertiramo ga u novi format s 4 zida automatizmom
                 this.projektObjekt = {
-                    klijent: staro.klijent, prostorija: staro.prostorija,
+                    klijent: staro.klijent,
+                    prostorija: staro.prostorija,
                     povrsine: {
                         zid1: { tip: 'Zid', w: staro.sirinaZida, h: staro.visinaZida, popisOtvora: staro.popisOtvora || [], hZona: false, vZona: false },
                         zid2: { tip: 'Zid', w: 200, h: staro.visinaZida, popisOtvora: [], hZona: false, vZona: false },
@@ -174,18 +186,23 @@ const App = {
     },
 
     osvjeziListuSpremljenihProjekata() {
-        const kontejner = document.getElementById('lista-projekata');
-        if (!kontejner) return;
+        const el = document.getElementById('lista-projekata');
+        if (!el) return;
+        
         const projekti = BazaModul.dohvatiSveProjekte();
-        kontejner.innerHTML = '';
+        el.innerHTML = '';
+        
         if (projekti.length === 0) {
-            kontejner.innerHTML = `<div style="font-size:12px; color:#6C7A84; padding:10px; border:1px dashed #22282C; text-align:center;">Nema spremljenih projekata.</div>`;
+            el.innerHTML = `<div style="font-size:12px; color:#6C7A84; padding:10px; border:1px dashed #22282C; text-align:center;">Nema spremljenih projekata.</div>`;
             return;
         }
+        
         projekti.forEach(p => {
             const kartica = document.createElement('div');
             kartica.className = 'alat-kartica';
-            kartica.style.display = 'flex'; kartica.style.justifyContent = 'space-between'; kartica.style.alignItems = 'center';
+            kartica.style.display = 'flex';
+            kartica.style.justifyContent = 'space-between';
+            kartica.style.alignItems = 'center';
             kartica.style.marginBottom = '6px';
             kartica.innerHTML = `
                 <div onclick="App.učitajProjektIzBaze('${p.id}')" style="cursor:pointer; flex:1; text-align:left;">
@@ -194,7 +211,7 @@ const App = {
                 </div>
                 <button onclick="App.obrisiProjektIzBaze('${p.id}')" style="background:transparent; border:none; color:#FF5555; font-size:16px; cursor:pointer;">✕</button>
             `;
-            kontejner.appendChild(kartica);
+            el.appendChild(kartica);
         });
     },
 
@@ -211,4 +228,3 @@ const App = {
     }
 };
 window.onload = () => App.init();
-        
