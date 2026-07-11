@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BRO-KER | Pametni Keramičarski Alat</title>
+    <link rel="stylesheet" href="css/stil.css">
+    <script async src="https://docs.opencv.org/4.5.4/opencv.js" type="text/javascript"></script>
+</head>
+<body>
+
+    <header class="broker-header">
+        <div class="mini-logo">
+            <div class="logo-box"></div>
+            <span>BRO-KER</span>
+        </div>
+        <h1 id="naslov-prikaza">Glavni Izbornik</h1>
+    </header>
+
+    <main class="broker-container">
+        
+        <section id="zaslon-izbornik" class="zaslon aktivni-zaslon">
+            <div class="logo-centar">
+                <div class="veliki-logo">
+                    <div class="red"><div class="p-pola">BRO</div><div class="p-cijela"></div></div>
+                    <div class="red"><div class="p-cijela"></div><div class="p-pola">KER</div></div>
+                </div>
+            </div>
+            <button class="gumb-ostri" onclick="App.promijeniZaslon('zaslon-kamera')">ZAPOČNI AUTOMATSKO SKENIRANJE</button>
+            <button class="gumb-ostri gumb-sekundarni" onclick="App.promijeniZaslon('zaslon-radni')">RUČNI RADNI PROSTOR (DEMO)</button>
+        </section>
+
+        <section id="zaslon-kamera" class="zaslon">
+            <div class="video-okvir">
+                <video id="web-kamera" autoplay playsinline></video>
+                <canvas id="aruco-canvas"></canvas>
+                <div class="nstatus" id="kamera-status">Tražim ArUco markere za kalibraciju...</div>
+            </div>
+            <div class="kontrole-kamere">
+                <button class="gumb-ostri gumb-kontra" onclick="Kamera.zaustavi()">PREKINI</button>
+                <button class="gumb-ostri" onclick="Kamera.uhvatiMjere()">ZAKLJUČAJ AUTOMATSKE MJERE</button>
+            </div>
+        </section>
+
+        <section id="zaslon-radni" class="zaslon">
+            <div class="canvas-prostor">
+                <div id="mreza-zida" class="zid-mreza-kontejner">
+                    </div>
+            </div>
+            <div class="kontrole-radne">
+                <button class="gumb-ostri" onclick="App.promijeniZaslon('zaslon-izbornik')">NAZAD</button>
+                <button class="gumb-ostri gumb-zeleni" onclick="App.otvoriDokumentaciju()">DOKUMENTACIJA</button>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="js/matematika.js"></script>
+    <script src="js/kamera.js"></script>
+    <script src="js/aruco.js"></script>
+    <script src="js/app.js"></script>
+</body>
+</html>
