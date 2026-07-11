@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="bs">
+<html lang="hr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,7 +11,7 @@
 
     <header class="broker-header">
         <div class="mini-logo">
-            <div class="logo-box"></div>
+            <img src="logo.png" alt="BRO-KER" class="header-logo-img">
             <span>BRO-KER</span>
         </div>
         <h1 id="naslov-prikaza">Glavni Izbornik</h1>
@@ -20,25 +20,30 @@
     <main class="broker-container">
         
         <section id="zaslon-izbornik" class="zaslon aktivni-zaslon">
-            <div class="logo-centar">
-                <div class="veliki-logo">
-                    <div class="red"><div class="p-pola">BRO</div><div class="p-cijela"></div></div>
-                    <div class="red"><div class="p-cijela"></div><div class="p-pola">KER</div></div>
-                </div>
+            <div class="logo-kontejner">
+                <img src="logo.png" alt="BRO-KER Vizualni Identitet" class="glavni-logo-img">
+                <p class="logo-podnaslov">CRAFT FOR TILING AND FLOOR COVERINGS</p>
             </div>
-            <button class="gumb-ostri" onclick="App.promijeniZaslon('zaslon-kamera')">ZAPOČNI AUTOMATSKO SKENIRANJE</button>
-            <button class="gumb-ostri gumb-sekundarni" onclick="App.promijeniZaslon('zaslon-radni')">RUČNI RADNI PROSTOR (DEMO)</button>
+            
+            <div class="izbornik-akcije">
+                <button class="gumb-ostri" onclick="App.promijeniZaslon('zaslon-kamera')">
+                    <span class="gumb-ikona">📷</span> ZAPOČNI AUTOMATSKO SKENIRANJE
+                </button>
+                <button class="gumb-ostri gumb-sekundarni" onclick="App.promijeniZaslon('zaslon-radni')">
+                    <span class="gumb-ikona">📐</span> RUČNI RADNI PROSTOR
+                </button>
+            </div>
         </section>
 
         <section id="zaslon-kamera" class="zaslon">
             <div class="video-okvir">
                 <video id="web-kamera" autoplay playsinline></video>
                 <canvas id="aruco-canvas"></canvas>
-                <div class="nstatus" id="kamera-status">Tražim ArUco markere za kalibraciju...</div>
+                <div class="nstatus" id="kamera-status">Inicijalizacija kamere...</div>
             </div>
             <div class="kontrole-kamere">
                 <button class="gumb-ostri gumb-kontra" onclick="Kamera.zaustavi()">PREKINI</button>
-                <button class="gumb-ostri" onclick="Kamera.uhvatiMjere()">ZAKLJUČAJ AUTOMATSKE MJERE</button>
+                <button class="gumb-ostri gumb-potvrda" onclick="Kamera.uhvatiMjere()">ZAKLJUČAJ AUTOMATSKE MJERE</button>
             </div>
         </section>
 
@@ -47,9 +52,27 @@
                 <div id="mreza-zida" class="zid-mreza-kontejner">
                     </div>
             </div>
+            
+            <div class="nadzorna-ploca">
+                <div class="alat-kartica">
+                    <label class="prekidac-kontejner">
+                        <span class="prekidac-tekst">Visinska Zona (90cm)</span>
+                        <input type="checkbox" id="check-visina" onchange="MatematikaEngine.toggleVisina(this.checked)">
+                        <span class="kvadratni-prekidac"></span>
+                    </label>
+                </div>
+                <div class="alat-kartica">
+                    <label class="prekidac-kontejner">
+                        <span class="prekidac-tekst">Traka za Tuš (Okomita)</span>
+                        <input type="checkbox" id="check-tus" onchange="MatematikaEngine.toggleTus(this.checked)">
+                        <span class="kvadratni-prekidac"></span>
+                    </label>
+                </div>
+            </div>
+
             <div class="kontrole-radne">
-                <button class="gumb-ostri" onclick="App.promijeniZaslon('zaslon-izbornik')">NAZAD</button>
-                <button class="gumb-ostri gumb-zeleni" onclick="App.otvoriDokumentaciju()">DOKUMENTACIJA</button>
+                <button class="gumb-ostri gumb-sekundarni" onclick="App.promijeniZaslon('zaslon-izbornik')">NAZAD</button>
+                <button class="gumb-ostri gumb-zeleni" onclick="App.otvoriDokumentaciju()">DOKUMENTACIJA / PDF</button>
             </div>
         </section>
 
@@ -58,6 +81,7 @@
     <script src="js/matematika.js"></script>
     <script src="js/kamera.js"></script>
     <script src="js/aruco.js"></script>
+    <script src="js/dokumentacija.js"></script>
     <script src="js/app.js"></script>
 </body>
 </html>
