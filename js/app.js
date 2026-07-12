@@ -68,8 +68,6 @@ const App = {
 
     ucitajPovrsinuUUrednik() {
         if (!this.projektObjekt) return;
-        
-        // POPRAVAK ZA STARE PROJEKTE: Ako u bazi stoji povrsines sa 's', spoji ga na pravi kljuc
         let komponente = this.projektObjekt.povrsine || this.projektObjekt.povrsines;
         if (!komponente) return;
         
@@ -179,8 +177,6 @@ const App = {
     spasiTrenutnoStanjeUBazu() {
         this.sacuvajPoljaUObjekt();
         let komponente = this.projektObjekt.povrsine || this.projektObjekt.povrsines;
-        
-        // Prisili bazu da od sad sprema ispravan kljuc
         this.projektObjekt.povrsine = komponente;
 
         BazaModul.spasiProjekt(
@@ -209,7 +205,6 @@ const App = {
             
             if (napredniPodaci) {
                 this.projektObjekt = JSON.parse(napredniPodaci);
-                // Krpamo kljuc u letu
                 if (this.projektObjekt.povrsines && !this.projektObjekt.povrsine) {
                     this.projektObjekt.povrsine = this.projektObjekt.povrsines;
                 }
@@ -266,15 +261,20 @@ const App = {
     },
 
     otvoriDokumentaciju() {
-        this.sacuvajPoljaUObjekt();
-        let komponente = this.projektObjekt.povrsine || this.projektObjekt.povrsines;
-        
-        Object.keys(komponente).forEach(kljuc => {
-            let povrsina = komponente[kljuc];
-            MatematikaEngine.pokreniTihiZbirniProracun(povrsina);
-        });
+        try {
+            this.sacuvajPoljaUObjekt();
+            let komponente = this.projektObjekt.povrsine || this.projektObjekt.povrsines;
+            
+            Object.keys(komponente).forEach(kljuc => {
+                let povrsina = komponente[kljuc];
+                MatematikaEngine.pokreniTihiZbirniProracun(povrsina);
+            });
 
-        DokumentacijaModul.generisiZbirniTroskovnik(this.projektObjekt);
+            DokumentacijaModul.generisiZbirniTroskovnik(this.projektObjekt);
+        } catch (e) {
+            alert("Sustav detektirao kvar pri izradi PDF-a: " + e.message);
+        }
     }
 };
 window.onload = () => App.init();
+            
