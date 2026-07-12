@@ -1,7 +1,6 @@
 const BazaModul = {
-    KLJUČ_BAZE: 'BROKER_PROJEKTI',
+    KLJUC_BAZE: 'BROKER_PROJEKTI',
 
-    // SPREMANJE TRENUTNOG PROJEKTA
     spasiProjekt(imeKlijenta, prostorija, sirinaZida, visinaZida, otvori, zone) {
         let sviProjekti = this.dohvatiSveProjekte();
         
@@ -16,7 +15,6 @@ const BazaModul = {
             datum: new Date().toLocaleDateString('hr-HR')
         };
 
-        // Ako projekt s istim ID-om već postoji, prebriši ga (Update), inače dodaj novi
         const indeks = sviProjekti.findIndex(p => p.klijent === imeKlijenta && p.prostorija === prostorija);
         if (indeks !== -1) {
             sviProjekti[indeks] = noviProjekt;
@@ -24,20 +22,18 @@ const BazaModul = {
             sviProjekti.push(noviProjekt);
         }
 
-        localStorage.setItem(this.KLJUČ_BAZE, JSON.stringify(sviProjekti));
-        console.log("Projekt uspješno spremljen u memoriju mobitela.");
+        localStorage.setItem(this.KLJUC_BAZE, JSON.stringify(sviProjekti));
+        console.log("Projekt uspjesno spremljen.");
     },
 
-    // DOHVAĆANJE SVIH SPREMLJENIH KLIJENATA
     dohvatiSveProjekte() {
-        const podaci = localStorage.getItem(this.KLJUČ_BAZE);
+        const podaci = localStorage.getItem(this.KLJUC_BAZE);
         return podaci ? JSON.parse(podaci) : [];
     },
 
-    // BRISANJE PROJEKTA IZ MEMORIJE
     izbrisiProjekt(idProjekta) {
         let sviProjekti = this.dohvatiSveProjekte();
         sviProjekti = sviProjekti.filter(p => p.id !== idProjekta);
-        localStorage.setItem(this.KLJUČ_BAZE, JSON.stringify(sviProjekti));
+        localStorage.setItem(this.KLJUC_BAZE, JSON.stringify(sviProjekti));
     }
 };
