@@ -2,16 +2,34 @@ const DokumentacijaModul = {
     generisiZbirniTroskovnik(projekt) {
         const p = projekt.povrsine;
 
-        let m2Zidovi = p.zid1.kvadratura + p.zid2.kvadratura + p.zid3.kvadratura + p.zid4.kvadratura;
-        let komZidovi = p.zid1.izracunCijelih + p.zid2.izracunCijelih + p.zid3.izracunCijelih + p.zid4.izracunCijelih;
+        // SIGURNOSNA PROVJERA: Ako se povlače podaci iz neotvorenih tabova, izračunaj ih na licu mjesta
+        let qZid1 = p.zid1.kvadratura || ((p.zid1.w * p.zid1.h) / 10000);
+        let qZid2 = p.zid2.kvadratura || ((p.zid2.w * p.zid2.h) / 10000);
+        let qZid3 = p.zid3.kvadratura || ((p.zid3.w * p.zid3.h) / 10000);
+        let qZid4 = p.zid4.kvadratura || ((p.zid4.w * p.zid4.h) / 10000);
 
-        let m2Pod = p.pod.kvadratura;
-        let komPod = p.pod.izracunCijelih;
+        let cZid1 = p.zid1.izracunCijelih || Math.ceil(qZid1 / ((p.zid1.plocicaW * p.zid1.plocicaH) / 10000));
+        let cZid2 = p.zid2.izracunCijelih || Math.ceil(qZid2 / ((p.zid2.plocicaW * p.zid2.plocicaH) / 10000));
+        let cZid3 = p.zid3.izracunCijelih || Math.ceil(qZid3 / ((p.zid3.plocicaW * p.zid3.plocicaH) / 10000));
+        let cZid4 = p.zid4.izracunCijelih || Math.ceil(qZid4 / ((p.zid4.plocicaW * p.zid4.plocicaH) / 10000));
 
-        let dužinaSokla = p.sokl.h; 
-        let komSokla = p.sokl.izracunCijelih;
+        let m2Zidovi = qZid1 + qZid2 + qZid3 + qZid4;
+        let komZidovi = cZid1 + cZid2 + cZid3 + cZid4;
+
+        let m2Pod = p.pod.kvadratura || ((p.pod.w * p.pod.h) / 10000);
+        let komPod = p.pod.izracunCijelih || Math.ceil(m2Pod / ((p.pod.plocicaW * p.pod.plocicaH) / 10000));
+
+        // Automatsko računanje opsega ako sokl tab nije bio otvoren
+        let opseg = p.zid1.w + p.zid2.w + p.zid3.w + p.zid4.w;
+        let dužinaSokla = p.sokl.h || opseg; 
+        let komSokla = p.sokl.izracunCijelih || Math.ceil(dužinaSokla / p.sokl.plocicaW);
 
         const pdfProzor = window.open('', '_blank');
+        if (!pdfProzor) {
+            alert("Preglednik na mobitelu je blokirao skočne prozore. Molimo dopustite 'Pop-ups' u postavkama preglednika za izvoz PDF-a.");
+            return;
+        }
+
         pdfProzor.document.write(`
             <!DOCTYPE html>
             <html lang="hr">
@@ -47,10 +65,10 @@ const DokumentacijaModul = {
                         <tr><th>Opis površine</th><th>Neto kvadratura</th><th>Potrebno pločica (kom)</th></tr>
                     </thead>
                     <tbody>
-                        <tr><td>Zid 1 (Prednji)</td><td>${p.zid1.kvadratura.toFixed(2)} m²</td><td>${p.zid1.izracunCijelih} kom</td></tr>
-                        <tr><td>Zid 2 (Desni)</td><td>${p.zid2.kvadratura.toFixed(2)} m²</td><td>${p.zid2.izracunCijelih} kom</td></tr>
-                        <tr><td>Zid 3 (Stražnji)</td><td>${p.zid3.kvadratura.toFixed(2)} m²</td><td>${p.zid3.izracunCijelih} kom</td></tr>
-                        <tr><td>Zid 4 (Lijevi)</td><td>${p.zid4.kvadratura.toFixed(2)} m²</td><td>${p.zid4.izracunCijelih} kom</td></tr>
+                        <tr><td>Zid 1 (Prednji)</td><td>${qZid1.toFixed(2)} m²</td><td>${cZid1} kom</td></tr>
+                        <tr><td>Zid 2 (Desni)</td><td>${qZid2.toFixed(2)} m²</td><td>${cZid2} kom</td></tr>
+                        <tr><td>Zid 3 (Stražnji)</td><td>${qZid3.toFixed(2)} m²</td><td>${cZid3} kom</td></tr>
+                        <tr><td>Zid 4 (Lijevi)</td><td>${qZid4.toFixed(2)} m²</td><td>${cZid4} kom</td></tr>
                         <tr class="istaknuto"><td>UKUPNO ZIDOVI</td><td>${m2Zidovi.toFixed(2)} m²</td><td>${komZidovi} kom</td></tr>
                     </tbody>
                 </table>
@@ -70,8 +88,8 @@ const DokumentacijaModul = {
                     ZAKLJUČAK NARUDŽBENICE ZA SALON KERAMIKE
                 </div>
                 <div style="border:2px solid #2C3236; padding:20px; font-size:15px; line-height:2;">
-                    • Ukupno zidne keramike za narudžbu (format ${p.zid1.plocicaW}x${p.zid1.plocicaH} cm): <strong>${m2Zidovi.toFixed(2)} m² (${komZidovi} komada)</strong><br>
-                    • Ukupno podne keramike za narudžbu (format ${p.pod.plocicaW}x${p.pod.plocicaH} cm): <strong>${m2Pod.toFixed(2)} m² (${komPod} komada)</strong><br>
+                    • Ukupno zidne keramike za narudžbu: <strong>${m2Zidovi.toFixed(2)} m² (${komZidovi} komada)</strong><br>
+                    • Ukupno podne keramike za narudžbu: <strong>${m2Pod.toFixed(2)} m² (${komPod} komada)</strong><br>
                     • Ukupno elemenata za rezanje sokla: <strong>${komSokla} elemenata</strong>
                 </div>
 
@@ -84,3 +102,4 @@ const DokumentacijaModul = {
         pdfProzor.document.close();
     }
 };
+
