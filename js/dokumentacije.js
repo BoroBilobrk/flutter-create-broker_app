@@ -2,7 +2,7 @@ const DokumentacijaModul = {
     generisiZbirniTroskovnik(projekt) {
         const p = projekt.povrsine;
 
-        // SIGURNOSNA PROVJERA: Ako se povlače podaci iz neotvorenih tabova, izračunaj ih na licu mjesta
+        // Sigurnosni proračun u slučaju da neki tabovi na zidu još nisu ručno pokrenuti
         let qZid1 = p.zid1.kvadratura || ((p.zid1.w * p.zid1.h) / 10000);
         let qZid2 = p.zid2.kvadratura || ((p.zid2.w * p.zid2.h) / 10000);
         let qZid3 = p.zid3.kvadratura || ((p.zid3.w * p.zid3.h) / 10000);
@@ -19,87 +19,91 @@ const DokumentacijaModul = {
         let m2Pod = p.pod.kvadratura || ((p.pod.w * p.pod.h) / 10000);
         let komPod = p.pod.izracunCijelih || Math.ceil(m2Pod / ((p.pod.plocicaW * p.pod.plocicaH) / 10000));
 
-        // Automatsko računanje opsega ako sokl tab nije bio otvoren
         let opseg = p.zid1.w + p.zid2.w + p.zid3.w + p.zid4.w;
         let dužinaSokla = p.sokl.h || opseg; 
         let komSokla = p.sokl.izracunCijelih || Math.ceil(dužinaSokla / p.sokl.plocicaW);
 
-        const pdfProzor = window.open('', '_blank');
-        if (!pdfProzor) {
-            alert("Preglednik na mobitelu je blokirao skočne prozore. Molimo dopustite 'Pop-ups' u postavkama preglednika za izvoz PDF-a.");
-            return;
-        }
+        // Ako stari prikaz već negdje postoji na ekranu, ukloni ga
+        const stariPrikaz = document.getElementById('print-overlay');
+        if (stariPrikaz) stariPrikaz.remove();
 
-        pdfProzor.document.write(`
-            <!DOCTYPE html>
-            <html lang="hr">
-            <head>
-                <meta charset="UTF-8">
-                <title>BRO-KER | Zbirna Specifikacija</title>
-                <style>
-                    body { font-family: 'Segoe UI', Arial, sans-serif; color: #1A1D20; padding: 40px; margin: 0; }
-                    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #2C3236; padding-bottom: 20px; }
-                    .logo { font-weight: bold; font-size: 26px; letter-spacing: 2px; color: #2C3236; }
-                    .info-blok { margin: 30px 0; background-color: #F5F6F7; padding: 20px; border-left: 5px solid #2C3236; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 35px; }
-                    th, td { padding: 12px; text-align: left; border-bottom: 1px solid #E0E0E0; font-size: 13px; }
-                    th { background-color: #2C3236; color: #FFFFFF; font-size: 11px; letter-spacing: 1px; text-transform: uppercase; }
-                    .istaknuto { background-color: #EAEDEF; font-weight: bold; }
-                </style>
-            </head>
-            <body>
-                <div class="header">
-                    <div class="logo">BRO-KER</div>
-                    <div style="text-transform:uppercase; font-size:12px; font-weight:bold; color:#8A959E;">ZBIRNI TROŠKOVNIK PROSTORIJE</div>
-                </div>
-                
-                <div class="info-blok">
-                    <strong>KLIJENT: ${projekt.klijent.toUpperCase()}</strong><br>
-                    Objekt / Prostorija: ${projekt.prostorija}<br>
-                    Sustav: BRO-KER Multi-Surface CAD Proračun
-                </div>
+        // STVARANJE OVERLAY KONTEJNERA (Prikazuje se unutar istog prozora)
+        const overlay = document.createElement('div');
+        overlay.id = 'print-overlay';
+        
+        // Stilovi koji pretvaraju ekran u čist bijeli list papira
+        overlay.style.position = 'fixed';
+        overlay.style.top = '0'; overlay.style.left = '0';
+        overlay.style.width = '100%'; overlay.style.height = '100%';
+        overlay.style.backgroundColor = '#FFFFFF';
+        overlay.style.color = '#1A1D20';
+        overlay.style.zIndex = '99999';
+        overlay.style.overflowY = 'auto';
+        overlay.style.padding = '24px';
+        overlay.style.boxSizing = 'border-box';
 
-                <h3>1. SPECIFIKACIJA ZIDOVA (Format: ${p.zid1.plocicaW}x${p.zid1.plocicaH} cm | Fuga: ${p.zid1.fuga} mm)</h3>
-                <table>
-                    <thead>
-                        <tr><th>Opis površine</th><th>Neto kvadratura</th><th>Potrebno pločica (kom)</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>Zid 1 (Prednji)</td><td>${qZid1.toFixed(2)} m²</td><td>${cZid1} kom</td></tr>
-                        <tr><td>Zid 2 (Desni)</td><td>${qZid2.toFixed(2)} m²</td><td>${cZid2} kom</td></tr>
-                        <tr><td>Zid 3 (Stražnji)</td><td>${qZid3.toFixed(2)} m²</td><td>${cZid3} kom</td></tr>
-                        <tr><td>Zid 4 (Lijevi)</td><td>${qZid4.toFixed(2)} m²</td><td>${cZid4} kom</td></tr>
-                        <tr class="istaknuto"><td>UKUPNO ZIDOVI</td><td>${m2Zidovi.toFixed(2)} m²</td><td>${komZidovi} kom</td></tr>
-                    </tbody>
-                </table>
+        overlay.innerHTML = `
+            <style>
+                @media print {
+                    body * { visibility: hidden; }
+                    #print-overlay, #print-overlay * { visibility: visible; }
+                    #print-overlay { position: absolute; left: 0; top: 0; width: 100%; height: auto; padding: 0; }
+                    .no-print { display: none !important; }
+                }
+            </style>
 
-                <h3>2. SPECIFIKACIJA PODA I SOKLA (Format poda: ${p.pod.plocicaW}x${p.pod.plocicaH} cm | Fuga: ${p.pod.fuga} mm)</h3>
-                <table>
-                    <thead>
-                        <tr><th>Tip površine</th><th>Dimenzija / Opseg</th><th>Potrebna količina</th></tr>
-                    </thead>
-                    <tbody>
-                        <tr><td>Podna površina (Neto)</td><td>${p.pod.w} x ${p.pod.h} cm</td><td>${m2Pod.toFixed(2)} m² (${komPod} kom)</td></tr>
-                        <tr><td>Sokl (Linearni metri dužina)</td><td>Opseg sobe: ${(dužinaSokla/100).toFixed(2)} m</td><td>${komSokla} komada (Visina sokla: ${p.sokl.w} cm)</td></tr>
-                    </tbody>
-                </table>
+            <div class="no-print" style="display:flex; justify-content:space-between; margin-bottom:30px; background:#111417; padding:12px; margin:-24px -24px 24px -24px; border-bottom:1px solid #22282C;">
+                <button style="background:#14281E; color:#4EFA9E; border:1px solid #2E5C43; padding:12px 20px; font-weight:bold; font-size:11px; letter-spacing:1px; cursor:pointer;" onclick="window.print()">🖨️ POKRENI PRINT / PDF</button>
+                <button style="background:#2C3236; color:#8C9BA5; border:1px solid #343D44; padding:12px 20px; font-weight:bold; font-size:11px; letter-spacing:1px; cursor:pointer;" onclick="document.getElementById('print-overlay').remove()">✕ ZATVORI</button>
+            </div>
 
-                <div style="background-color:#2C3236; color:#FFF; padding:15px; font-weight:bold; font-size:14px; text-transform:uppercase; letter-spacing:1px;">
-                    ZAKLJUČAK NARUDŽBENICE ZA SALON KERAMIKE
-                </div>
-                <div style="border:2px solid #2C3236; padding:20px; font-size:15px; line-height:2;">
-                    • Ukupno zidne keramike za narudžbu: <strong>${m2Zidovi.toFixed(2)} m² (${komZidovi} komada)</strong><br>
-                    • Ukupno podne keramike za narudžbu: <strong>${m2Pod.toFixed(2)} m² (${komPod} komada)</strong><br>
-                    • Ukupno elemenata za rezanje sokla: <strong>${komSokla} elemenata</strong>
-                </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #2C3236; padding-bottom: 15px;">
+                <div style="font-weight: bold; font-size: 26px; letter-spacing: 2px; color: #2C3236;">BRO-KER</div>
+                <div style="text-transform:uppercase; font-size:11px; font-weight:bold; color:#8A959E; text-align:right; letter-spacing:0.5px;">Zbirna Specifikacija Naloga</div>
+            </div>
+            
+            <div style="margin: 24px 0; background-color: #F5F6F7; padding: 20px; border-left: 5px solid #2C3236; font-size:13px; line-height:1.6; color:#333;">
+                <strong>PROJEKTNI NALOG: ${projekt.prostorija.toUpperCase()}</strong><br>
+                Klijent / Lokacija: ${projekt.klijent}<br>
+                Datum proračuna: ${new Date().toLocaleDateString('hr-HR')}<br>
+                Sustav optimizacije: BRO-KER Multi-Surface 3D CAD Engine
+            </div>
 
-                <script>
-                    window.onload = function() { window.print(); }
-                </script>
-            </body>
-            </html>
-        `);
-        pdfProzor.document.close();
+            <h3 style="font-size:13px; text-transform:uppercase; margin-top:30px; color:#111; letter-spacing:0.5px;">1. SPECIFIKACIJA ZIDOVA (Format: ${p.zid1.plocicaW}x${p.zid1.plocicaH} cm)</h3>
+            <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
+                <thead>
+                    <tr style="background:#2C3236; color:#FFFFFF; text-transform:uppercase; font-size:10px; letter-spacing:0.5px;"><th style="padding:10px; text-align:left;">Opis površine</th><th style="padding:10px; text-align:left;">Neto kvadratura</th><th style="padding:10px; text-align:left;">Potrebno pločica</th></tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 1 (Prednji / Glavni)</td><td style="padding:10px;">${qZid1.toFixed(2)} m²</td><td style="padding:10px;">${cZid1} kom</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 2 (Desni)</td><td style="padding:10px;">${qZid2.toFixed(2)} m²</td><td style="padding:10px;">${cZid2} kom</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 3 (Stražnji)</td><td style="padding:10px;">${qZid3.toFixed(2)} m²</td><td style="padding:10px;">${cZid3} kom</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 4 (Lijevi)</td><td style="padding:10px;">${qZid4.toFixed(2)} m²</td><td style="padding:10px;">${cZid4} kom</td></tr>
+                    <tr style="background:#EAEDEF; font-weight:bold; color:#000;"><td style="padding:10px;">UKUPNO ZIDOVI</td><td style="padding:10px;">${m2Zidovi.toFixed(2)} m²</td><td style="padding:10px;">${komZidovi} kom</td></tr>
+                </tbody>
+            </table>
+
+            <h3 style="font-size:13px; text-transform:uppercase; margin-top:30px; color:#111; letter-spacing:0.5px;">2. SPECIFIKACIJA PODA I SOKLA</h3>
+            <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px; margin-bottom:40px;">
+                <thead>
+                    <tr style="background:#2C3236; color:#FFFFFF; text-transform:uppercase; font-size:10px; letter-spacing:0.5px;"><th style="padding:10px; text-align:left;">Tip površine</th><th style="padding:10px; text-align:left;">Dimenzije / Opseg</th><th style="padding:10px; text-align:left;">Izračunata količina</th></tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Podna površina (Neto format: ${p.pod.plocicaW}x${p.pod.plocicaH} cm)</td><td style="padding:10px;">${p.pod.w} x ${p.pod.h} cm</td><td style="padding:10px;">${m2Pod.toFixed(2)} m² (${komPod} kom)</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Sokl (Linearni metri oko sobe)</td><td style="padding:10px;">Opseg kupaonice: ${(dužinaSokla/100).toFixed(2)} m</td><td style="padding:10px;">${komSokla} komada (Visina: ${p.sokl.w} cm)</td></tr>
+                </tbody>
+            </table>
+
+            <div style="background-color:#2C3236; color:#FFF; padding:12px; font-weight:bold; font-size:13px; text-transform:uppercase; letter-spacing:1px;">
+                ZAKLJUČAK SPECIJALIZIRANE NARUDŽBE
+            </div>
+            <div style="border:2px solid #2C3236; padding:20px; font-size:14px; line-height:1.9; color:#000;">
+                • Ukupno zidne keramike za salon (format ${p.zid1.plocicaW}x${p.zid1.plocicaH} cm): <strong>${m2Zidovi.toFixed(2)} m² (${komZidovi} kom)</strong><br>
+                • Ukupno podne keramike za salon (format ${p.pod.plocicaW}x${p.pod.plocicaH} cm): <strong>${m2Pod.toFixed(2)} m² (${komPod} kom)</strong><br>
+                • Ukupno komada za rezanje sokla: <strong>${komSokla} kom</strong>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
     }
 };
-
