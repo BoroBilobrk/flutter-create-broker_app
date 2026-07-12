@@ -2,7 +2,6 @@ const DokumentacijaModul = {
     generisiZbirniTroskovnik(projekt) {
         if (!projekt) return;
         
-        // PODRŠKA ZA STARE I NOVE PROJEKTE: Čita i 'povrsine' i stari ključ 'povrsines' iz prošlog tjedna
         const p = projekt.povrsine || projekt.povrsines;
         if (!p) {
             alert("Greska pri citanju strukture kupaonice.");
@@ -30,6 +29,8 @@ const DokumentacijaModul = {
         let komPod = p.pod.izracunCijelih || Math.ceil(m2Pod / (((p.pod.plocicaW || 60) * (p.pod.plocicaH || 60)) / 10000)) || 0;
 
         let opseg = (p.zid1.w || 240) + (p.zid2.w || 200) + (p.zid3.w || 240) + (p.zid4.w || 200);
+        
+        // ISPRAVLJENO: Maknut 'z' s kvacicom iz naziva varijable za stabilnost mobitela
         let duzinaSokla = p.sokl.h || opseg; 
         let komSokla = p.sokl.izracunCijelih || Math.ceil(duzinaSokla / (p.sokl.plocicaW || 60)) || 0;
 
@@ -90,7 +91,7 @@ const DokumentacijaModul = {
                 </tbody>
             </table>
 
-            <h3 style="font-size:13px; text-transform:uppercase; margin-top:30px; color:#111; letter-spacing:0.5px;">2. SPECIFIKACIJA PODA I SOKLA</h3>
+            <h3>2. SPECIFIKACIJA PODA I SOKLA</h3>
             <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px; margin-bottom:40px;">
                 <thead>
                     <tr style="background:#2C3236; color:#FFFFFF; text-transform:uppercase; font-size:10px; letter-spacing:0.5px;"><th style="padding:10px; text-align:left;">Tip povrsine</th><th style="padding:10px; text-align:left;">Dimenzije / Opseg</th><th style="padding:10px; text-align:left;">Izracunata kolicina</th></tr>
