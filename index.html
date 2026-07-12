@@ -30,8 +30,24 @@
             <div class="alat-kartica" style="width:100%; margin-bottom: 20px;">
                 <span style="font-size:10px; font-weight:700; color:#6C7A84; display:block; margin-bottom:10px; letter-spacing:1px;">OTVORI NOVI PROJEKTNI NALOG</span>
                 <input type="text" id="input-klijent" placeholder="Ime klijenta / Lokacija" style="width:100%; background:#0A0C0E; border:1px solid #22282C; color:#FFF; padding:12px; margin-bottom:10px;">
-                <input type="text" id="input-prostorija" placeholder="Prostorija (npr. Kupaonica prizemlje)" style="width:100%; background:#0A0C0E; border:1px solid #22282C; color:#FFF; padding:12px; margin-bottom:15px;">
+                <input type="text" id="input-prostorija" placeholder="Prostorija (npr. Kupaonica kat)" style="width:100%; background:#0A0C0E; border:1px solid #22282C; color:#FFF; padding:12px; margin-bottom:15px;">
                 
+                <span style="font-size:10px; font-weight:700; color:#6C7A84; display:block; margin-bottom:8px; letter-spacing:1px;">DIMENZIJE KERAMIKE ZA OVAJ PROSTOR</span>
+                <div style="display:flex; gap:10px; margin-bottom:20px;">
+                    <div style="flex:1;">
+                        <label style="font-size:9px; color:#6C7A84; font-weight:bold; display:block; margin-bottom:4px;">DULJINA (cm)</label>
+                        <input type="number" id="init-plocica-w" value="120" style="width:100%; background:#0A0C0E; border:1px solid #22282C; color:#FFF; padding:10px; font-weight:bold; text-align:center;">
+                    </div>
+                    <div style="flex:1;">
+                        <label style="font-size:9px; color:#6C7A84; font-weight:bold; display:block; margin-bottom:4px;">SIRINA (cm)</label>
+                        <input type="number" id="init-plocica-h" value="60" style="width:100%; background:#0A0C0E; border:1px solid #22282C; color:#FFF; padding:10px; font-weight:bold; text-align:center;">
+                    </div>
+                    <div style="flex:1;">
+                        <label style="font-size:9px; color:#6C7A84; font-weight:bold; display:block; margin-bottom:4px;">FUGA (mm)</label>
+                        <input type="number" id="init-fuga" value="2" step="0.5" style="width:100%; background:#0A0C0E; border:1px solid #22282C; color:#FFF; padding:10px; font-weight:bold; text-align:center;">
+                    </div>
+                </div>
+
                 <button class="gumb-ostri gumb-potvrda" style="margin-bottom: 10px;" onclick="App.kreirajNoviProjekt('kamera')">
                     <span class="gumb-ikona">📷</span> POKRENI AR LIVE SKENIRANJE
                 </button>
