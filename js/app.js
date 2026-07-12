@@ -1,9 +1,8 @@
-// INTEGRIRANA DOKUMENTACIJA DIREKTNO U SRC DATOTEKU - KRAJ PROBLEMA "NOT DEFINED"
 const DokumentacijaModul = {
     generisiZbirniTroskovnik(projekt) {
         if (!projekt) return;
         const p = projekt.povrsine || projekt.povrsines;
-        if (!p) { alert("Greska pri citanju strukture kupaonice."); return; }
+        if (!p) { alert("Greska pri citanju kupaonice."); return; }
 
         let qZid1 = p.zid1.kvadratura || ((p.zid1.w * p.zid1.h) / 10000) || 0;
         let qZid2 = p.zid2.kvadratura || ((p.zid2.w * p.zid2.h) / 10000) || 0;
@@ -37,7 +36,7 @@ const DokumentacijaModul = {
         overlay.style.position = 'fixed'; overlay.style.top = '0'; overlay.style.left = '0';
         overlay.style.width = '100%'; overlay.style.height = '100%';
         overlay.style.backgroundColor = '#FFFFFF'; overlay.style.color = '#1A1D20';
-        overlay.style.zIndex = '99999'; overlay.style.overflowY = 'auto';
+        overlay.style.zIndex = '999999'; overlay.style.overflowY = 'auto';
         overlay.style.padding = '24px'; overlay.style.boxSizing = 'border-box';
 
         overlay.innerHTML = `
@@ -60,19 +59,26 @@ const DokumentacijaModul = {
             <div style="margin: 24px 0; background-color: #F5F6F7; padding: 20px; border-left: 5px solid #2C3236; font-size:13px; line-height:1.6; color:#333;">
                 <strong>PROJEKTNI NALOG: ${projekt.prostorija.toUpperCase()}</strong><br>
                 Klijent: ${projekt.klijent}<br>
-                Sustav: BRO-KER 3D Multi-Surface CAD
+                Sustav: BRO-KER Multi-Surface CAD
             </div>
-            <h3 style="font-size:13px; text-transform:uppercase; margin-top:30px;">1. SPECIFIKACIJA ZIDOVA</h3>
-            <table style="width:100%; border-collapse:collapse; font-size:13px;">
+            <h3 style="font-size:13px; text-transform:uppercase; margin-top:30px;">1. SPECIFIKACIJA ZIDOVA (Keramika: ${fmtZidW}x${fmtZidH} cm)</h3>
+            <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
                 <thead>
-                    <tr style="background:#2C3236; color:#FFFFFF;"><th style="padding:10px; text-align:left;">Povrsina</th><th style="padding:10px; text-align:left;">Kvadratura</th><th style="padding:10px; text-align:left;">Potrebno plocica</th></tr>
+                    <tr style="background:#2C3236; color:#FFFFFF;"><th style="padding:10px; text-align:left;">Povrsina</th><th style="padding:10px; text-align:left;">Kvadratura</th><th style="padding:10px; text-align:left;">Kolicina</th></tr>
                 </thead>
                 <tbody>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 1</td><td style="padding:10px;">${qZid1.toFixed(2)} m2</td><td style="padding:10px;">${cZid1} kom</td></tr>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 2</td><td style="padding:10px;">${qZid2.toFixed(2)} m2</td><td style="padding:10px;">${cZid2} kom</td></tr>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 3</td><td style="padding:10px;">${qZid3.toFixed(2)} m2</td><td style="padding:10px;">${cZid3} kom</td></tr>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 4</td><td style="padding:10px;">${qZid4.toFixed(2)} m2</td><td style="padding:10px;">${cZid4} kom</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 1 (Glavni)</td><td style="padding:10px;">${qZid1.toFixed(2)} m2</td><td style="padding:10px;">${cZid1} kom</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 2 (Desni)</td><td style="padding:10px;">${qZid2.toFixed(2)} m2</td><td style="padding:10px;">${cZid2} kom</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 3 (Straznji)</td><td style="padding:10px;">${qZid3.toFixed(2)} m2</td><td style="padding:10px;">${cZid3} kom</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 4 (Lijevi)</td><td style="padding:10px;">${qZid4.toFixed(2)} m2</td><td style="padding:10px;">${cZid4} kom</td></tr>
                     <tr style="background:#EAEDEF; font-weight:bold;"><td style="padding:10px;">UKUPNO ZIDOVI</td><td style="padding:10px;">${m2Zidovi.toFixed(2)} m2</td><td style="padding:10px;">${komZidovi} kom</td></tr>
+                </tbody>
+            </table>
+            <h3 style="font-size:13px; text-transform:uppercase; margin-top:30px;">2. SPECIFIKACIJA PODA I SOKLA</h3>
+            <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
+                <tbody>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Podna povrsina (Neto)</td><td style="padding:10px;">${m2Pod.toFixed(2)} m2 (${komPod} kom)</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Sokl (Linearni metri)</td><td style="padding:10px;">${(duzinaSokla/100).toFixed(2)} m (${komSokla} kom)</td></tr>
                 </tbody>
             </table>
         `;
@@ -92,19 +98,27 @@ const App = {
     },
 
     promijeniZaslon(idZaslona) {
+        // Sakrij sve standardne zaslone
         document.querySelectorAll('.zaslon').forEach(z => z.style.display = 'none');
-        const cilj = document.getElementById(idZaslona);
-        if (cilj) cilj.style.display = idZaslona === 'zaslon-kamera' ? 'block' : 'block';
-
+        
+        const camSection = document.getElementById('zaslon-kamera');
+        
         if (idZaslona === 'zaslon-kamera') {
+            if (camSection) camSection.style.display = 'block';
             document.getElementById('naslov-prikaza').innerText = "Skeniranje prostora";
             Kamera.pokreni();
-        } else if (idZaslona === 'zaslon-radni') {
-            document.getElementById('naslov-prikaza').innerText = `${this.trenutniKlijent} - Rad`;
-            this.ucitajPovrsinuUUrednik();
-        } else if (idZaslona === 'zaslon-izbornik') {
-            document.getElementById('naslov-prikaza').innerText = "Glavni Izbornik";
-            this.osvjeziListuSpremljenihProjekata();
+        } else {
+            if (camSection) camSection.style.display = 'none';
+            const cilj = document.getElementById(idZaslona);
+            if (cilj) cilj.style.display = 'block';
+            
+            if (idZaslona === 'zaslon-radni') {
+                document.getElementById('naslov-prikaza').innerText = `${this.trenutniKlijent} - Rad`;
+                this.ucitajPovrsinuUUrednik();
+            } else if (idZaslona === 'zaslon-izbornik') {
+                document.getElementById('naslov-prikaza').innerText = "Glavni Izbornik";
+                this.osvjeziListuSpremljenihProjekata();
+            }
         }
     },
 
@@ -170,7 +184,7 @@ const App = {
             if (sekcijaZona) sekcijaZona.style.display = 'grid';
             if (sekcijaFormat) sekcijaFormat.style.display = 'flex';
             if (sekcijaPomicanje) sekcijaPomicanje.style.display = 'flex';
-            if (gumbOtvor) gumbOtvor.innerText = "➕ DODAJ OTVOR (VRATA / PROZOR)";
+            if (gumbOtvor) gumbOtvor.innerText = "➕ DODAJ OTVOR / KRUNU MANUELNO";
             document.getElementById('check-visina').checked = p.hZona || false;
             document.getElementById('check-tus').checked = p.vZona || false;
         } else {
@@ -235,4 +249,4 @@ const App = {
     }
 };
 window.onload = () => App.init();
-            
+                
