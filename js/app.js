@@ -44,12 +44,12 @@ const App = {
             klijent: klijentInput,
             prostorija: prostorijaInput,
             povrsine: {
-                zid1: { tip: 'Zid', w: 240, h: 200, popisOtvora: [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2 },
-                zid2: { tip: 'Zid', w: 200, h: 200, popisOtvora: [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2 },
-                zid3: { tip: 'Zid', w: 240, h: 200, popisOtvora: [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2 },
-                zid4: { tip: 'Zid', w: 200, h: 200, popisOtvora: [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2 },
-                pod:  { tip: 'Pod',  w: 240, h: 200, popisOtvora: [], plocicaW: 60, plocicaH: 60, fuga: 2 },
-                sokl: { tip: 'Sokl', w: 8,    h: 0,   popisOtvora: [], plocicaW: 60, plocicaH: 8,  fuga: 2 }
+                zid1: { tip: 'Zid', w: 240, h: 200, popisOtvora: [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2, odmakX: 0 },
+                zid2: { tip: 'Zid', w: 200, h: 200, popisOtvora: [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2, odmakX: 0 },
+                zid3: { tip: 'Zid', w: 240, h: 200, popisOtvora: [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2, odmakX: 0 },
+                zid4: { tip: 'Zid', w: 200, h: 200, popisOtvora: [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2, odmakX: 0 },
+                pod:  { tip: 'Pod',  w: 240, h: 200, popisOtvora: [], plocicaW: 60, plocicaH: 60, fuga: 2, odmakX: 0 },
+                sokl: { tip: 'Sokl', w: 8,    h: 0,   popisOtvora: [], plocicaW: 60, plocicaH: 8,  fuga: 2, odmakX: 0 }
             }
         };
 
@@ -70,6 +70,7 @@ const App = {
         
         const sekcijaZona = document.getElementById('sekcija-zona');
         const sekcijaFormat = document.getElementById('sekcija-format-plocice');
+        const sekcijaPomicanje = document.getElementById('sekcija-pomicanje-rastera');
         const gumbOtvor = document.getElementById('gumb-dodaj-otvor');
         const lblW = document.getElementById('label-dim-w');
         const lblH = document.getElementById('label-dim-h');
@@ -83,6 +84,7 @@ const App = {
             document.getElementById('input-zid-h').value = p.h;
             if (sekcijaZona) sekcijaZona.style.display = 'grid';
             if (sekcijaFormat) sekcijaFormat.style.display = 'flex';
+            if (sekcijaPomicanje) sekcijaPomicanje.style.display = 'flex';
             if (gumbOtvor) {
                 gumbOtvor.style.display = 'block';
                 gumbOtvor.innerText = "➕ DODAJ OTVOR (VRATA / PROZOR)";
@@ -96,6 +98,7 @@ const App = {
             document.getElementById('input-zid-h').value = p.h;
             if (sekcijaZona) sekcijaZona.style.display = 'none';
             if (sekcijaFormat) sekcijaFormat.style.display = 'flex';
+            if (sekcijaPomicanje) sekcijaPomicanje.style.display = 'flex';
             if (gumbOtvor) {
                 gumbOtvor.style.display = 'block';
                 gumbOtvor.innerText = "➕ DODAJ OTVOR (PODNI SLIVNIK)";
@@ -106,6 +109,7 @@ const App = {
             if (sekcijaZona) sekcijaZona.style.display = 'none';
             if (gumbOtvor) gumbOtvor.style.display = 'none';
             if (sekcijaFormat) sekcijaFormat.style.display = 'none';
+            if (sekcijaPomicanje) sekcijaPomicanje.style.display = 'none';
             if (lblW) lblW.innerText = "VISINA SOKLA (cm)";
             if (lblH) lblH.style.display = 'none';
             document.getElementById('input-zid-h').style.display = 'none';
@@ -146,23 +150,17 @@ const App = {
             p.vZona = document.getElementById('check-tus').checked;
         }
 
-        // --- AUTOMATSKO PREUZIMANJE DIMENZIJA ZA 3D SOBU I POD ---
         if (this.aktivnaPovrsinaKey === 'zid1') {
-            // Zid 3 (nasuprotni) dobiva istu širinu i visinu
             this.projektObjekt.povrsine.zid3.w = p.w;
             this.projektObjekt.povrsine.zid3.h = p.h;
-            // Pod dobiva širinu (X os) od Zida 1
             this.projektObjekt.povrsine.pod.w = p.w;
-            // Kopiraj visinu na sve ostale zidove jer su prostorije u pravilu jednako visoke
             this.projektObjekt.povrsine.zid2.h = p.h;
             this.projektObjekt.povrsine.zid4.h = p.h;
         }
         
         if (this.aktivnaPovrsinaKey === 'zid2') {
-            // Zid 4 (nasuprotni) dobiva istu širinu i visinu
             this.projektObjekt.povrsine.zid4.w = p.w;
             this.projektObjekt.povrsine.zid4.h = p.h;
-            // Pod dobiva duljinu (Y os) od širine Zida 2!
             this.projektObjekt.povrsine.pod.h = p.w;
         }
 
@@ -200,22 +198,19 @@ const App = {
                 Object.keys(this.projektObjekt.povrsine).forEach(k => {
                     let pov = this.projektObjekt.povrsine[k];
                     if (!pov.plocicaW) {
-                        pov.plocicaW = 60;
-                        pov.plocicaH = pov.tip === 'Pod' ? 60 : 30;
-                        pov.fuga = 2;
+                        pov.plocicaW = 60; pov.plocicaH = pov.tip === 'Pod' ? 60 : 30; pov.fuga = 2; pov.odmakX = 0;
                     }
                 });
             } else {
                 this.projektObjekt = {
-                    klijent: staro.klijent,
-                    prostorija: staro.prostorija,
+                    klijent: staro.klijent, prostorija: staro.prostorija,
                     povrsine: {
-                        zid1: { tip: 'Zid', w: staro.sirinaZida, h: staro.visinaZida, popisOtvora: staro.popisOtvora || [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2 },
-                        zid2: { tip: 'Zid', w: 200, h: staro.visinaZida, popisOtvora: [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2 },
-                        zid3: { tip: 'Zid', w: staro.sirinaZida, h: staro.visinaZida, popisOtvora: [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2 },
-                        zid4: { tip: 'Zid', w: 200, h: staro.visinaZida, popisOtvora: [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2 },
-                        pod:  { tip: 'Pod',  w: staro.sirinaZida, h: 200, popisOtvora: [], plocicaW: 60, plocicaH: 60, fuga: 2 },
-                        sokl: { tip: 'Sokl', w: 8, h: (staro.sirinaZida * 2) + 400, popisOtvora: [], plocicaW: 60, plocicaH: 8, fuga: 2 }
+                        zid1: { tip: 'Zid', w: staro.sirinaZida, h: staro.visinaZida, popisOtvora: staro.popisOtvora || [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2, odmakX: 0 },
+                        zid2: { tip: 'Zid', w: 200, h: staro.visinaZida, popisOtvora: [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2, odmakX: 0 },
+                        zid3: { tip: 'Zid', w: staro.sirinaZida, h: staro.visinaZida, popisOtvora: [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2, odmakX: 0 },
+                        zid4: { tip: 'Zid', w: 200, h: staro.visinaZida, popisOtvora: [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2, odmakX: 0 },
+                        pod:  { tip: 'Pod',  w: staro.sirinaZida, h: 200, popisOtvora: [], plocicaW: 60, plocicaH: 60, fuga: 2, odmakX: 0 },
+                        sokl: { tip: 'Sokl', w: 8, h: (staro.sirinaZida * 2) + 400, popisOtvora: [], plocicaW: 60, plocicaH: 8, fuga: 2, odmakX: 0 }
                     }
                 };
             }
@@ -242,7 +237,7 @@ const App = {
             kartica.innerHTML = `
                 <div onclick="App.učitajProjektIzBaze('${p.id}')" style="cursor:pointer; flex:1; text-align:left;">
                     <div style="font-weight:bold; font-size:13px; color:#FFF; margin-bottom:4px;">${p.klijent}</div>
-                    <div style="font-size:11px; color:#8C9BA5;">${p.prostorija} | Dinamički Formati</div>
+                    <div style="font-size:11px; color:#8C9BA5;">${p.prostorija} | 3D Soba</div>
                 </div>
                 <button onclick="App.obrisiProjektIzBaze('${p.id}')" style="background:transparent; border:none; color:#FF5555; font-size:16px; cursor:pointer;">✕</button>
             `;
@@ -263,4 +258,3 @@ const App = {
     }
 };
 window.onload = () => App.init();
-        
