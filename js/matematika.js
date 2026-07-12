@@ -1,7 +1,7 @@
 const MatematikaEngine = {
     trenutnaPovrsina: null,
     plocicaW: 60, plocicaH: 30, fuga: 0.2,
-    odmakX: 0, // NOVO: Trenutna vrijednost ručnog pomaka u cm
+    odmakX: 0, 
     bazaOstataka: [], iskoristeniOstatciCount: 0, potrosenoCijelihPlocica: 0,
 
     osveziIzObjekta(povrsinaObj) {
@@ -11,13 +11,12 @@ const MatematikaEngine = {
         this.plocicaH = parseFloat(this.trenutnaPovrsina.plocicaH) || 30;
         this.fuga = (parseFloat(this.trenutnaPovrsina.fuga) || 2) / 10; 
         
-        // Učitavanje i sinkronizacija kliznih kontrola s odabranom površinom
         this.odmakX = parseFloat(this.trenutnaPovrsina.odmakX) || 0;
         
         const slider = document.getElementById('slider-odmak-x');
         const prikaza = document.getElementById('prikaz-odmaka');
         if (slider) {
-            slider.max = this.plocicaW; // Maksimalni odmak je širina jedne pločice
+            slider.max = this.plocicaW; 
             slider.value = this.odmakX;
         }
         if (prikaza) prikaza.innerText = this.odmakX.toFixed(1) + ' cm';
@@ -25,7 +24,6 @@ const MatematikaEngine = {
         this.iscrtajMrezuPlocica();
     },
 
-    // UPRAVLJANJE KLIZAČEM
     postaviOdmakX(vrijednost) {
         this.odmakX = parseFloat(vrijednost) || 0;
         const prikaza = document.getElementById('prikaz-odmaka');
@@ -35,11 +33,10 @@ const MatematikaEngine = {
         this.iscrtajMrezuPlocica();
     },
 
-    // FINO NAMJEŠTANJE TIPKAMA (STRELICAMA)
     nudgeRaster(iznos) {
         let noviOdmak = this.odmakX + iznos;
-        if (noviOdmak < 0) noviOdmak = this.plocicaW + iznos; // Wrap ulijevo
-        if (noviOdmak > this.plocicaW) noviOdmak = 0; // Wrap udesno
+        if (noviOdmak < 0) noviOdmak = this.plocicaW + iznos; 
+        if (noviOdmak > this.plocicaW) noviOdmak = 0; 
         
         const slider = document.getElementById('slider-odmak-x');
         if (slider) slider.value = noviOdmak;
@@ -139,10 +136,7 @@ const MatematikaEngine = {
             pocetniPomakX = (efektivnaSirina - ostatakKuta) / 2;
         }
 
-        // NOVO: Proračun startne X točke kombiniranjem automatske simetrije i ručnog kliznog odmaka
         let startnaTockaX = (pocetniPomakX > 0 ? -pocetniPomakX : 0) + this.odmakX;
-        
-        // Osiguravanje da mreža krene prije nulte točke (kako udesno ne bi ostala rupa)
         while (startnaTockaX > 0) {
             startnaTockaX -= efektivnaSirina;
         }
@@ -163,7 +157,6 @@ const MatematikaEngine = {
                 else if (tekuceX + w > sW) { w = sW - tekuceX; }
                 if (tekuceY + h > sH) h = sH - tekuceY;
 
-                // Provjera kolizije (brisanje pločica unutar vrata/prozora)
                 let plocicaPotpunoUnutarOtvora = false;
                 let plocicaSijeceOtvor = false;
 
@@ -258,7 +251,7 @@ const MatematikaEngine = {
         `;
         document.body.appendChild(modalDiv);
     },
-        // Nova metoda dodana na kraj objekta MatematikaEngine:
+
     pokreniTihiZbirniProracun(p) {
         let sW = p.w;
         let sH = p.h;
@@ -300,5 +293,5 @@ const MatematikaEngine = {
         p.izracunCijelih = komada;
         p.kvadratura = (sW * sH) / 10000;
     }
-    
 };
+                
