@@ -35,21 +35,27 @@ const App = {
             return;
         }
 
+        // NOVO: Preuzimanje unesenih formata s pocetnog zaslona
+        const initW = parseFloat(document.getElementById('init-plocica-w').value) || 60;
+        const initH = parseFloat(document.getElementById('init-plocica-h').value) || 30;
+        const initF = parseFloat(document.getElementById('init-fuga').value) || 2;
+
         this.trenutniKlijent = klijentInput;
         this.trenutnaProstorija = prostorijaInput;
         this.aktivnaPovrsinaKey = 'zid1';
         document.getElementById('odabir-povrsine').value = 'zid1';
 
+        // Svi zidovi i pod odmah dobivaju unesene dimenzije za AR live overlay
         this.projektObjekt = {
             klijent: klijentInput,
             prostorija: prostorijaInput,
             povrsine: {
-                zid1: { tip: 'Zid', w: 240, h: 200, popisOtvora: [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2, odmakX: 0 },
-                zid2: { tip: 'Zid', w: 200, h: 200, popisOtvora: [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2, odmakX: 0 },
-                zid3: { tip: 'Zid', w: 240, h: 200, popisOtvora: [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2, odmakX: 0 },
-                zid4: { tip: 'Zid', w: 200, h: 200, popisOtvora: [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2, odmakX: 0 },
-                pod:  { tip: 'Pod',  w: 240, h: 200, popisOtvora: [], plocicaW: 60, plocicaH: 60, fuga: 2, odmakX: 0 },
-                sokl: { tip: 'Sokl', w: 8,    h: 0,   popisOtvora: [], plocicaW: 60, plocicaH: 8,  fuga: 2, odmakX: 0 }
+                zid1: { tip: 'Zid', w: 240, h: 200, popisOtvora: [], hZona: false, vZona: false, plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0 },
+                zid2: { tip: 'Zid', w: 200, h: 200, popisOtvora: [], hZona: false, vZona: false, plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0 },
+                zid3: { tip: 'Zid', w: 240, h: 200, popisOtvora: [], hZona: false, vZona: false, plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0 },
+                zid4: { tip: 'Zid', w: 200, h: 200, popisOtvora: [], hZona: false, vZona: false, plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0 },
+                pod:  { tip: 'Pod',  w: 240, h: 200, popisOtvora: [], plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0 },
+                sokl: { tip: 'Sokl', w: 8,    h: 0,   popisOtvora: [], plocicaW: initW, plocicaH: 8,  fuga: initF, odmakX: 0 }
             }
         };
 
@@ -277,4 +283,4 @@ const App = {
     }
 };
 window.onload = () => App.init();
-            
+                        
