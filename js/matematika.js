@@ -4,7 +4,7 @@ const MatematikaEngine = {
     odmakX: 0, 
     bazaOstataka: [], iskoristeniOstatciCount: 0, potrosenoCijelihPlocica: 0,
 
-    osveziIzObjekta(povrsinaObj) {
+    osvjeziIzObjekta(povrsinaObj) {
         this.trenutnaPovrsina = povrsinaObj;
         
         this.plocicaW = parseFloat(this.trenutnaPovrsina.plocicaW) || 60;
@@ -43,7 +43,7 @@ const MatematikaEngine = {
         this.postaviOdmakX(noviOdmak);
     },
 
-    prikažiDijalogZaOtvor() {
+    prikaziDijalogZaOtvor() {
         const stariModal = document.getElementById('broker-modal');
         if (stariModal) stariModal.remove();
         const modalDiv = document.createElement('div');
@@ -69,11 +69,11 @@ const MatematikaEngine = {
                 </div>
                 <div style="display:flex; gap:10px; margin-bottom:12px;">
                     <div style="flex:1;">
-                        <label style="font-size:10px; color:#6C7A84; font-weight:bold;">ŠIRINA X (cm)</label>
+                        <label style="font-size:10px; color:#6C7A84; font-weight:bold;">SIRINA X (cm)</label>
                         <input type="number" id="modal-otvor-w" value="${jePod?30:70}" style="width:100%; background:#0A0C0E; border:1px solid #343D44; color:#FFF; padding:8px;">
                     </div>
                     <div style="flex:1;">
-                        <label style="font-size:10px; color:#6C7A84; font-weight:bold;">DUŽINA Y (cm)</label>
+                        <label style="font-size:10px; color:#6C7A84; font-weight:bold;">DUZINA Y (cm)</label>
                         <input type="number" id="modal-otvor-h" value="${jePod?30:200}" style="width:100%; background:#0A0C0E; border:1px solid #343D44; color:#FFF; padding:8px;">
                     </div>
                 </div>
@@ -87,7 +87,7 @@ const MatematikaEngine = {
                         <input type="number" id="modal-otvor-y" value="0" style="width:100%; background:#0A0C0E; border:1px solid #343D44; color:#FFF; padding:8px;">
                     </div>
                 </div>
-                <button class="gumb-ostri" style="margin:0; width:100%; background-color:#19242D; border-color:#34495C;" onclick="MatematikaEngine.zakljucajOtvorIzForme()">UBACI NA CRTEŽ</button>
+                <button class="gumb-ostri" style="margin:0; width:100%; background-color:#19242D; border-color:#34495C;" onclick="MatematikaEngine.zakljucajOtvorIzForme()">UBACI NA CRTEZ</button>
             </div>
         `;
         document.body.appendChild(modalDiv);
@@ -172,12 +172,10 @@ const MatematikaEngine = {
                                 plocicaPotpunoUnutarOtvora = true;
                             } else {
                                 plocicaSijeceOtvor = true;
-                                // GEOMETRIJA ZUBA: Računamo gdje točno otvor "grize" pločicu
                                 detaljiZubaOtvora = {
                                     tip: otvor.tip,
                                     izrezW: xPreklapanje,
                                     izrezH: yPreklapanje,
-                                    // Ako je početak preklapanja na početku pločice, izrez je s LIJEVE strane
                                     saLijeveStrane: (Math.abs(Math.max(stvarniX, otvor.x) - stvarniX) < 0.5)
                                 };
                             }
@@ -211,8 +209,7 @@ const MatematikaEngine = {
 
                 let trenutnoW = w - this.fuga; let trenutnoH = (this.trenutnaPovrsina.tip === 'Sokl') ? h : h - this.fuga;
                 
-                // Slanje geometrije zuba izravno na klik prsta
-                plocicaDiv.onclick = () => this.prikaži2DDetaljModal(trenutnoW, trenutnoH, jeRezana, izOstatka, detaljiZubaOtvora);
+                plocicaDiv.onclick = () => this.prikazi2DDetaljModal(trenutnoW, trenutnoH, jeRezana, izOstatka, detaljiZubaOtvora);
                 kontejner.appendChild(plocicaDiv);
                 tekuceX += efektivnaSirina;
             }
@@ -237,7 +234,7 @@ const MatematikaEngine = {
         this.trenutnaPovrsina.kvadratura = (sW * sH) / 10000;
     },
 
-    prikaži2DDetaljModal(w, h, jeRezana, izOstatka, zubOtvora) {
+    prikazi2DDetaljModal(w, h, jeRezana, izOstatka, zubOtvora) {
         const stariModal = document.getElementById('broker-modal');
         if (stariModal) stariModal.remove();
         
@@ -249,30 +246,26 @@ const MatematikaEngine = {
         modalDiv.style.display = 'flex'; modalDiv.style.alignItems = 'center'; modalDiv.style.justifyContent = 'center';
         modalDiv.style.zIndex = '9999';
 
-        let naslovModala = "TVORNIČKI ELEMENT";
+        let naslovModala = "TVORNOVICKI ELEMENT";
         let podaciZubaHtml = "";
         let stilZubaHtml = "";
 
         if (zubOtvora) {
             naslovModala = `IZREZ L ZA ${zubOtvora.tip.toUpperCase()}`;
             let ostatakW = w - zubOtvora.izrezW;
-            let ostatakH = h - zubOtvora.izrezH;
 
             podaciZubaHtml = `
                 <div style="background:#1C2125; padding:10px; font-size:11px; color:#FF5555; font-weight:bold; margin-bottom:10px;">
                     ⚠️ DIMENZIJE L-ZUBA ZA REZANJE:<br>
-                    • Širina zuba (X): ${zubOtvora.izrezW.toFixed(1)} cm<br>
+                    • Sirina zuba (X): ${zubOtvora.izrezW.toFixed(1)} cm<br>
                     • Visina zuba (Y): ${zubOtvora.izrezH.toFixed(1)} cm<br>
-                    • Preostali dio ploče za ugradnju: ${ostatakW.toFixed(1)} cm
+                    • Ostatak za ugradnju: ${ostatakW.toFixed(1)} cm
                 </div>
             `;
 
-            // CRTAMO VIZUALNI ZUB OVISNO O TOME JE LI LIJEVA ILI DESNA ŠPALETA
             if (zubOtvora.saLijeveStrane) {
-                // Vrata su s lijeve strane pločice -> izrezujemo donji lijevi kut
                 stilZubaHtml = `<div style="position:absolute; bottom:0; left:0; width:${(zubOtvora.izrezW/w)*100}%; height:${(zubOtvora.izrezH/h)*100}%; background:#000; border-right:1px dashed #FF5555; border-top:1px dashed #FF5555; display:flex; align-items:center; justify-content:center; font-size:9px; color:#FF5555;">IZREZ</div>`;
             } else {
-                // Vrata su s desne strane pločice -> izrezujemo donji desni kut
                 stilZubaHtml = `<div style="position:absolute; bottom:0; right:0; width:${(zubOtvora.izrezW/w)*100}%; height:${(zubOtvora.izrezH/h)*100}%; background:#000; border-left:1px dashed #FF5555; border-top:1px dashed #FF5555; display:flex; align-items:center; justify-content:center; font-size:9px; color:#FF5555;">IZREZ</div>`;
             }
         } else if (jeRezana) {
@@ -339,3 +332,4 @@ const MatematikaEngine = {
         p.kvadratura = (sW * sH) / 10000;
     }
 };
+                                                                     
