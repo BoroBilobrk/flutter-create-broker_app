@@ -6,20 +6,28 @@ const Kamera = {
         const status = document.getElementById('kamera-status');
         
         try {
-            // Zahtjev za aktivaciju stražnje kamere (environment) s maksimalnom preciznošću
+            // Maknut "exact" - idealno rjesenje za mnostvo straznjih leca na novim mobitelima
             this.stream = await navigator.mediaDevices.getUserMedia({
-                video: { facingMode: { exact: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }
+                video: { 
+                    facingMode: "environment", 
+                    width: { ideal: 1280 }, 
+                    height: { ideal: 720 } 
+                }
             });
             video.srcObject = this.stream;
-            status.innerText = "Kamera aktivna. Postavite ArUco marker u kadar...";
+            status.innerText = "Straznja kamera aktivna. Uperite u crni kvadrat...";
             
-            // Pokretanje ArUco skeniranja u idućem koraku petlje
-            ArucoModul.otpočniDetekciju();
+            ArucoModul.otpocniDetekciju();
         } catch (error) {
-            console.warn("Nema stražnje kamere, prebacujem na standardnu...", error);
-            // Fallback ako se testira preko laptopa/prednje kamere
-            this.stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            video.srcObject = this.stream;
+            try {
+                // Rezervni pokusaj ako je operativni sustav mobitela restriktivan
+                this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+                video.srcObject = this.stream;
+                status.innerText = "Straznja kamera aktivna (osnovni mod)...";
+                ArucoModul.otpocniDetekciju();
+            } catch (err2) {
+                alert("Problem s kamerom: " + err2.message);
+            }
         }
     },
 
@@ -32,7 +40,6 @@ const Kamera = {
     },
 
     uhvatiMjere() {
-        // Kada prepozna marker, povlači automatske mjere i šalje ih u matematiku
         this.zaustavi();
         App.promijeniZaslon('zaslon-radni');
     }
