@@ -40,7 +40,6 @@ const App = {
         this.aktivnaPovrsinaKey = 'zid1';
         document.getElementById('odabir-povrsine').value = 'zid1';
 
-        // NOVO: Inicijalizacija zadanih formata pločica i fuge (u mm) zasebno za zid i pod
         this.projektObjekt = {
             klijent: klijentInput,
             prostorija: prostorijaInput,
@@ -49,7 +48,7 @@ const App = {
                 zid2: { tip: 'Zid', w: 200, h: 200, popisOtvora: [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2 },
                 zid3: { tip: 'Zid', w: 240, h: 200, popisOtvora: [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2 },
                 zid4: { tip: 'Zid', w: 200, h: 200, popisOtvora: [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2 },
-                pod:  { tip: 'Pod',  w: 240, h: 200, popisOtvora: [], plocicaW: 60, plocicaH: 60, fuga: 2 }, // Podne su obično kvadratne
+                pod:  { tip: 'Pod',  w: 240, h: 200, popisOtvora: [], plocicaW: 60, plocicaH: 60, fuga: 2 },
                 sokl: { tip: 'Sokl', w: 8,    h: 0,   popisOtvora: [], plocicaW: 60, plocicaH: 8,  fuga: 2 }
             }
         };
@@ -75,7 +74,6 @@ const App = {
         const lblW = document.getElementById('label-dim-w');
         const lblH = document.getElementById('label-dim-h');
 
-        // Učitavanje dimenzija zida i pločica u input polja ekrana
         document.getElementById('input-zid-w').value = p.w;
         document.getElementById('input-plocica-w').value = p.plocicaW;
         document.getElementById('input-plocica-h').value = p.plocicaH;
@@ -107,7 +105,7 @@ const App = {
         } else if (p.tip === 'Sokl') {
             if (sekcijaZona) sekcijaZona.style.display = 'none';
             if (gumbOtvor) gumbOtvor.style.display = 'none';
-            if (sekcijaFormat) sekcijaFormat.style.display = 'none'; // Sokl ne treba zaseban format panela
+            if (sekcijaFormat) sekcijaFormat.style.display = 'none';
             if (lblW) lblW.innerText = "VISINA SOKLA (cm)";
             if (lblH) lblH.style.display = 'none';
             document.getElementById('input-zid-h').style.display = 'none';
@@ -136,12 +134,10 @@ const App = {
         p.w = parseFloat(document.getElementById('input-zid-w').value) || 0;
         if (p.tip !== 'Sokl') {
             p.h = parseFloat(document.getElementById('input-zid-h').value) || 0;
-            // Spremanje dimenzija pločice i fuge iz polja na ekranu
             p.plocicaW = parseFloat(document.getElementById('input-plocica-w').value) || 60;
             p.plocicaH = parseFloat(document.getElementById('input-plocica-h').value) || 30;
             p.fuga = parseFloat(document.getElementById('input-fuga').value) || 2;
         } else {
-            // Za sokl visina sokla postaje parametar pločice H
             p.plocicaH = p.w;
         }
         
@@ -149,6 +145,27 @@ const App = {
             p.hZona = document.getElementById('check-visina').checked;
             p.vZona = document.getElementById('check-tus').checked;
         }
+
+        // --- AUTOMATSKO PREUZIMANJE DIMENZIJA ZA 3D SOBU I POD ---
+        if (this.aktivnaPovrsinaKey === 'zid1') {
+            // Zid 3 (nasuprotni) dobiva istu širinu i visinu
+            this.projektObjekt.povrsine.zid3.w = p.w;
+            this.projektObjekt.povrsine.zid3.h = p.h;
+            // Pod dobiva širinu (X os) od Zida 1
+            this.projektObjekt.povrsine.pod.w = p.w;
+            // Kopiraj visinu na sve ostale zidove jer su prostorije u pravilu jednako visoke
+            this.projektObjekt.povrsine.zid2.h = p.h;
+            this.projektObjekt.povrsine.zid4.h = p.h;
+        }
+        
+        if (this.aktivnaPovrsinaKey === 'zid2') {
+            // Zid 4 (nasuprotni) dobiva istu širinu i visinu
+            this.projektObjekt.povrsine.zid4.w = p.w;
+            this.projektObjekt.povrsine.zid4.h = p.h;
+            // Pod dobiva duljinu (Y os) od širine Zida 2!
+            this.projektObjekt.povrsine.pod.h = p.w;
+        }
+
         MatematikaEngine.osveziIzObjekta(p);
     },
 
@@ -164,7 +181,7 @@ const App = {
         );
         let kljuc = 'BROKER_COMP_' + this.trenutniKlijent;
         localStorage.setItem(kljuc, JSON.stringify(this.projektObjekt));
-        alert("Kompletna kupaonica (sa svim formatima pločica) spremljena!");
+        alert("Kompletna kupaonica (Svi zidovi, pod i sokl) spremljena!");
     },
 
     učitajProjektIzBaze(idProjekta) {
@@ -180,7 +197,6 @@ const App = {
             
             if (napredniPodaci) {
                 this.projektObjekt = JSON.parse(napredniPodaci);
-                // Provjera i migracija za stare zapise ako nemaju upisane formate
                 Object.keys(this.projektObjekt.povrsine).forEach(k => {
                     let pov = this.projektObjekt.povrsine[k];
                     if (!pov.plocicaW) {
@@ -247,3 +263,4 @@ const App = {
     }
 };
 window.onload = () => App.init();
+        
