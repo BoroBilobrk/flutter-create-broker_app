@@ -6,9 +6,9 @@ const ArucoModul = {
     odrediKrunu(promjerCm) {
         let mm = promjerCm * 10;
         if (mm <= 8) return { oznaka: "Svrdlo O 6-8 mm", kruna: 8 };
-        if (mm <= 37) return { oznaka: "Kruna O 35 mm (Mijesalice)", kruna: 35 };
-        if (mm <= 72) return { oznaka: "Kruna O 68 mm (Uticnice)", kruna: 68 };
-        return { oznaka: "Kruna O 110 mm (WC odvod)", kruna: 110 };
+        if (mm <= 37) return { oznaka: "Kruna O 35 mm", kruna: 35 };
+        if (mm <= 72) return { oznaka: "Kruna O 68 mm", kruna: 68 };
+        return { oznaka: "Kruna O 110 mm", kruna: 110 };
     },
 
     otpocniDetekciju() { this.aktivan = true; this.procesirajOkvir(); },
@@ -35,7 +35,9 @@ const ArucoModul = {
                 let siva = new cv.Mat(); let bluranaSiva = new cv.Mat(); let thresholded = new cv.Mat();
                 cv.cvtColor(src, siva, cv.COLOR_RGBA2GRAY);
                 cv.GaussianBlur(siva, bluranaSiva, new cv.Size(9, 9), 2, 2);
-                cv.threshold(bluranaSiva, thresholded, 100, 255, cv.THRESH_BINARY_INV);
+                
+                // Prosiren i olaksan prag kontrasta za bolji hvat papira u kupaonici
+                cv.threshold(bluranaSiva, thresholded, 90, 255, cv.THRESH_BINARY_INV);
 
                 let contours = new cv.MatVector(); let hierarchy = new cv.Mat();
                 cv.findContours(thresholded, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
@@ -44,7 +46,7 @@ const ArucoModul = {
 
                 for (let i = 0; i < contours.size(); ++i) {
                     let cnt = contours.get(i); let area = cv.contourArea(cnt);
-                    if (area > 6000 && area > maksimalnaPovrsina && area < (canvas.width * canvas.height * 0.8)) {
+                    if (area > 4000 && area > maksimalnaPovrsina && area < (canvas.width * canvas.height * 0.85)) {
                         let approx = new cv.Mat();
                         cv.approxPolyDP(cnt, approx, 0.04 * cv.arcLength(cnt, true), true);
                         if (approx.rows === 4) {
@@ -63,8 +65,19 @@ const ArucoModul = {
                     let stvarniH = Math.round(canvas.height / this.pikselPoCm);
 
                     if (stvarniW > 40 && stvarniW < 500) {
-                        status.innerHTML = `🌐 AR MOD AKTIVAN | DIMENZIJE: ${stvarniW}x${stvarniH} cm`;
+                        status.innerHTML = `🌐 AR RASTER AKTIVAN | DIMENZIJE: ${stvarniW}x${stvarniH} cm`;
+                        status.style.color = "#4EFA9E";
+
+                        // ZAKLJUČAVANJE: Upisujemo izmjerene centimetre direktno u radnu memoriju!
+                        MatematikaEngine.sirinaZida = stvarniW;
+                        MatematikaEngine.visinaZida = stvarniH;
                         
+                        if (App.projektObjekt) {
+                            App.projektObjekt.povrsine.zid1.w = stvarniW;
+                            App.projektObjekt.povrsine.zid1.h = stvarniH;
+                        }
+
+                        // AR crtanje fuge
                         let pW = App.projektObjekt ? App.projektObjekt.povrsine.zid1.plocicaW : 120;
                         let pH = App.projektObjekt ? App.projektObjekt.povrsine.zid1.plocicaH : 60;
                         let f = (App.projektObjekt ? App.projektObjekt.povrsine.zid1.fuga : 2) / 10;
@@ -74,7 +87,6 @@ const ArucoModul = {
                         for (let x = 0; x < canvas.width; x += korakX) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
                         for (let y = canvas.height; y > 0; y -= korakY) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
 
-                        // ISPRAVLJENO: Ne brisemo cijelu bazu otvora, micemo samo stare krune, VRATA OSTAJU!
                         if (App.projektObjekt) {
                             App.projektObjekt.povrsine.zid1.popisOtvora = App.projektObjekt.povrsine.zid1.popisOtvora.filter(o => !o.tip.includes("Kruna"));
                         }
