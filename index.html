@@ -6,6 +6,8 @@
     <title>BRO-KER | Pametni Keramicarski Alat</title>
     <link rel="stylesheet" href="css/stil.css">
     <script async src="https://docs.opencv.org/4.5.4/opencv.js" type="text/javascript"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
 </head>
 <body>
 
@@ -22,7 +24,7 @@
         <section id="zaslon-izbornik" class="zaslon aktivni-zaslon">
             <div class="logo-kontejner" style="margin: 25px 0 15px 0;">
                 <img src="logo.png" alt="BRO-KER" class="glavni-logo-img" style="width:120px; height:120px;">
-                <p class="logo-podnaslov">MULTI-SURFACE ESTIMATION SYSTEM</p>
+                <p class="logo-podnaslov">AUGMENTED REALITY COATING SYSTEM</p>
             </div>
             
             <div class="alat-kartica" style="width:100%; margin-bottom: 20px;">
@@ -31,7 +33,7 @@
                 <input type="text" id="input-prostorija" placeholder="Prostorija (npr. Kupaonica prizemlje)" style="width:100%; background:#0A0C0E; border:1px solid #22282C; color:#FFF; padding:12px; margin-bottom:15px;">
                 
                 <button class="gumb-ostri gumb-potvrda" style="margin-bottom: 10px;" onclick="App.kreirajNoviProjekt('kamera')">
-                    <span class="gumb-ikona">📷</span> SNIMI MJERE KAMEROM
+                    <span class="gumb-ikona">📷</span> POKRENI AR LIVE SKENIRANJE
                 </button>
                 <button class="gumb-ostri" style="margin:0; background-color:#161A1D;" onclick="App.kreirajNoviProjekt('rucno')">
                     <span class="gumb-ikona">📐</span> RUČNI RADNI PROSTOR
@@ -48,11 +50,11 @@
             <div class="video-okvir">
                 <video id="web-kamera" autoplay playsinline></video>
                 <canvas id="aruco-canvas"></canvas>
-                <div class="nstatus" id="kamera-status">Inicijalizacija kamere...</div>
+                <div class="nstatus" id="kamera-status">Inicijalizacija AI modela...</div>
             </div>
             <div class="kontrole-kamere">
                 <button class="gumb-ostri gumb-kontra" onclick="Kamera.zaustavi()">PREKINI</button>
-                <button class="gumb-ostri gumb-potvrda" onclick="Kamera.uhvatiMjere()">ZAKLJUČAJ AUTOMATSKE MJERE</button>
+                <button class="gumb-ostri gumb-potvrda" onclick="Kamera.uhvatiMjere()">ZAKLJUČAJ AR RASTER I RUPE</button>
             </div>
         </section>
 
@@ -128,7 +130,7 @@
             </div>
 
             <button id="gumb-dodaj-otvor" class="gumb-ostri gumb-potvrda" style="margin-bottom: 10px;" onclick="MatematikaEngine.prikaziDijalogZaOtvor()">
-                ➕ DODAJ OTVOR (VRATA / PROZOR / SLIVNIK)
+                ➕ DODAJ OTVOR / KRUNU MANUELNO
             </button>
             <button class="gumb-ostri" style="margin-bottom: 20px; background-color: #1A221D; border-color: #2E5C38; color: #4EFA9E;" onclick="App.spasiTrenutnoStanjeUBazu()">
                 💾 SPREMI PROJEKT U MEMORIJU
