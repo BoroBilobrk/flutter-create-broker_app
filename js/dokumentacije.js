@@ -1,37 +1,43 @@
 const DokumentacijaModul = {
     generisiZbirniTroskovnik(projekt) {
+        if (!projekt || !projekt.povrsine) {
+            alert("Greška: Projekt nema ispravnu strukturu površina.");
+            return;
+        }
+
         const p = projekt.povrsine;
 
-        // Sigurnosni proračun u slučaju da neki tabovi na zidu još nisu ručno pokrenuti
-        let qZid1 = p.zid1.kvadratura || ((p.zid1.w * p.zid1.h) / 10000);
-        let qZid2 = p.zid2.kvadratura || ((p.zid2.w * p.zid2.h) / 10000);
-        let qZid3 = p.zid3.kvadratura || ((p.zid3.w * p.zid3.h) / 10000);
-        let qZid4 = p.zid4.kvadratura || ((p.zid4.w * p.zid4.h) / 10000);
+        // SIGURNOSNA KONTROLA NULE: Ako povlačimo stari projekt, napuni nule automatizmom
+        let qZid1 = p.zid1.kvadratura || ((p.zid1.w * p.zid1.h) / 10000) || 0;
+        let qZid2 = p.zid2.kvadratura || ((p.zid2.w * p.zid2.h) / 10000) || 0;
+        let qZid3 = p.zid3.kvadratura || ((p.zid3.w * p.zid3.h) / 10000) || 0;
+        let qZid4 = p.zid4.kvadratura || ((p.zid4.w * p.zid4.h) / 10000) || 0;
 
-        let cZid1 = p.zid1.izracunCijelih || Math.ceil(qZid1 / ((p.zid1.plocicaW * p.zid1.plocicaH) / 10000));
-        let cZid2 = p.zid2.izracunCijelih || Math.ceil(qZid2 / ((p.zid2.plocicaW * p.zid2.plocicaH) / 10000));
-        let cZid3 = p.zid3.izracunCijelih || Math.ceil(qZid3 / ((p.zid3.plocicaW * p.zid3.plocicaH) / 10000));
-        let cZid4 = p.zid4.izracunCijelih || Math.ceil(qZid4 / ((p.zid4.plocicaW * p.zid4.plocicaH) / 10000));
+        let fmtZidW = p.zid1.plocicaW || 60;
+        let fmtZidH = p.zid1.plocicaH || 30;
+        let fgZid = p.zid1.fuga || 2;
+
+        let cZid1 = p.zid1.izracunCijelih || Math.ceil(qZid1 / ((fmtZidW * fmtZidH) / 10000)) || 0;
+        let cZid2 = p.zid2.izracunCijelih || Math.ceil(qZid2 / ((fmtZidW * fmtZidH) / 10000)) || 0;
+        let cZid3 = p.zid3.izracunCijelih || Math.ceil(qZid3 / ((fmtZidW * fmtZidH) / 10000)) || 0;
+        let cZid4 = p.zid4.izracunCijelih || Math.ceil(qZid4 / ((fmtZidW * fmtZidH) / 10000)) || 0;
 
         let m2Zidovi = qZid1 + qZid2 + qZid3 + qZid4;
         let komZidovi = cZid1 + cZid2 + cZid3 + cZid4;
 
-        let m2Pod = p.pod.kvadratura || ((p.pod.w * p.pod.h) / 10000);
-        let komPod = p.pod.izracunCijelih || Math.ceil(m2Pod / ((p.pod.plocicaW * p.pod.plocicaH) / 10000));
+        let m2Pod = p.pod.kvadratura || ((p.pod.w * p.pod.h) / 10000) || 0;
+        let komPod = p.pod.izracunCijelih || Math.ceil(m2Pod / (((p.pod.plocicaW || 60) * (p.pod.plocicaH || 60)) / 10000)) || 0;
 
-        let opseg = p.zid1.w + p.zid2.w + p.zid3.w + p.zid4.w;
+        let opseg = (p.zid1.w || 240) + (p.zid2.w || 200) + (p.zid3.w || 240) + (p.zid4.w || 200);
         let dužinaSokla = p.sokl.h || opseg; 
-        let komSokla = p.sokl.izracunCijelih || Math.ceil(dužinaSokla / p.sokl.plocicaW);
+        let komSokla = p.sokl.izracunCijelih || Math.ceil(dužinaSokla / (p.sokl.plocicaW || 60)) || 0;
 
-        // Ako stari prikaz već negdje postoji na ekranu, ukloni ga
         const stariPrikaz = document.getElementById('print-overlay');
         if (stariPrikaz) stariPrikaz.remove();
 
-        // STVARANJE OVERLAY KONTEJNERA (Prikazuje se unutar istog prozora)
         const overlay = document.createElement('div');
         overlay.id = 'print-overlay';
         
-        // Stilovi koji pretvaraju ekran u čist bijeli list papira
         overlay.style.position = 'fixed';
         overlay.style.top = '0'; overlay.style.left = '0';
         overlay.style.width = '100%'; overlay.style.height = '100%';
@@ -52,7 +58,7 @@ const DokumentacijaModul = {
                 }
             </style>
 
-            <div class="no-print" style="display:flex; justify-content:space-between; margin-bottom:30px; background:#111417; padding:12px; margin:-24px -24px 24px -24px; border-bottom:1px solid #22282C;">
+            <div class="no-print" style="display:flex; justify-content:space-between; margin-bottom:30px; background:#111417; padding:12px; margin:-24px -24px 24px -24px;">
                 <button style="background:#14281E; color:#4EFA9E; border:1px solid #2E5C43; padding:12px 20px; font-weight:bold; font-size:11px; letter-spacing:1px; cursor:pointer;" onclick="window.print()">🖨️ POKRENI PRINT / PDF</button>
                 <button style="background:#2C3236; color:#8C9BA5; border:1px solid #343D44; padding:12px 20px; font-weight:bold; font-size:11px; letter-spacing:1px; cursor:pointer;" onclick="document.getElementById('print-overlay').remove()">✕ ZATVORI</button>
             </div>
@@ -69,7 +75,7 @@ const DokumentacijaModul = {
                 Sustav optimizacije: BRO-KER Multi-Surface 3D CAD Engine
             </div>
 
-            <h3 style="font-size:13px; text-transform:uppercase; margin-top:30px; color:#111; letter-spacing:0.5px;">1. SPECIFIKACIJA ZIDOVA (Format: ${p.zid1.plocicaW}x${p.zid1.plocicaH} cm)</h3>
+            <h3 style="font-size:13px; text-transform:uppercase; margin-top:30px; color:#111; letter-spacing:0.5px;">1. SPECIFIKACIJA ZIDOVA (Format: ${fmtZidW}x${fmtZidH} cm | Fuga: ${fgZid} mm)</h3>
             <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
                 <thead>
                     <tr style="background:#2C3236; color:#FFFFFF; text-transform:uppercase; font-size:10px; letter-spacing:0.5px;"><th style="padding:10px; text-align:left;">Opis površine</th><th style="padding:10px; text-align:left;">Neto kvadratura</th><th style="padding:10px; text-align:left;">Potrebno pločica</th></tr>
@@ -89,8 +95,8 @@ const DokumentacijaModul = {
                     <tr style="background:#2C3236; color:#FFFFFF; text-transform:uppercase; font-size:10px; letter-spacing:0.5px;"><th style="padding:10px; text-align:left;">Tip površine</th><th style="padding:10px; text-align:left;">Dimenzije / Opseg</th><th style="padding:10px; text-align:left;">Izračunata količina</th></tr>
                 </thead>
                 <tbody>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Podna površina (Neto format: ${p.pod.plocicaW}x${p.pod.plocicaH} cm)</td><td style="padding:10px;">${p.pod.w} x ${p.pod.h} cm</td><td style="padding:10px;">${m2Pod.toFixed(2)} m² (${komPod} kom)</td></tr>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Sokl (Linearni metri oko sobe)</td><td style="padding:10px;">Opseg kupaonice: ${(dužinaSokla/100).toFixed(2)} m</td><td style="padding:10px;">${komSokla} komada (Visina: ${p.sokl.w} cm)</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Podna površina (Neto format: ${p.pod.plocicaW || 60}x${p.pod.plocicaH || 60} cm)</td><td style="padding:10px;">${p.pod.w || 240} x ${p.pod.h || 200} cm</td><td style="padding:10px;">${m2Pod.toFixed(2)} m² (${komPod} kom)</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Sokl (Linearni metri oko sobe)</td><td style="padding:10px;">Opseg kupaonice: ${(dužinaSokla/100).toFixed(2)} m</td><td style="padding:10px;">${komSokla} komada (Visina: ${p.sokl.w || 8} cm)</td></tr>
                 </tbody>
             </table>
 
@@ -98,8 +104,8 @@ const DokumentacijaModul = {
                 ZAKLJUČAK SPECIJALIZIRANE NARUDŽBE
             </div>
             <div style="border:2px solid #2C3236; padding:20px; font-size:14px; line-height:1.9; color:#000;">
-                • Ukupno zidne keramike za salon (format ${p.zid1.plocicaW}x${p.zid1.plocicaH} cm): <strong>${m2Zidovi.toFixed(2)} m² (${komZidovi} kom)</strong><br>
-                • Ukupno podne keramike za salon (format ${p.pod.plocicaW}x${p.pod.plocicaH} cm): <strong>${m2Pod.toFixed(2)} m² (${komPod} kom)</strong><br>
+                • Ukupno zidne keramike za nalog: <strong>${m2Zidovi.toFixed(2)} m² (${komZidovi} kom)</strong><br>
+                • Ukupno podne keramike za nalog: <strong>${m2Pod.toFixed(2)} m² (${komPod} kom)</strong><br>
                 • Ukupno komada za rezanje sokla: <strong>${komSokla} kom</strong>
             </div>
         `;
