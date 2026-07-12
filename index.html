@@ -62,24 +62,8 @@
             <div id="lista-projekata" style="width:100%; display:flex; flex-direction:column; gap:8px;"></div>
         </section>
 
-        <section id="zaslon-kamera" class="zaslon" style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:#000; z-index:99999; display:none;">
-            <video id="web-kamera" autoplay playsinline style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0;"></video>
-            <canvas id="aruco-canvas" style="width:100%; height:100%; object-fit:cover; position:absolute; top:0; left:0; pointer-events:none;"></canvas>
-            
-            <div id="kamera-status" style="position:absolute; top:20px; left:5%; width:90%; background:rgba(10,12,14,0.95); border:1px solid #22282C; color:#FFF; padding:12px; font-size:11px; font-weight:bold; text-align:center; box-sizing:border-box;">Inicijalizacija leca...</div>
-            
-            <div style="position:absolute; bottom:30px; left:5%; width:90%; display:flex; flex-direction:column; gap:10px; box-sizing:border-box;">
-                <button class="gumb-ostri" style="margin:0; width:100%; background:rgba(31,42,51,0.9); border-color:#34495C; color:#FFF;" onclick="Kamera.ciklirajLecu()">
-                    🔄 PROMIJENI LEĆU (0.5x / 1x)
-                </button>
-                <div style="display:flex; gap:10px; width:100%;">
-                    <button class="gumb-ostri gumb-kontra" style="margin:0; flex:1;" onclick="Kamera.zaustavi()">PREKINI</button>
-                    <button class="gumb-ostri gumb-potvrda" style="margin:0; flex:2;" onclick="Kamera.uhvatiMjere()">ZAKLJUČAJ AR RASTER I RUPE</button>
-                </div>
-            </div>
-        </section>
-
         <section id="zaslon-radni" class="zaslon">
+            
             <div style="width:100%; margin-bottom: 12px;">
                 <label style="font-size:10px; color:#6C7A84; font-weight:bold; display:block; margin-bottom:4px;">AKTIVNA POVRŠINA ZA OBRADU</label>
                 <select id="odabir-povrsine" style="width:100%; background:#161A1D; border:1px solid #343D44; color:#4EFA9E; padding:12px; font-weight:bold; font-size:13px; letter-spacing:1px;" onchange="App.promijeniAktivnuPovrsinu(this.value)">
@@ -164,10 +148,28 @@
 
     </main>
 
+    <section id="zaslon-kamera" style="position:fixed !important; top:0 !important; left:0 !important; width:100vw !important; height:100vh !important; background:#000000 !important; z-index:999999 !important; display:none; box-sizing:border-box !important;">
+        <video id="web-kamera" autoplay playsinline style="width:100% !important; height:100% !important; object-fit:cover !important; position:absolute !important; top:0 !important; left:0 !important;"></video>
+        <canvas id="aruco-canvas" style="width:100% !important; height:100% !important; object-fit:cover !important; position:absolute !important; top:0 !important; left:0 !important; pointer-events:none !important;"></canvas>
+        
+        <div id="kamera-status" style="position:absolute !important; top:20px !important; left:5% !important; width:90% !important; background:rgba(10,12,14,0.9) !important; border:1px solid #343D44 !important; color:#FFF !important; padding:12px !important; font-size:11px !important; font-weight:bold !important; text-align:center !important; box-sizing:border-box !important; z-index:1000000 !important;">Inicijalizacija leca...</div>
+        
+        <div style="position:absolute !important; bottom:30px !important; left:5% !important; width:90% !important; display:flex !important; flex-direction:column !important; gap:10px !important; box-sizing:border-box !important; z-index:1000000 !important;">
+            <button class="gumb-ostri" style="margin:0; width:100%; background:rgba(31,42,51,0.95); border-color:#34495C; color:#FFF;" onclick="Kamera.ciklirajLecu()">
+                🔄 PROMIJENI LEĆU (0.5x / 1x)
+            </button>
+            <div style="display:flex !important; gap:10px !important; width:100% !important;">
+                <button class="gumb-ostri gumb-kontra" style="margin:0; flex:1;" onclick="Kamera.zaustavi()">PREKINI</button>
+                <button class="gumb-ostri gumb-potvrda" style="margin:0; flex:2;" onclick="Kamera.uhvatiMjere()">ZAKLJUČAJ AR RASTER I RUPE</button>
+            </div>
+        </div>
+    </section>
+
     <script src="js/baza.js"></script>
     <script src="js/matematika.js"></script>
     <script src="js/kamera.js"></script>
     <script src="js/aruco.js"></script>
     <script src="js/app.js"></script>
 </body>
-</html>
+            </html>
+            
