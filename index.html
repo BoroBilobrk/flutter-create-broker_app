@@ -20,16 +20,22 @@
     <main class="broker-container">
         
         <section id="zaslon-izbornik" class="zaslon aktivni-zaslon">
-            <div class="logo-kontejner" style="margin: 30px 0 20px 0;">
-                <img src="logo.png" alt="BRO-KER" class="glavni-logo-img" style="width:130px; height:130px;">
+            <div class="logo-kontejner" style="margin: 25px 0 15px 0;">
+                <img src="logo.png" alt="BRO-KER" class="glavni-logo-img" style="width:120px; height:120px;">
                 <p class="logo-podnaslov">MULTI-SURFACE ESTIMATION SYSTEM</p>
             </div>
             
             <div class="alat-kartica" style="width:100%; margin-bottom: 20px;">
-                <span style="font-size:10px; font-weight:700; color:#6C7A84; display:block; margin-bottom:10px; letter-spacing:1px;">NOVI PROJEKT</span>
+                <span style="font-size:10px; font-weight:700; color:#6C7A84; display:block; margin-bottom:10px; letter-spacing:1px;">OTVORI NOVI PROJEKTNI NALOG</span>
                 <input type="text" id="input-klijent" placeholder="Ime klijenta / Lokacija" style="width:100%; background:#0A0C0E; border:1px solid #22282C; color:#FFF; padding:12px; margin-bottom:10px;">
-                <input type="text" id="input-prostorija" placeholder="Prostorija (npr. Kupaonica kat)" style="width:100%; background:#0A0C0E; border:1px solid #22282C; color:#FFF; padding:12px; margin-bottom:15px;">
-                <button class="gumb-ostri" style="margin:0;" onclick="App.kreirajNoviProjekt()">OTVORI PROJEKTNI NALOG</button>
+                <input type="text" id="input-prostorija" placeholder="Prostorija (npr. Kupaonica prizemlje)" style="width:100%; background:#0A0C0E; border:1px solid #22282C; color:#FFF; padding:12px; margin-bottom:15px;">
+                
+                <button class="gumb-ostri gumb-potvrda" style="margin-bottom: 10px;" onclick="App.kreirajNoviProjekt('kamera')">
+                    <span class="gumb-ikona">📷</span> SNIMI MJERE KAMEROM
+                </button>
+                <button class="gumb-ostri" style="margin:0; background-color:#161A1D;" onclick="App.kreirajNoviProjekt('rucno')">
+                    <span class="gumb-ikona">📐</span> RUČNI RADNI PROSTOR
+                </button>
             </div>
 
             <div style="width:100%; text-align:left; margin-bottom:10px;">
@@ -91,7 +97,7 @@
             </div>
 
             <div id="sekcija-pomicanje-rastera" class="alat-kartica" style="width:100%; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px;">
-                <label style="font-size:10px; color:#6C7A84; font-weight:bold; letter-spacing:1px;">RUČNO PORAVNANJE MREŽE (LIJEVO / DESNO)</label>
+                <label style="font-size:10px; color:#6C7A84; font-weight:bold; letter-spacing:1px;">RUČNO PORAVNANJE MREŽE</label>
                 <div style="display: flex; align-items: center; gap: 10px;">
                     <button class="gumb-ostri" style="margin:0; padding:10px; width:45px; background:#161A1D;" onclick="MatematikaEngine.nudgeRaster(-0.5)">◀</button>
                     <input type="range" id="slider-odmak-x" min="0" max="60" value="0" step="0.5" style="flex:1; accent-color:#4EFA9E; height:6px; cursor:pointer;" oninput="MatematikaEngine.postaviOdmakX(this.value)">
