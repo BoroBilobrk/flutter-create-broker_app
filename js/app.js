@@ -67,9 +67,13 @@ const App = {
     },
 
     ucitajPovrsinuUUrednik() {
-        if (!this.projektObjekt || !this.projektObjekt.povrsine) return;
+        if (!this.projektObjekt) return;
         
-        const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
+        // POPRAVAK ZA STARE PROJEKTE: Ako u bazi stoji povrsines sa 's', spoji ga na pravi kljuc
+        let komponente = this.projektObjekt.povrsine || this.projektObjekt.povrsines;
+        if (!komponente) return;
+        
+        const p = komponente[this.aktivnaPovrsinaKey];
         if (!p) return;
         
         const sekcijaZona = document.getElementById('sekcija-zona');
@@ -80,9 +84,9 @@ const App = {
         const lblH = document.getElementById('label-dim-h');
 
         document.getElementById('input-zid-w').value = p.w;
-        document.getElementById('input-plocica-w').value = p.plocicaW;
-        document.getElementById('input-plocica-h').value = p.plocicaH;
-        document.getElementById('input-fuga').value = p.fuga;
+        document.getElementById('input-plocica-w').value = p.plocicaW || 60;
+        document.getElementById('input-plocica-h').value = p.plocicaH || 30;
+        document.getElementById('input-fuga').value = p.fuga || 2;
 
         if (p.tip === 'Zid') {
             document.getElementById('input-zid-h').value = p.h;
@@ -96,8 +100,8 @@ const App = {
             if (lblW) lblW.innerText = "ŠIRINA ZIDA (cm)";
             if (lblH) lblH.innerText = "VISINA ZIDA (cm)";
             
-            document.getElementById('check-visina').checked = p.hZona;
-            document.getElementById('check-tus').checked = p.vZona;
+            document.getElementById('check-visina').checked = p.hZona || false;
+            document.getElementById('check-tus').checked = p.vZona || false;
         } else if (p.tip === 'Pod') {
             document.getElementById('input-zid-h').value = p.h;
             if (sekcijaZona) sekcijaZona.style.display = 'none';
@@ -113,15 +117,14 @@ const App = {
             if (sekcijaZona) sekcijaZona.style.display = 'none';
             if (gumbOtvor) gumbOtvor.style.display = 'none';
             if (sekcijaFormat) sekcijaFormat.style.display = 'none';
-            if (sekcijaPomicanje) sekcijaPomicanje.style.display = 'none';
             if (lblW) lblW.innerText = "VISINA SOKLA (cm)";
             if (lblH) lblH.style.display = 'none';
             document.getElementById('input-zid-h').style.display = 'none';
             
-            let opseg = (parseFloat(this.projektObjekt.povrsine.zid1.w) || 0) + 
-                        (parseFloat(this.projektObjekt.povrsine.zid2.w) || 0) + 
-                        (parseFloat(this.projektObjekt.povrsine.zid3.w) || 0) + 
-                        (parseFloat(this.projektObjekt.povrsine.zid4.w) || 0);
+            let opseg = (parseFloat(komponente.zid1.w) || 0) + 
+                        (parseFloat(komponente.zid2.w) || 0) + 
+                        (parseFloat(komponente.zid3.w) || 0) + 
+                        (parseFloat(komponente.zid4.w) || 0);
             p.h = opseg;
         }
 
@@ -130,13 +133,15 @@ const App = {
             document.getElementById('input-zid-h').style.display = 'block';
         }
 
-        MatematikaEngine.osveziIzObjekta(p);
+        MatematikaEngine.osvjeziIzObjekta(p);
     },
 
     sacuvajPoljaUObjekt() {
-        if (!this.projektObjekt || !this.projektObjekt.povrsine) return;
+        if (!this.projektObjekt) return;
+        let komponente = this.projektObjekt.povrsine || this.projektObjekt.povrsines;
+        if (!komponente) return;
         
-        const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
+        const p = komponente[this.aktivnaPovrsinaKey];
         if (!p) return;
         
         p.w = parseFloat(document.getElementById('input-zid-w').value) || 0;
@@ -155,38 +160,43 @@ const App = {
         }
 
         if (this.aktivnaPovrsinaKey === 'zid1') {
-            this.projektObjekt.povrsine.zid3.w = p.w;
-            this.projektObjekt.povrsine.zid3.h = p.h;
-            this.projektObjekt.povrsine.pod.w = p.w;
-            this.projektObjekt.povrsine.zid2.h = p.h;
-            this.projektObjekt.povrsine.zid4.h = p.h;
+            komponente.zid3.w = p.w;
+            komponente.zid3.h = p.h;
+            komponente.pod.w = p.w;
+            komponente.zid2.h = p.h;
+            komponente.zid4.h = p.h;
         }
         
         if (this.aktivnaPovrsinaKey === 'zid2') {
-            this.projektObjekt.povrsine.zid4.w = p.w;
-            this.projektObjekt.povrsine.zid4.h = p.h;
-            this.projektObjekt.povrsine.pod.h = p.w;
+            komponente.zid4.w = p.w;
+            komponente.zid4.h = p.h;
+            komponente.pod.h = p.w;
         }
 
-        MatematikaEngine.osveziIzObjekta(p);
+        MatematikaEngine.osvjeziIzObjekta(p);
     },
 
     spasiTrenutnoStanjeUBazu() {
         this.sacuvajPoljaUObjekt();
+        let komponente = this.projektObjekt.povrsine || this.projektObjekt.povrsines;
+        
+        // Prisili bazu da od sad sprema ispravan kljuc
+        this.projektObjekt.povrsine = komponente;
+
         BazaModul.spasiProjekt(
             this.trenutniKlijent,
             this.trenutnaProstorija,
-            this.projektObjekt.povrsine.zid1.w,
-            this.projektObjekt.povrsine.zid1.h,
-            this.projektObjekt.povrsine.zid1.popisOtvora,
+            komponente.zid1.w,
+            komponente.zid1.h,
+            komponente.zid1.popisOtvora,
             this.projektObjekt
         );
         let kljuc = 'BROKER_COMP_' + this.trenutniKlijent;
         localStorage.setItem(kljuc, JSON.stringify(this.projektObjekt));
-        alert("Kompletna kupaonica (Svi zidovi, pod i sokl) spremljena!");
+        alert("Kompletna kupaonica spremljena!");
     },
 
-    učitajProjektIzBaze(idProjekta) {
+    ucitajProjektIzBaze(idProjekta) {
         const projekti = BazaModul.dohvatiSveProjekte();
         const staro = projekti.find(proj => proj.id === idProjekta);
         
@@ -199,9 +209,14 @@ const App = {
             
             if (napredniPodaci) {
                 this.projektObjekt = JSON.parse(napredniPodaci);
+                // Krpamo kljuc u letu
+                if (this.projektObjekt.povrsines && !this.projektObjekt.povrsine) {
+                    this.projektObjekt.povrsine = this.projektObjekt.povrsines;
+                }
             } else {
                 this.projektObjekt = {
-                    klijent: staro.klijent, prostorija: staro.prostorija,
+                    klijent: staro.klijent,
+                    prostorija: staro.prostorija,
                     povrsine: {
                         zid1: { tip: 'Zid', w: staro.sirinaZida, h: staro.visinaZida, popisOtvora: staro.popisOtvora || [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2, odmakX: 0 },
                         zid2: { tip: 'Zid', w: 200, h: staro.visinaZida, popisOtvora: [], hZona: false, vZona: false, plocicaW: 60, plocicaH: 30, fuga: 2, odmakX: 0 },
@@ -233,7 +248,7 @@ const App = {
             kartica.style.display = 'flex'; kartica.style.justifyContent = 'space-between'; kartica.style.alignItems = 'center';
             kartica.style.marginBottom = '6px';
             kartica.innerHTML = `
-                <div onclick="App.učitajProjektIzBaze('${p.id}')" style="cursor:pointer; flex:1; text-align:left;">
+                <div onclick="App.ucitajProjektIzBaze('${p.id}')" style="cursor:pointer; flex:1; text-align:left;">
                     <div style="font-weight:bold; font-size:13px; color:#FFF; margin-bottom:4px;">${p.klijent}</div>
                     <div style="font-size:11px; color:#8C9BA5;">${p.prostorija} | 3D Soba</div>
                 </div>
@@ -244,7 +259,7 @@ const App = {
     },
 
     obrisiProjektIzBaze(idProjekta) {
-        if (confirm("Jeste li sigurni da želite obrisati ovu cijelu kupaonicu?")) {
+        if (confirm("Jeste li sigurni da zelite obrisati ovu cijelu kupaonicu?")) {
             BazaModul.izbrisiProjekt(idProjekta);
             this.osvjeziListuSpremljenihProjekata();
         }
@@ -252,9 +267,10 @@ const App = {
 
     otvoriDokumentaciju() {
         this.sacuvajPoljaUObjekt();
+        let komponente = this.projektObjekt.povrsine || this.projektObjekt.povrsines;
         
-        Object.keys(this.projektObjekt.povrsine).forEach(kljuc => {
-            let povrsina = this.projektObjekt.povrsine[kljuc];
+        Object.keys(komponente).forEach(kljuc => {
+            let povrsina = komponente[kljuc];
             MatematikaEngine.pokreniTihiZbirniProracun(povrsina);
         });
 
@@ -262,4 +278,3 @@ const App = {
     }
 };
 window.onload = () => App.init();
-            
