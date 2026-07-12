@@ -1,14 +1,14 @@
 const ArucoModul = {
     aktivan: false,
-    stvarneDimenzijeMarkera: 10.0, 
+    stvarneDimenzijeMarkera: 10.0, // Stvarna velicina unutarnjeg crnog kvadrata u cm
     pikselPoCm: 0, 
 
     odrediKrunu(promjerCm) {
         let mm = promjerCm * 10;
         if (mm <= 8) return { oznaka: "Svrdlo O 6-8 mm", kruna: 8 };
-        if (mm <= 37) return { oznaka: "Kruna O 35 mm", kruna: 35 };
-        if (mm <= 72) return { oznaka: "Kruna O 68 mm", kruna: 68 };
-        return { oznaka: "Kruna O 110 mm", kruna: 110 };
+        if (mm <= 37) return { oznaka: "Kruna O 35 mm (Mijesalice)", kruna: 35 };
+        if (mm <= 72) return { oznaka: "Kruna O 68 mm (Uticnice)", kruna: 68 };
+        return { oznaka: "Kruna O 110 mm (WC odvod)", kruna: 110 };
     },
 
     otpocniDetekciju() { this.aktivan = true; this.procesirajOkvir(); },
@@ -32,15 +32,17 @@ const ArucoModul = {
         if (typeof cv !== 'undefined' && cv.Mat) {
             try {
                 let src = cv.imread(canvas);
-                let siva = new cv.Mat(); let bluranaSiva = new cv.Mat(); let thresholded = new cv.Mat();
+                let siva = new cv.Mat(); let bluranaSiva = new cv.Mat(); let thresholded = new cv.Mat(); let cisceno = new cv.Mat();
+                
                 cv.cvtColor(src, siva, cv.COLOR_RGBA2GRAY);
                 cv.GaussianBlur(siva, bluranaSiva, new cv.Size(9, 9), 2, 2);
+                cv.adaptiveThreshold(bluranaSiva, thresholded, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 11, 2);
                 
-                // Prosiren i olaksan prag kontrasta za bolji hvat papira u kupaonici
-                cv.threshold(bluranaSiva, thresholded, 90, 255, cv.THRESH_BINARY_INV);
+                let M_mat = cv.Mat.ones(3, 3, cv.CV_8U);
+                cv.morphologyEx(thresholded, cisceno, cv.MORPH_CLOSE, M_mat);
 
                 let contours = new cv.MatVector(); let hierarchy = new cv.Mat();
-                cv.findContours(thresholded, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
+                cv.findContours(cisceno, contours, hierarchy, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE);
 
                 let kalibriran = false; let maksimalnaPovrsina = 0; let najboljiKutevi = null;
 
@@ -57,62 +59,99 @@ const ArucoModul = {
                     }
                 }
 
+                // AKO JE PRONAĐEN I KALIBRIRAN PROSTOR ZIDA
                 if (kalibriran && najboljiKutevi) {
-                    let sirinaPiksela = Math.sqrt(Math.pow(najboljiKutevi[2] - najboljiKutevi[0], 2) + Math.pow(najboljiKutevi[3] - najboljiKutevi[1], 2));
-                    this.pikselPoCm = sirinaPiksela / this.stvarneDimenzijeMarkera;
+                    let x0 = najboljiKutevi[0], y0 = najboljiKutevi[1];
+                    let x1 = najboljiKutevi[2], y1 = najboljiKutevi[3];
+                    let x2 = najboljiKutevi[4], y2 = najboljiKutevi[5];
+                    let x3 = najboljiKutevi[6], y3 = najboljiKutevi[7];
 
+                    // Nacrtaj tanki zeleni laserski okvir oko kalibracijskog papira
+                    ctx.beginPath(); ctx.lineWidth = 3; ctx.strokeStyle = "#4EFA9E";
+                    ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.lineTo(x2, y2); ctx.lineTo(x3, y3); ctx.closePath(); ctx.stroke();
+
+                    // MATRICA 3D PROJEKCIJE: Mapiramo zgnjecene kuteve s ekrana u stvarni kvadratni prostor zida
+                    let srcPts = cv.matFromArray(4, 1, cv.CV_32FC2, [x0, y0, x1, y1, x2, y2, x3, y3]);
+                    let dstPts = cv.matFromArray(4, 1, cv.CV_32FC2, [0, 0, this.stvarneDimenzijeMarkera, 0, this.stvarneDimenzijeMarkera, this.stvarneDimenzijeMarkera, 0, this.stvarneDimenzijeMarkera]);
+
+                    // Racunamo homografsku matricu koja u letu ispravlja perspektivu i kut gledanja
+                    let homografijaMatrica = cv.getPerspectiveTransform(dstPts, srcPts);
+
+                    let sirinaPiksela = Math.sqrt(Math.pow(x1 - x0, 2) + Math.pow(y1 - y0, 2));
+                    this.pikselPoCm = sirinaPiksela / this.stvarneDimenzijeMarkera;
                     let stvarniW = Math.round(canvas.width / this.pikselPoCm);
                     let stvarniH = Math.round(canvas.height / this.pikselPoCm);
 
-                    if (stvarniW > 40 && stvarniW < 500) {
-                        status.innerHTML = `🌐 AR RASTER AKTIVAN | DIMENZIJE: ${stvarniW}x${stvarniH} cm`;
-                        status.style.color = "#4EFA9E";
+                    status.innerHTML = `💎 ENTERPRISE AR SYSTEM | 3D PERSPECTIVE LOCK SPREMAN`;
+                    status.style.color = "#4EFA9E";
 
-                        // ZAKLJUČAVANJE: Upisujemo izmjerene centimetre direktno u radnu memoriju!
-                        MatematikaEngine.sirinaZida = stvarniW;
-                        MatematikaEngine.visinaZida = stvarniH;
-                        
-                        if (App.projektObjekt) {
-                            App.projektObjekt.povrsine.zid1.w = stvarniW;
-                            App.projektObjekt.povrsine.zid1.h = stvarniH;
-                        }
-
-                        // AR crtanje fuge
-                        let pW = App.projektObjekt ? App.projektObjekt.povrsine.zid1.plocicaW : 120;
-                        let pH = App.projektObjekt ? App.projektObjekt.povrsine.zid1.plocicaH : 60;
-                        let f = (App.projektObjekt ? App.projektObjekt.povrsine.zid1.fuga : 2) / 10;
-                        
-                        let korakX = (pW + f) * this.pikselPoCm; let korakY = (pH + f) * this.pikselPoCm;
-                        ctx.strokeStyle = "rgba(78, 250, 158, 0.4)"; ctx.lineWidth = 2;
-                        for (let x = 0; x < canvas.width; x += korakX) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke(); }
-                        for (let y = canvas.height; y > 0; y -= korakY) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
-
-                        if (App.projektObjekt) {
-                            App.projektObjekt.povrsine.zid1.popisOtvora = App.projektObjekt.povrsine.zid1.popisOtvora.filter(o => !o.tip.includes("Kruna"));
-                        }
-
-                        let krugovi = new cv.Mat();
-                        cv.HoughCircles(bluranaSiva, krugovi, cv.HOUGH_GRADIENT, 1, 50, 100, 55, 12, 100);
-                        let brojRupa = Math.min(krugovi.cols, 4);
-
-                        for (let i = 0; i < brojRupa; ++i) {
-                            let x = krugovi.data32F[i * 3]; let y = krugovi.data32F[i * 3 + 1]; let r = krugovi.data32F[i * 3 + 2];
-                            let rupaPromjerCm = (r * 2) / this.pikselPoCm;
-                            let preporuka = this.odrediKrunu(rupaPromjerCm);
-
-                            ctx.beginPath(); ctx.arc(x, y, r, 0, 2 * Math.PI); ctx.lineWidth = 4; ctx.strokeStyle = "#FF5555"; ctx.stroke();
-                            
-                            if (App.projektObjekt) {
-                                App.projektObjekt.povrsine.zid1.popisOtvora.push({
-                                    tip: preporuka.oznaka, w: rupaPromjerCm, h: rupaPromjerCm, x: (x / this.pikselPoCm) - (rupaPromjerCm / 2), y: ((canvas.height - y) / this.pikselPoCm) - (rupaPromjerCm / 2)
-                                });
-                            }
-                        }
-                        krugovi.delete();
+                    if (App.projektObjekt) {
+                        App.projektObjekt.povrsine.zid1.w = stvarniW;
+                        App.projektObjekt.povrsine.zid1.h = stvarniH;
                     }
+                    MatematikaEngine.sirinaZida = stvarniW;
+                    MatematikaEngine.visinaZida = stvarniH;
+
+                    // POVLAČENJE TRENUTNOG FORMATA KERAMIKE S POČETNOG ZASLONA
+                    let pW = App.projektObjekt ? App.projektObjekt.povrsine.zid1.plocicaW : 120;
+                    let pH = App.projektObjekt ? App.projektObjekt.povrsine.zid1.plocicaH : 60;
+                    let f = (App.projektObjekt ? App.projektObjekt.povrsine.zid1.fuga : 2) / 10;
+                    let efW = pW + f; let efH = pH + f;
+
+                    ctx.strokeStyle = "rgba(78, 250, 158, 0.55)"; ctx.lineWidth = 3;
+
+                    // Pomocna funkcija koja projektira stvarni centimetar sa zida u piksel na ekranu preko 3D matrice
+                    let projektirajTocku = (realX, realY) => {
+                        let data = homografijaMatrica.data64F;
+                        let px = data[0] * realX + data[1] * realY + data[2];
+                        let py = data[3] * realX + data[4] * realY + data[5];
+                        let pz = data[6] * realX + data[7] * realY + data[8];
+                        return { x: px / pz, y: py / pz };
+                    };
+
+                    // PROJEKTIRAMO VERTIKALNE FUGE U 3D PERSPEKTIVI KOJA PRATI NAGIB MOBITELA
+                    for (let realX = -200; realX <= 400; realX += efW) {
+                        let tStart = projektirajTocku(realX, -250);
+                        let tEnd = projektirajTocku(realX, 450);
+                        ctx.beginPath(); ctx.moveTo(tStart.x, tStart.y); ctx.lineTo(tEnd.x, tEnd.y); ctx.stroke();
+                    }
+                    
+                    // PROJEKTIRAMO HORIZONTALNE FUGE U 3D PERSPEKTIVI
+                    for (let realY = -250; realY <= 450; realY += efH) {
+                        let tStart = projektirajTocku(-200, realY);
+                        let tEnd = projektirajTocku(400, realY);
+                        ctx.beginPath(); ctx.moveTo(tStart.x, tStart.y); ctx.lineTo(tEnd.x, tEnd.y); ctx.stroke();
+                    }
+
+                    // KORAK 3: AI PREPOZNAVANJE INSTALACIJA ZA DIJAMANTNA SVRDLA
+                    if (App.projektObjekt) {
+                        App.projektObjekt.povrsine.zid1.popisOtvora = App.projektObjekt.povrsine.zid1.popisOtvora.filter(o => !o.tip.includes("Kruna"));
+                    }
+
+                    let krugovi = new cv.Mat();
+                    cv.HoughCircles(bluranaSiva, krugovi, cv.HOUGH_GRADIENT, 1, 50, 100, 55, 12, 100);
+                    let brojRupa = Math.min(krugovi.cols, 4);
+
+                    for (let i = 0; i < brojRupa; ++i) {
+                        let cx = krugovi.data32F[i * 3]; let cy = krugovi.data32F[i * 3 + 1]; let r = krugovi.data32F[i * 3 + 2];
+                        let rupaPromjerCm = (r * 2) / this.pikselPoCm;
+                        let preporuka = this.odrediKrunu(rupaPromjerCm);
+
+                        ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI); ctx.lineWidth = 4; ctx.strokeStyle = "#FF5555"; ctx.stroke();
+                        
+                        if (App.projektObjekt) {
+                            App.projektObjekt.povrsine.zid1.popisOtvora.push({
+                                tip: preporuka.oznaka, w: rupaPromjerCm, h: rupaPromjerCm, x: (cx / this.pikselPoCm) - (rupaPromjerCm / 2), y: ((canvas.height - cy) / this.pikselPoCm) - (rupaPromjerCm / 2)
+                            });
+                        }
+                    }
+                    krugovi.delete(); srcPts.delete(); dstPts.delete(); homografijaMatrica.delete();
+                } else {
+                    status.innerText = "Uperite lecu prema BRO-KER kalibracijskoj ploci za aktivaciju 3D AR kuta...";
+                    status.style.color = "#6C7A84";
                 }
-                src.delete(); siva.delete(); bluranaSiva.delete(); thresholded.delete(); contours.delete(); hierarchy.delete();
-            } catch (err) { console.log(err.message); }
+                src.delete(); siva.delete(); bluranaSiva.delete(); thresholded.delete(); cisceno.delete(); contours.delete(); hierarchy.delete(); M_mat.delete();
+            } catch (err) { console.log("Enterprise AR greska: " + err.message); }
         }
         requestAnimationFrame(() => this.procesirajOkvir());
     }
