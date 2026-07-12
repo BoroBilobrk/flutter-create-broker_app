@@ -26,7 +26,7 @@ const App = {
         }
     },
 
-    kreirajNoviProjekt() {
+    kreirajNoviProjekt(modRada) {
         const klijentInput = document.getElementById('input-klijent').value.trim();
         const prostorijaInput = document.getElementById('input-prostorija').value.trim();
 
@@ -53,7 +53,11 @@ const App = {
             }
         };
 
-        this.promijeniZaslon('zaslon-radni');
+        if (modRada === 'kamera') {
+            this.promijeniZaslon('zaslon-kamera');
+        } else {
+            this.promijeniZaslon('zaslon-radni');
+        }
     },
 
     promijeniAktivnuPovrsinu(kljuc) {
@@ -195,12 +199,6 @@ const App = {
             
             if (napredniPodaci) {
                 this.projektObjekt = JSON.parse(napredniPodaci);
-                Object.keys(this.projektObjekt.povrsine).forEach(k => {
-                    let pov = this.projektObjekt.povrsine[k];
-                    if (!pov.plocicaW) {
-                        pov.plocicaW = 60; pov.plocicaH = pov.tip === 'Pod' ? 60 : 30; pov.fuga = 2; pov.odmakX = 0;
-                    }
-                });
             } else {
                 this.projektObjekt = {
                     klijent: staro.klijent, prostorija: staro.prostorija,
@@ -254,7 +252,14 @@ const App = {
 
     otvoriDokumentaciju() {
         this.sacuvajPoljaUObjekt();
+        
+        Object.keys(this.projektObjekt.povrsine).forEach(kljuc => {
+            let povrsina = this.projektObjekt.povrsine[kljuc];
+            MatematikaEngine.pokreniTihiZbirniProracun(povrsina);
+        });
+
         DokumentacijaModul.generisiZbirniTroskovnik(this.projektObjekt);
     }
 };
 window.onload = () => App.init();
+            
