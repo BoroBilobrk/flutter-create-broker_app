@@ -1,6 +1,7 @@
 const MatematikaEngine = {
     trenutnaPovrsina: null,
     plocicaW: 60, plocicaH: 30, fuga: 0.2,
+    odmakX: 0, // NOVO: Trenutna vrijednost ručnog pomaka u cm
     bazaOstataka: [], iskoristeniOstatciCount: 0, potrosenoCijelihPlocica: 0,
 
     osveziIzObjekta(povrsinaObj) {
@@ -9,8 +10,40 @@ const MatematikaEngine = {
         this.plocicaW = parseFloat(this.trenutnaPovrsina.plocicaW) || 60;
         this.plocicaH = parseFloat(this.trenutnaPovrsina.plocicaH) || 30;
         this.fuga = (parseFloat(this.trenutnaPovrsina.fuga) || 2) / 10; 
+        
+        // Učitavanje i sinkronizacija kliznih kontrola s odabranom površinom
+        this.odmakX = parseFloat(this.trenutnaPovrsina.odmakX) || 0;
+        
+        const slider = document.getElementById('slider-odmak-x');
+        const prikaza = document.getElementById('prikaz-odmaka');
+        if (slider) {
+            slider.max = this.plocicaW; // Maksimalni odmak je širina jedne pločice
+            slider.value = this.odmakX;
+        }
+        if (prikaza) prikaza.innerText = this.odmakX.toFixed(1) + ' cm';
 
         this.iscrtajMrezuPlocica();
+    },
+
+    // UPRAVLJANJE KLIZAČEM
+    postaviOdmakX(vrijednost) {
+        this.odmakX = parseFloat(vrijednost) || 0;
+        const prikaza = document.getElementById('prikaz-odmaka');
+        if (prikaza) prikaza.innerText = this.odmakX.toFixed(1) + ' cm';
+        
+        if (this.trenutnaPovrsina) this.trenutnaPovrsina.odmakX = this.odmakX;
+        this.iscrtajMrezuPlocica();
+    },
+
+    // FINO NAMJEŠTANJE TIPKAMA (STRELICAMA)
+    nudgeRaster(iznos) {
+        let noviOdmak = this.odmakX + iznos;
+        if (noviOdmak < 0) noviOdmak = this.plocicaW + iznos; // Wrap ulijevo
+        if (noviOdmak > this.plocicaW) noviOdmak = 0; // Wrap udesno
+        
+        const slider = document.getElementById('slider-odmak-x');
+        if (slider) slider.value = noviOdmak;
+        this.postaviOdmakX(noviOdmak);
     },
 
     prikažiDijalogZaOtvor() {
@@ -92,7 +125,6 @@ const MatematikaEngine = {
         const maxMoguciW = kontejner.parentElement.clientWidth;
         const skala = maxMoguciW / sW;
 
-        // UKLJUČENO POZICIONIRANJE: Ovo fiksira lokaciju elemenata unutar crnog okvira
         kontejner.style.width = (sW * skala) + 'px';
         kontejner.style.height = (sH * skala) + 'px';
         kontejner.style.position = 'relative'; 
@@ -107,9 +139,17 @@ const MatematikaEngine = {
             pocetniPomakX = (efektivnaSirina - ostatakKuta) / 2;
         }
 
+        // NOVO: Proračun startne X točke kombiniranjem automatske simetrije i ručnog kliznog odmaka
+        let startnaTockaX = (pocetniPomakX > 0 ? -pocetniPomakX : 0) + this.odmakX;
+        
+        // Osiguravanje da mreža krene prije nulte točke (kako udesno ne bi ostala rupa)
+        while (startnaTockaX > 0) {
+            startnaTockaX -= efektivnaSirina;
+        }
+
         let tekuceY = 0;
         while (tekuceY < sH) {
-            let tekuceX = pocetniPomakX > 0 ? -pocetniPomakX : 0;
+            let tekuceX = startnaTockaX;
             while (tekuceX < sW) {
                 let jeDekor = false;
                 if (this.trenutnaPovrsina.tip === 'Zid') {
@@ -123,6 +163,7 @@ const MatematikaEngine = {
                 else if (tekuceX + w > sW) { w = sW - tekuceX; }
                 if (tekuceY + h > sH) h = sH - tekuceY;
 
+                // Provjera kolizije (brisanje pločica unutar vrata/prozora)
                 let plocicaPotpunoUnutarOtvora = false;
                 let plocicaSijeceOtvor = false;
 
@@ -138,7 +179,7 @@ const MatematikaEngine = {
                     }
                 }
 
-                if (plocicaPotpunoUnutarOtvora) {
+                if (plocicaPotpunoUnutarOtvora || w <= 0.1 || h <= 0.1) {
                     tekuceX += efektivnaSirina;
                     continue;
                 }
@@ -218,4 +259,3 @@ const MatematikaEngine = {
         document.body.appendChild(modalDiv);
     }
 };
-                    
