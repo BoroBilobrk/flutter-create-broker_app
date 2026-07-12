@@ -1,32 +1,31 @@
 const DokumentacijaModul = {
     generisiZbirniTroskovnik(projekt) {
         if (!projekt) return;
-        const p = projekt.povrsine || projekt.povrsines;
-        if (!p) { alert("Greska pri citanju kupaonice."); return; }
+        const p = Math.refreshAllSlices ? Math.refreshAllSlices(projekt) : (projekt.povrsine || projekt.povrsines);
+        if (!p) { alert("Greska pri ucitavanju kupaonice."); return; }
 
-        let qZid1 = p.zid1.kvadratura || ((p.zid1.w * p.zid1.h) / 10000) || 0;
-        let qZid2 = p.zid2.kvadratura || ((p.zid2.w * p.zid2.h) / 10000) || 0;
-        let qZid3 = p.zid3.kvadratura || ((p.zid3.w * p.zid3.h) / 10000) || 0;
-        let qZid4 = p.zid4.kvadratura || ((p.zid4.w * p.zid4.h) / 10000) || 0;
+        let qZid1 = p.zid1.kvadratura || 0;
+        let qZid2 = p.zid2.kvadratura || 0;
+        let qZid3 = p.zid3.kvadratura || 0;
+        let qZid4 = p.zid4.kvadratura || 0;
 
-        let fmtZidW = p.zid1.plocicaW || 60;
-        let fmtZidH = p.zid1.plocicaH || 30;
-        let fgZid = p.zid1.fuga || 2;
-
-        let cZid1 = p.zid1.izracunCijelih || Math.ceil(qZid1 / ((fmtZidW * fmtZidH) / 10000)) || 0;
-        let cZid2 = p.zid2.izracunCijelih || Math.ceil(qZid2 / ((fmtZidW * fmtZidH) / 10000)) || 0;
-        let cZid3 = p.zid3.izracunCijelih || Math.ceil(qZid3 / ((fmtZidW * fmtZidH) / 10000)) || 0;
-        let cZid4 = p.zid4.izracunCijelih || Math.ceil(qZid4 / ((fmtZidW * fmtZidH) / 10000)) || 0;
+        let komZid1 = p.zid1.izracunCijelih || 0;
+        let komZid2 = p.zid2.izracunCijelih || 0;
+        let komZid3 = p.zid3.izracunCijelih || 0;
+        let komZid4 = p.zid4.izracunCijelih || 0;
 
         let m2Zidovi = qZid1 + qZid2 + qZid3 + qZid4;
-        let komZidovi = cZid1 + cZid2 + cZid3 + cZid4;
+        let komZidovi = komZid1 + komZid2 + komZid3 + komZid4;
 
-        let m2Pod = p.pod.kvadratura || ((p.pod.w * p.pod.h) / 10000) || 0;
-        let komPod = p.pod.izracunCijelih || Math.ceil(m2Pod / (((p.pod.plocicaW || 60) * (p.pod.plocicaH || 60)) / 10000)) || 0;
+        let m2Pod = p.pod.kvadratura || 0;
+        let komPod = p.pod.izracunCijelih || 0;
 
-        let opseg = (p.zid1.w || 240) + (p.zid2.w || 200) + (p.zid3.w || 240) + (p.zid4.w || 200);
-        let duzinaSokla = p.sokl.h || opseg; 
-        let komSokla = p.sokl.izracunCijelih || Math.ceil(duzinaSokla / (p.sokl.plocicaW || 60)) || 0;
+        let duzinaSokla = p.sokl.h || 0; 
+        let komSokla = p.sokl.izracunCijelih || 0;
+        
+        let fmtZidW = p.zid1.plocicaW || 120;
+        let fmtZidH = p.zid1.plocicaH || 60;
+        let fgZid = p.zid1.fuga || 2;
 
         const stariPrikaz = document.getElementById('print-overlay');
         if (stariPrikaz) stariPrikaz.remove();
@@ -36,7 +35,7 @@ const DokumentacijaModul = {
         overlay.style.position = 'fixed'; overlay.style.top = '0'; overlay.style.left = '0';
         overlay.style.width = '100%'; overlay.style.height = '100%';
         overlay.style.backgroundColor = '#FFFFFF'; overlay.style.color = '#1A1D20';
-        overlay.style.zIndex = '999999'; overlay.style.overflowY = 'auto';
+        overlay.style.zIndex = '9999999'; overlay.style.overflowY = 'auto';
         overlay.style.padding = '24px'; overlay.style.boxSizing = 'border-box';
 
         overlay.innerHTML = `
@@ -59,26 +58,26 @@ const DokumentacijaModul = {
             <div style="margin: 24px 0; background-color: #F5F6F7; padding: 20px; border-left: 5px solid #2C3236; font-size:13px; line-height:1.6; color:#333;">
                 <strong>PROJEKTNI NALOG: ${projekt.prostorija.toUpperCase()}</strong><br>
                 Klijent: ${projekt.klijent}<br>
-                Sustav: BRO-KER Multi-Surface CAD
+                Sustav: BRO-KER Multi-Surface CAD Engine
             </div>
-            <h3 style="font-size:13px; text-transform:uppercase; margin-top:30px;">1. SPECIFIKACIJA ZIDOVA (Keramika: ${fmtZidW}x${fmtZidH} cm)</h3>
+            <h3 style="font-size:13px; text-transform:uppercase; margin-top:30px;">1. SPECIFIKACIJA ZIDOVA (Keramika: ${fmtZidW}x${fmtZidH} cm | Fuga: ${fgZid} mm)</h3>
             <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
                 <thead>
-                    <tr style="background:#2C3236; color:#FFFFFF;"><th style="padding:10px; text-align:left;">Povrsina</th><th style="padding:10px; text-align:left;">Kvadratura</th><th style="padding:10px; text-align:left;">Kolicina</th></tr>
+                    <tr style="background:#2C3236; color:#FFFFFF;"><th style="padding:10px; text-align:left;">Povrsina</th><th style="padding:10px; text-align:left;">Kvadratura</th><th style="padding:10px; text-align:left;">Kolicina za narudzbu</th></tr>
                 </thead>
                 <tbody>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 1 (Glavni)</td><td style="padding:10px;">${qZid1.toFixed(2)} m2</td><td style="padding:10px;">${cZid1} kom</td></tr>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 2 (Desni)</td><td style="padding:10px;">${qZid2.toFixed(2)} m2</td><td style="padding:10px;">${cZid2} kom</td></tr>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 3 (Straznji)</td><td style="padding:10px;">${qZid3.toFixed(2)} m2</td><td style="padding:10px;">${cZid3} kom</td></tr>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 4 (Lijevi)</td><td style="padding:10px;">${qZid4.toFixed(2)} m2</td><td style="padding:10px;">${cZid4} kom</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 1 (Prednji)</td><td style="padding:10px;">${qZid1.toFixed(2)} m2</td><td style="padding:10px;">${komZid1} kom</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 2 (Desni)</td><td style="padding:10px;">${qZid2.toFixed(2)} m2</td><td style="padding:10px;">${cZid2 || komZid2} kom</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 3 (Straznji)</td><td style="padding:10px;">${qZid3.toFixed(2)} m2</td><td style="padding:10px;">${cZid3 || komZid3} kom</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 4 (Lijevi)</td><td style="padding:10px;">${qZid4.toFixed(2)} m2</td><td style="padding:10px;">${cZid4 || komZid4} kom</td></tr>
                     <tr style="background:#EAEDEF; font-weight:bold;"><td style="padding:10px;">UKUPNO ZIDOVI</td><td style="padding:10px;">${m2Zidovi.toFixed(2)} m2</td><td style="padding:10px;">${komZidovi} kom</td></tr>
                 </tbody>
             </table>
             <h3 style="font-size:13px; text-transform:uppercase; margin-top:30px;">2. SPECIFIKACIJA PODA I SOKLA</h3>
             <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
                 <tbody>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Podna povrsina (Neto)</td><td style="padding:10px;">${m2Pod.toFixed(2)} m2 (${komPod} kom)</td></tr>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Sokl (Linearni metri)</td><td style="padding:10px;">${(duzinaSokla/100).toFixed(2)} m (${komSokla} kom)</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Podna povrsina (Neto format: ${p.pod.plocicaW || 60}x${p.pod.plocicaH || 60} cm)</td><td style="padding:10px;">${m2Pod.toFixed(2)} m2 (${komPod} kom)</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Sokl (Linearni metri oko sobe)</td><td style="padding:10px;">${(duzinaSokla/100).toFixed(2)} m (${komSokla} kom)</td></tr>
                 </tbody>
             </table>
         `;
@@ -98,9 +97,7 @@ const App = {
     },
 
     promijeniZaslon(idZaslona) {
-        // Sakrij sve standardne zaslone
         document.querySelectorAll('.zaslon').forEach(z => z.style.display = 'none');
-        
         const camSection = document.getElementById('zaslon-kamera');
         
         if (idZaslona === 'zaslon-kamera') {
@@ -144,11 +141,11 @@ const App = {
             klijent: klijentInput,
             prostorija: prostorijaInput,
             povrsine: {
-                zid1: { tip: 'Zid', w: 243, h: 265, popisOtvora: [], hZona: false, vZona: false, plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0 },
+                zid1: { tip: 'Zid', w: 240, h: 265, popisOtvora: [], hZona: false, vZona: false, plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0 },
                 zid2: { tip: 'Zid', w: 200, h: 265, popisOtvora: [], hZona: false, vZona: false, plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0 },
-                zid3: { tip: 'Zid', w: 243, h: 265, popisOtvora: [], hZona: false, vZona: false, plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0 },
+                zid3: { tip: 'Zid', w: 240, h: 265, popisOtvora: [], hZona: false, vZona: false, plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0 },
                 zid4: { tip: 'Zid', w: 200, h: 265, popisOtvora: [], hZona: false, vZona: false, plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0 },
-                pod:  { tip: 'Pod',  w: 243, h: 200, popisOtvora: [], plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0 },
+                pod:  { tip: 'Pod',  w: 240, h: 200, popisOtvora: [], plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0 },
                 sokl: { tip: 'Sokl', w: 8,    h: 0,   popisOtvora: [], plocicaW: initW, plocicaH: 8,  fuga: initF, odmakX: 0 }
             }
         };
@@ -201,9 +198,30 @@ const App = {
         
         p.w = parseFloat(document.getElementById('input-zid-w').value) || 0;
         p.h = parseFloat(document.getElementById('input-zid-h').value) || 0;
-        p.plocicaW = parseFloat(document.getElementById('input-plocica-w').value) || 120;
-        p.plocicaH = parseFloat(document.getElementById('input-plocica-h').value) || 60;
-        p.fuga = parseFloat(document.getElementById('input-fuga').value) || 2;
+        
+        let tekuciW = parseFloat(document.getElementById('input-plocica-w').value) || 120;
+        let tekuciH = parseFloat(document.getElementById('input-plocica-h').value) || 60;
+        let tekuciF = parseFloat(document.getElementById('input-fuga').value) || 2;
+
+        // NOVO: Prisilna sinkronizacija formata na APSOLUTNO SVE povrsine odjednom
+        Object.keys(komponente).forEach(key => {
+            komponente[key].plocicaW = tekuciW;
+            komponente[key].plocicaH = tekuciH;
+            komponente[key].fuga = tekuciF;
+        });
+
+        if (this.aktivnaPovrsinaKey === 'zid1') {
+            komponente.zid3.w = p.w; komponente.zid3.h = p.h; komponente.pod.w = p.w;
+            komponente.zid2.h = p.h; komponente.zid4.h = p.h;
+        }
+        if (this.aktivnaPovrsinaKey === 'zid2') {
+            komponente.zid4.w = p.w; komponente.zid4.h = p.h; komponente.pod.h = p.w;
+        }
+
+        // Tiha pozadinska rekalkulacija nule za cijelu sobu
+        Object.keys(komponente).forEach(key => {
+            MatematikaEngine.pokreniTihiZbirniProracun(komponente[key]);
+        });
 
         MatematikaEngine.osvjeziIzObjekta(p);
     },
@@ -248,5 +266,13 @@ const App = {
         DokumentacijaModul.generisiZbirniTroskovnik(this.projektObjekt);
     }
 };
+
+// Pomocna funkcija za tihi refresh
+Math.refreshAllSlices = function(proj) {
+    let kom = proj.povrsine || proj.povrsines;
+    Object.keys(kom).forEach(k => MatematikaEngine.pokreniTihiZbirniProracun(kom[k]));
+    return kom;
+};
+
 window.onload = () => App.init();
-                
+                             
