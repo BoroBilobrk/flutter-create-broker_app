@@ -257,5 +257,48 @@ const MatematikaEngine = {
             </div>
         `;
         document.body.appendChild(modalDiv);
+    },
+        // Nova metoda dodana na kraj objekta MatematikaEngine:
+    pokreniTihiZbirniProracun(p) {
+        let sW = p.w;
+        let sH = p.h;
+        if (p.tip === 'Sokl') {
+            sW = p.h; sH = p.w;
+        }
+        let pW = parseFloat(p.plocicaW) || 60;
+        let pH = parseFloat(p.plocicaH) || 30;
+        let f = (parseFloat(p.fuga) || 2) / 10;
+
+        let efSirina = pW + f;
+        let efVisina = (p.tip === 'Sokl') ? sH : pH + f;
+        
+        let komada = 0;
+        let tekuceY = 0;
+        while (tekuceY < sH) {
+            let tekuceX = 0;
+            while (tekuceX < sW) {
+                let w = efSirina; let h = efVisina;
+                let stvarniX = tekuceX;
+                if (tekuceX + w > sW) w = sW - tekuceX;
+                if (tekuceY + h > sH) h = sH - tekuceY;
+
+                let unutarOtvora = false;
+                if (p.popisOtvora) {
+                    for (let otv of p.popisOtvora) {
+                        let xPrek = Math.max(0, Math.min(stvarniX + w, otv.x + otv.w) - Math.max(stvarniX, otv.x));
+                        let yPrek = Math.max(0, Math.min(tekuceY + h, otv.y + otv.h) - Math.max(tekuceY, otv.y));
+                        if ((xPrek * yPrek) > 0 && Math.abs((xPrek * yPrek) - (w * h)) < 1.0) {
+                            unutarOtvora = true;
+                        }
+                    }
+                }
+                if (!unutarOtvora) komada++;
+                tekuceX += efSirina;
+            }
+            tekuceY += efVisina;
+        }
+        p.izracunCijelih = komada;
+        p.kvadratura = (sW * sH) / 10000;
     }
+    
 };
