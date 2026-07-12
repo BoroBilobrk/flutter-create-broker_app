@@ -49,7 +49,7 @@ const MatematikaEngine = {
         modalDiv.style.width = '100%'; modalDiv.style.height = '100%';
         modalDiv.style.backgroundColor = 'rgba(10, 12, 14, 0.95)';
         modalDiv.style.display = 'flex'; modalDiv.style.alignItems = 'center'; modalDiv.style.justifyContent = 'center';
-        modalDiv.style.zIndex = '999999';
+        modalDiv.style.zIndex = '9999999';
 
         let jePod = this.trenutnaPovrsina.tip === 'Pod';
         modalDiv.innerHTML = `
@@ -121,6 +121,13 @@ const MatematikaEngine = {
 
         let efektivnaSirina = this.plocicaW + this.fuga;
         let efektivnaVisina = (this.trenutnaPovrsina.tip === 'Sokl') ? sH : this.plocicaH + this.fuga;
+        let minimalniRez = 8.0;
+
+        let ostatakKuta = sW % efektivnaSirina;
+        let pocetniPomakX = 0;
+        if (ostatakKuta > 0 && ostatakKuta < minimalniRez) {
+            pocetniPomakX = (efektivnaSirina - ostatakKuta) / 2;
+        }
 
         let startnaTockaX = this.odmakX;
         while (startnaTockaX > 0) { startnaTockaX -= efektivnaSirina; }
@@ -160,7 +167,7 @@ const MatematikaEngine = {
                     }
                 }
 
-                if (unutarOtvora) { tekuceX += efektivnaSirina; continue; }
+                if (unutarOtvora || w <= 0.1 || h <= 0.1) { tekuceX += efektivnaSirina; continue; }
 
                 this.potrosenoCijelihPlocica++;
 
@@ -177,28 +184,17 @@ const MatematikaEngine = {
                 else plocicaDiv.style.backgroundColor = '#22282C';
 
                 let trenutnoW = w - this.fuga; let trenutnoH = h - this.fuga;
-                plocicaDiv.onclick = () => this.prikazi2DDetaljModal(trenutnoW, trenutnoH, sijeceOtvor, false, detaljiKrunice);
+                
+                // POPRAVLJENO: Proslijedjena tocna varijabla "jeRezana" umjesto sijeceOtvor!
+                let jeRezana = (w < (this.plocicaW - 0.5)) || (h < (this.plocicaH - 0.5)) || sijeceOtvor;
+                plocicaDiv.onclick = () => this.prikazi2DDetaljModal(trenutnoW, trenutnoH, jeRezana, false, detaljiKrunice);
                 
                 kontejner.appendChild(plocicaDiv);
                 tekuceX += efektivnaSirina;
             }
             tekuceY += efektivnaVisina;
         }
-
-        // Iscrtavanje otvora (Vrata, prozori, podni slivnici)
-        if (this.trenutnaPovrsina.popisOtvora) {
-            for (let otvor of this.trenutnaPovrsina.popisOtvora) {
-                const otvorDiv = document.createElement('div');
-                otvorDiv.style.position = 'absolute';
-                otvorDiv.style.left = (otvor.x * skala) + 'px'; otvorDiv.style.bottom = (otvor.y * skala) + 'px';
-                otvorDiv.style.width = (otvor.w * skala) + 'px'; otvorDiv.style.height = (otvor.h * skala) + 'px';
-                otvorDiv.style.backgroundColor = '#000000'; otvorDiv.style.border = '2px solid #FF5555';
-                otvorDiv.style.display = 'flex'; otvorDiv.style.alignItems = 'center'; otvorDiv.style.justifyContent = 'center';
-                otvorDiv.style.fontSize = '10px'; otvorDiv.style.color = '#FF5555'; otvorDiv.style.fontWeight = 'bold';
-                otvorDiv.innerText = otvor.tip.toUpperCase();
-                kontejner.appendChild(otvorDiv);
-            }
-        }
+        this.trenutnaPovrsina.izracunCijelih = this.potrosenoCijelihPlocica;
     },
 
     prikazi2DDetaljModal(w, h, jeRezana, izOstatka, nalogKrunice) {
@@ -211,9 +207,9 @@ const MatematikaEngine = {
         modalDiv.style.width = '100%'; modalDiv.style.height = '100%';
         modalDiv.style.backgroundColor = 'rgba(10, 12, 14, 0.95)';
         modalDiv.style.display = 'flex'; modalDiv.style.alignItems = 'center'; modalDiv.style.justifyContent = 'center';
-        modalDiv.style.zIndex = '999999';
+        modalDiv.style.zIndex = '9999999';
 
-        let naslov = "TVORNOVICKI ELEMENT";
+        let naslov = jeRezana ? "RAVNI REZ NA STOLU" : "TVORNOVICKI ELEMENT";
         let uputeHtml = "";
 
         if (nalogKrunice) {
@@ -250,17 +246,31 @@ const MatematikaEngine = {
     pokreniTihiZbirniProracun(p) {
         let sW = p.w; let sH = p.h;
         if (p.tip === 'Sokl') { sW = p.h; sH = p.w; }
-        let pW = parseFloat(p.plocicaW) || 120;
-        let pH = parseFloat(p.plocicaH) || 60;
+        
+        let pW = parseFloat(p.plocicaW) || (p.tip === 'Pod' ? 60 : 120);
+        let pH = parseFloat(p.plocicaH) || (p.tip === 'Pod' ? 60 : 60);
         let f = (parseFloat(p.fuga) || 2) / 10;
         let efSirina = pW + f; let efVisina = (p.tip === 'Sokl') ? sH : pH + f;
+        
+        let odmakX = parseFloat(p.odmakX) || 0;
+        let minimalniRez = 8.0;
+        let ostatakKuta = sW % efSirina;
+        let pocetniPomakX = 0;
+        if (ostatakKuta > 0 && ostatakKuta < minimalniRez) {
+            pocetniPomakX = (efSirina - ostatakKuta) / 2;
+        }
+        
+        let startnaTockaX = (pocetniPomakX > 0 ? -pocetniPomakX : 0) + odmakX;
+        while (startnaTockaX > 0) { startnaTockaX -= efSirina; }
+        
         let komada = 0; let tekuceY = 0;
         while (tekuceY < sH) {
-            let tekuceX = 0;
+            let tekuceX = startnaTockaX;
             while (tekuceX < sW) {
                 let w = efSirina; let h = efVisina;
-                let stvarniX = tekuceX;
-                if (tekuceX + w > sW) w = sW - tekuceX;
+                let stvarniX = tekuceX < 0 ? 0 : tekuceX;
+                if (tekuceX < 0) { w = efSirina + tekuceX; } 
+                else if (tekuceX + w > sW) { w = sW - tekuceX; }
                 if (tekuceY + h > sH) h = sH - tekuceY;
                 let unutarOtvora = false;
                 if (p.popisOtvora) {
@@ -271,7 +281,7 @@ const MatematikaEngine = {
                         if ((xPrek * yPrek) > 0 && Math.abs((xPrek * yPrek) - (w * h)) < 1.0) unutarOtvora = true;
                     }
                 }
-                if (!unutarOtvora) komada++;
+                if (!unutarOtvora && w > 0.1 && h > 0.1) komada++;
                 tekuceX += efSirina;
             }
             tekuceY += efVisina;
@@ -279,4 +289,3 @@ const MatematikaEngine = {
         p.izracunCijelih = komada; p.kvadratura = (sW * sH) / 10000;
     }
 };
-            
