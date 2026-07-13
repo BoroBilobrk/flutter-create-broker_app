@@ -230,9 +230,9 @@ const MatematikaEngine = {
                     <span style="cursor: pointer; font-size: 20px; color: #6C7A84;" onclick="document.getElementById('broker-modal').remove()">✕</span>
                 </div>
                 ${uputeHtml}
-                <div style="width: 100%; height: 180px; background-color: #0A0C0E; border: 1px dashed #343D44; display: flex; align-items: center; justify-content: center; position: relative; margin-bottom: 20px;">
+                <div style="width: 100%; height: 180px; background-color: #0A0C0E; border: 1px dashed #343D44; display: flex; align-items: center; justify-content: center; position: relative; margin-bottom:15px;">
                     <div style="width: 160px; height: 100px; background-color: #22282C; border: 2px solid #FFFFFF; position: relative;">
-                        ${nalogKrunice ? `<div style="position:absolute; left:${(nalogKrunice.odmakLijevo/w)*100}%; bottom:${(nalogKrunice.odmakDno/h)*100}%; transform:translate(-50%, 50%); width:12px; height:12px; color:#FF5555; font-weight:bold; font-size:14px;">✕</div>` : ''}
+                        ${nalogKrunice ? `<div style="position:absolute; left:${(nalogKrunice.odmakLijevo/w)*100}%; bottom:${(nalogKrunice.odmakDno/h)*100}%; transform:translate(-50%, 50%); width:10px; height:10px; background-color:#FF5555; border-radius:50%; z-index:10;"></div>` : ''}
                         <span style="position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: bold; color: #FFF;">${w.toFixed(1)} cm</span>
                         <span style="position: absolute; right: -55px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #FFF;">${h.toFixed(1)} cm</span>
                     </div>
