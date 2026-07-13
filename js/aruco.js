@@ -50,8 +50,6 @@ const ArucoModul = {
                 
                 cv.cvtColor(src, siva, cv.COLOR_RGBA2GRAY);
                 cv.GaussianBlur(siva, bluranaSiva, new cv.Size(9, 9), 2, 2);
-                
-                // POPRAVAK: Povecan blok skeniranja na 21 i konstanta na 4 za vrhunsko prepoznavanje u mraku i sjenama
                 cv.adaptiveThreshold(bluranaSiva, thresholded, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 21, 4);
                 
                 let M_mat = cv.Mat.ones(3, 3, cv.CV_8U);
@@ -64,7 +62,6 @@ const ArucoModul = {
 
                 for (let i = 0; i < contours.size(); ++i) {
                     let cnt = contours.get(i); let area = cv.contourArea(cnt);
-                    // POPRAVAK: Smanjena minimalna povrsina sa 5000 na 1500 piksela. Sada hvata papir na podu iz stajaceg polozaja!
                     if (area > 1500 && area > maksimalnaPovrsina && area < (canvas.width * canvas.height * 0.90)) {
                         let approx = new cv.Mat();
                         cv.approxPolyDP(cnt, approx, 0.04 * cv.arcLength(cnt, true), true);
@@ -163,4 +160,3 @@ const ArucoModul = {
         requestAnimationFrame(() => this.procesirajOkvir());
     }
 };
-                            
