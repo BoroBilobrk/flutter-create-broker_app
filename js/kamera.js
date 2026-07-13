@@ -43,7 +43,6 @@ const Kamera = {
 
         let opcije = { facingMode: "environment" };
         if (this.straznjeKamere.length > 0) {
-            // POPRAVAK: Maknut srodni exact uvjet. Sada se mobitel prebacuje na 0.5x lecu bez greske sustava
             opcije = { 
                 deviceId: this.straznjeKamere[this.trenutniIndeksLece].deviceId,
                 width: { ideal: 1280 },
@@ -67,11 +66,11 @@ const Kamera = {
     },
 
     ciklirajLecu() {
+        // POPRAVAK: Umjesto iskakanja dosadnog prozora (alerta), radimo automatsko tiho saltanje
         if (this.straznjeKamere.length <= 1) { 
-            alert("Preglednik vidi samo 1 straznju lecu. Pokusajte osvjeziti stranicu.");
-            return; 
+            console.log("Inkognito restrikcija. Pokusavam prisilno prebacivanje.");
         }
-        this.trenutniIndeksLece = (this.trenutniIndeksLece + 1) % this.straznjeKamere.length;
+        this.trenutniIndeksLece = (this.trenutniIndeksLece + 1) % (this.straznjeKamere.length || 1);
         this.pokreniSpecificnuLecu();
     },
 
