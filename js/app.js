@@ -1,8 +1,6 @@
 const DokumentacijaModul = {
     generisiZbirniTroskovnik(projekt) {
         if (!projekt) return;
-        
-        // Pozivamo nasu sigurnu lokalnu funkciju za osvjezavanje prije ispisa
         const p = App.osvjeziSveKvadraturneProracune(projekt);
         if (!p) { alert("Greska pri ucitavanju kupaonice."); return; }
 
@@ -37,14 +35,14 @@ const DokumentacijaModul = {
         overlay.style.position = 'fixed'; overlay.style.top = '0'; overlay.style.left = '0';
         overlay.style.width = '100%'; overlay.style.height = '100%';
         overlay.style.backgroundColor = '#FFFFFF'; overlay.style.color = '#1A1D20';
-        overlay.style.zIndex = '9999999'; overlay.style.overflowY = 'auto';
+        overlay.style.zIndex = '99999999'; overlay.style.overflowY = 'auto';
         overlay.style.padding = '24px'; overlay.style.boxSizing = 'border-box';
 
         overlay.innerHTML = `
             <style>
                 @media print {
-                    body * { visibility: hidden; }
-                    #print-overlay, #print-overlay * { visibility: visible; }
+                    body * { visibility: hidden !important; }
+                    #print-overlay, #print-overlay * { visibility: visible !important; }
                     #print-overlay { position: absolute; left: 0; top: 0; width: 100%; height: auto; padding: 0; }
                     .no-print { display: none !important; }
                 }
@@ -55,17 +53,17 @@ const DokumentacijaModul = {
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #2C3236; padding-bottom: 15px;">
                 <div style="font-weight: bold; font-size: 26px; letter-spacing: 2px; color: #2C3236;">BRO-KER</div>
-                <div style="text-transform:uppercase; font-size:11px; font-weight:bold; color:#8A959E; text-align:right;">Zbirna Specifikacija Nabora</div>
+                <div style="text-transform:uppercase; font-size:11px; font-weight:bold; color:#8A959E; text-align:right;">Zbirna Specifikacija</div>
             </div>
             <div style="margin: 24px 0; background-color: #F5F6F7; padding: 20px; border-left: 5px solid #2C3236; font-size:13px; line-height:1.6; color:#333;">
                 <strong>PROJEKTNI NALOG: ${projekt.prostorija.toUpperCase()}</strong><br>
                 Klijent / Lokacija: ${projekt.klijent}<br>
-                Sustav optimizacije: BRO-KER Multi-Surface 3D CAD Engine
+                Sustav optimizacije: BRO-KER Multi-Surface 3D CAD
             </div>
             <h3 style="font-size:13px; text-transform:uppercase; margin-top:30px;">1. SPECIFIKACIJA ZIDOVA (Keramika: ${fmtZidW}x${fmtZidH} cm | Fuga: ${fgZid} mm)</h3>
             <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
                 <thead>
-                    <tr style="background:#2C3236; color:#FFFFFF;"><th style="padding:10px; text-align:left;">Povrsina</th><th style="padding:10px; text-align:left;">Kvadratura</th><th style="padding:10px; text-align:left;">Kolicina za narudzbu</th></tr>
+                    <tr style="background:#2C3236; color:#FFFFFF;"><th style="padding:10px; text-align:left;">Povrsina</th><th style="padding:10px; text-align:left;">Kvadratura</th><th style="padding:10px; text-align:left;">Kolicina</th></tr>
                 </thead>
                 <tbody>
                     <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 1 (Prednji)</td><td style="padding:10px;">${qZid1.toFixed(2)} m2</td><td style="padding:10px;">${komZid1} kom</td></tr>
@@ -78,8 +76,8 @@ const DokumentacijaModul = {
             <h3 style="font-size:13px; text-transform:uppercase; margin-top:30px;">2. SPECIFIKACIJA PODA I SOKLA</h3>
             <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
                 <tbody>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Podna povrsina (Neto format: ${p.pod.plocicaW || 60}x${p.pod.plocicaH || 60} cm)</td><td style="padding:10px;">${m2Pod.toFixed(2)} m2 (${komPod} kom)</td></tr>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Sokl (Linearni metri oko sobe)</td><td style="padding:10px;">${(duzinaSokla/100).toFixed(2)} m (${komSokla} kom)</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Podna povrsina (Neto)</td><td style="padding:10px;">${m2Pod.toFixed(2)} m2 (${komPod} kom)</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Sokl (Linearni metri)</td><td style="padding:10px;">${(duzinaSokla/100).toFixed(2)} m (${komSokla} kom)</td></tr>
                 </tbody>
             </table>
         `;
@@ -95,21 +93,32 @@ const App = {
 
     init() {
         console.log("BRO-KER Sustav Inicijaliziran.");
-        this.osvjeziListuSpremljenihProjekata();
+        this.promijeniZaslon('zaslon-izbornik');
     },
 
     promijeniZaslon(idZaslona) {
-        document.querySelectorAll('.zaslon').forEach(z => z.style.display = 'none');
+        // POPRAVAK: Slijepo i nasilno gasimo apsolutno sve zaslone s !important izbjeljivanjem
+        document.querySelectorAll('.zaslon').forEach(z => {
+            z.style.setProperty('display', 'none', 'important');
+            z.classList.remove('aktivni-zaslon');
+        });
+        
         const camSection = document.getElementById('zaslon-kamera');
+        const header = document.getElementById('glavno-zaglavlje');
         
         if (idZaslona === 'zaslon-kamera') {
-            if (camSection) camSection.style.display = 'block';
-            document.getElementById('naslov-prikaza').innerText = "Skeniranje prostora";
+            if (camSection) camSection.style.setProperty('display', 'block', 'important');
+            if (header) header.style.setProperty('display', 'none', 'important'); // Skrivamo i crno zaglavlje radi kamere
             Kamera.pokreni();
         } else {
-            if (camSection) camSection.style.display = 'none';
+            if (camSection) camSection.style.setProperty('display', 'none', 'important');
+            if (header) header.style.setProperty('display', 'flex', 'important');
+            
             const cilj = document.getElementById(idZaslona);
-            if (cilj) cilj.style.display = 'block';
+            if (cilj) {
+                cilj.style.setProperty('display', 'block', 'important');
+                cilj.classList.add('aktivni-zaslon');
+            }
             
             if (idZaslona === 'zaslon-radni') {
                 document.getElementById('naslov-prikaza').innerText = `${this.trenutniKlijent} - Rad`;
@@ -261,7 +270,6 @@ const App = {
         });
     },
 
-    // Lokalna sigurna funkcija unutar App objekta - nema diranja Math globalne memorije
     osvjeziSveKvadraturneProracune(proj) {
         let kom = proj.povrsine || proj.povrsines;
         Object.keys(kom).forEach(k => MatematikaEngine.pokreniTihiZbirniProracun(kom[k]));
@@ -274,4 +282,4 @@ const App = {
     }
 };
 window.onload = () => App.init();
-            
+                
