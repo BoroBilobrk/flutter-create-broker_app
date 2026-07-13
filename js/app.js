@@ -1,7 +1,9 @@
 const DokumentacijaModul = {
     generisiZbirniTroskovnik(projekt) {
         if (!projekt) return;
-        const p = Math.refreshAllSlices ? Math.refreshAllSlices(projekt) : (projekt.povrsine || projekt.povrsines);
+        
+        // Pozivamo nasu sigurnu lokalnu funkciju za osvjezavanje prije ispisa
+        const p = App.osvjeziSveKvadraturneProracune(projekt);
         if (!p) { alert("Greska pri ucitavanju kupaonice."); return; }
 
         let qZid1 = p.zid1.kvadratura || 0;
@@ -53,12 +55,12 @@ const DokumentacijaModul = {
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #2C3236; padding-bottom: 15px;">
                 <div style="font-weight: bold; font-size: 26px; letter-spacing: 2px; color: #2C3236;">BRO-KER</div>
-                <div style="text-transform:uppercase; font-size:11px; font-weight:bold; color:#8A959E; text-align:right;">Zbirna Specifikacija</div>
+                <div style="text-transform:uppercase; font-size:11px; font-weight:bold; color:#8A959E; text-align:right;">Zbirna Specifikacija Nabora</div>
             </div>
             <div style="margin: 24px 0; background-color: #F5F6F7; padding: 20px; border-left: 5px solid #2C3236; font-size:13px; line-height:1.6; color:#333;">
                 <strong>PROJEKTNI NALOG: ${projekt.prostorija.toUpperCase()}</strong><br>
-                Klijent: ${projekt.klijent}<br>
-                Sustav: BRO-KER Multi-Surface CAD Engine
+                Klijent / Lokacija: ${projekt.klijent}<br>
+                Sustav optimizacije: BRO-KER Multi-Surface 3D CAD Engine
             </div>
             <h3 style="font-size:13px; text-transform:uppercase; margin-top:30px;">1. SPECIFIKACIJA ZIDOVA (Keramika: ${fmtZidW}x${fmtZidH} cm | Fuga: ${fgZid} mm)</h3>
             <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
@@ -67,9 +69,9 @@ const DokumentacijaModul = {
                 </thead>
                 <tbody>
                     <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 1 (Prednji)</td><td style="padding:10px;">${qZid1.toFixed(2)} m2</td><td style="padding:10px;">${komZid1} kom</td></tr>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 2 (Desni)</td><td style="padding:10px;">${qZid2.toFixed(2)} m2</td><td style="padding:10px;">${cZid2 || komZid2} kom</td></tr>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 3 (Straznji)</td><td style="padding:10px;">${qZid3.toFixed(2)} m2</td><td style="padding:10px;">${cZid3 || komZid3} kom</td></tr>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 4 (Lijevi)</td><td style="padding:10px;">${qZid4.toFixed(2)} m2</td><td style="padding:10px;">${cZid4 || komZid4} kom</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 2 (Desni)</td><td style="padding:10px;">${qZid2.toFixed(2)} m2</td><td style="padding:10px;">${komZid2} kom</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 3 (Straznji)</td><td style="padding:10px;">${qZid3.toFixed(2)} m2</td><td style="padding:10px;">${komZid3} kom</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 4 (Lijevi)</td><td style="padding:10px;">${qZid4.toFixed(2)} m2</td><td style="padding:10px;">${komZid4} kom</td></tr>
                     <tr style="background:#EAEDEF; font-weight:bold;"><td style="padding:10px;">UKUPNO ZIDOVI</td><td style="padding:10px;">${m2Zidovi.toFixed(2)} m2</td><td style="padding:10px;">${komZidovi} kom</td></tr>
                 </tbody>
             </table>
@@ -203,7 +205,6 @@ const App = {
         let tekuciH = parseFloat(document.getElementById('input-plocica-h').value) || 60;
         let tekuciF = parseFloat(document.getElementById('input-fuga').value) || 2;
 
-        // NOVO: Prisilna sinkronizacija formata na APSOLUTNO SVE povrsine odjednom
         Object.keys(komponente).forEach(key => {
             komponente[key].plocicaW = tekuciW;
             komponente[key].plocicaH = tekuciH;
@@ -218,7 +219,6 @@ const App = {
             komponente.zid4.w = p.w; komponente.zid4.h = p.h; komponente.pod.h = p.w;
         }
 
-        // Tiha pozadinska rekalkulacija nule za cijelu sobu
         Object.keys(komponente).forEach(key => {
             MatematikaEngine.pokreniTihiZbirniProracun(komponente[key]);
         });
@@ -261,18 +261,17 @@ const App = {
         });
     },
 
+    // Lokalna sigurna funkcija unutar App objekta - nema diranja Math globalne memorije
+    osvjeziSveKvadraturneProracune(proj) {
+        let kom = proj.povrsine || proj.povrsines;
+        Object.keys(kom).forEach(k => MatematikaEngine.pokreniTihiZbirniProracun(kom[k]));
+        return kom;
+    },
+
     otvoriDokumentaciju() {
         this.sacuvajPoljaUObjekt();
         DokumentacijaModul.generisiZbirniTroskovnik(this.projektObjekt);
     }
 };
-
-// Pomocna funkcija za tihi refresh
-Math.refreshAllSlices = function(proj) {
-    let kom = proj.povrsine || proj.povrsines;
-    Object.keys(kom).forEach(k => MatematikaEngine.pokreniTihiZbirniProracun(kom[k]));
-    return kom;
-};
-
 window.onload = () => App.init();
-                             
+            
