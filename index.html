@@ -152,15 +152,15 @@
         <video id="web-kamera" autoplay playsinline style="width:100% !important; height:100% !important; object-fit:cover !important; position:absolute !important; top:0 !important; left:0 !important; z-index:10 !important;"></video>
         <canvas id="aruco-canvas" style="width:100% !important; height:100% !important; object-fit:cover !important; position:absolute !important; top:0 !important; left:0 !important; pointer-events:none !important; z-index:20 !important;"></canvas>
         
-        <div id="kamera-status" style="position:absolute !important; top:20px !important; left:5% !important; width:90% !important; background:rgba(10,12,14,0.93) !important; border:1px solid #343D44 !important; color:#FFF !important; padding:12px !important; font-size:11px !important; font-weight:bold !important; text-align:center !important; box-sizing:border-box !important; z-index:30 !important;">Inicijalizacija leca...</div>
+        <div id="kamera-status" style="position:absolute !important; top:20px !important; left:5% !important; width:90% !important; background:rgba(10,12,14,0.95) !important; border:1px solid #343D44 !important; color:#FFF !important; padding:12px !important; font-size:11px !important; font-weight:bold !important; text-align:center !important; box-sizing:border-box !important; z-index:30 !important; letter-spacing:0.5px;">Inicijalizacija straznjih leca...</div>
         
-        <div style="position:absolute !important; bottom:90px !important; left:5% !important; width:90% !important; display:flex !important; flex-direction:column !important; gap:10px !important; box-sizing:border-box !important; z-index:10000000 !important; pointer-events:auto !important;">
-            <button class="gumb-ostri" style="margin:0; width:100%; background:rgba(31,42,51,0.96); border-color:#34495C; color:#FFF; font-weight:bold; padding:14px;" onclick="Kamera.ciklirajLecu()">
-                🔄 PROMIJENI LEĆU (0.5x ŠIROKOKUTNA / 1x STANDARD)
+        <div style="position:absolute !important; bottom:140px !important; left:5% !important; width:90% !important; display:flex !important; flex-direction:column !important; gap:12px !important; box-sizing:border-box !important; z-index:10000000 !important; pointer-events:auto !important;">
+            <button class="gumb-ostri" style="margin:0; width:100%; background:rgba(20,26,33,0.98); border:2px solid #34495C; color:#FFF; font-weight:bold; padding:16px; font-size:12px; letter-spacing:1px;" onclick="Kamera.ciklirajLecu()">
+                🔄 PROMIJENI LEĆU (0.5x ŠIROKOKUTNA / 1x COATED)
             </button>
             <div style="display:flex !important; gap:10px !important; width:100% !important;">
-                <button class="gumb-ostri gumb-kontra" style="margin:0; flex:1; padding:14px;" onclick="Kamera.zaustavi()">PREKINI</button>
-                <button class="gumb-ostri gumb-potvrda" style="margin:0; flex:2; padding:14px;" onclick="Kamera.uhvatiMjere()">ZAKLJUČAJ AR RASTER I RUPE</button>
+                <button class="gumb-ostri gumb-kontra" style="margin:0; flex:1; padding:16px; font-weight:bold;" onclick="Kamera.zaustavi()">PREKINI</button>
+                <button class="gumb-ostri gumb-potvrda" style="margin:0; flex:2; padding:16px; font-weight:bold;" onclick="Kamera.uhvatiMjere()">ZAKLJUČAJ AR RASTER I RUPE</button>
             </div>
         </div>
     </section>
