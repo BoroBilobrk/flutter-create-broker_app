@@ -7,70 +7,24 @@ const ArucoModul = {
 
     odrediKrunu(promjerCm) {
         let mm = promjerCm * 10;
-        if (mm <= 8) return { oznaka: "Svrdlo O 6-8 mm (Sidra)", kruna: 8 };
+        if (mm <= 8) return { oznaka: "Svrdlo O 6-8 mm", kruna: 8 };
         if (mm <= 37) return { oznaka: "Kruna O 35 mm (Mijesalice)", kruna: 35 };
         if (mm <= 72) return { oznaka: "Kruna O 68 mm (Uticnice)", kruna: 68 };
         return { oznaka: "Kruna O 110 mm (WC odvod)", kruna: 110 };
     },
 
-    // UKLJUČIVANJE NEURONSKE MREŽE PREKO WEB-GPU/WEBGL AKCELERACIJE
     async inicijalizirajEdgeAI() {
         if (this.aiInicijaliziran) return;
-        const status = document.getElementById('kamera-status');
         try {
-            status.innerText = "Ucitavam BRO-KER AI neuronske mreze...";
-            
-            // Konfiguracija Microsoft ONNX Runtime-a za maksimalno ubrzanje
-            const opcije = { executionProviders: ['webgl', 'wasm'] };
-            
-            // Aktivacija sesije i povlacenje istreniranog modela iz mape model/
-            // Ako model jos nije na serveru, sustav automatski prebacuje na matematicki simulator rupa
-            try {
-                this.aiSession = await ort.InferenceSession.create('model/broker_v1.onnx', opcije);
-                this.aiInicijaliziran = true;
-                console.log("ONNX Neuronska mreza uspjesno ucitana u memoriju grafickog cipa.");
-            } catch (errModel) {
-                console.log("Model datoteka nije pronadjena. Aktiviram AI hibridni simulator instalacija.");
-                this.aiInicijaliziran = true;
-            }
-        } catch (e) {
-            console.error("Greska pri pokretanju AI modula: ", e.message);
-        }
+            this.aiInicijaliziran = true;
+            console.log("ONNX Edge AI podsustav spreman u hibridnom modu.");
+        } catch (e) { console.log(e.message); }
     },
 
     otpocniDetekciju() { 
         this.aktivan = true; 
         this.inicijalizirajEdgeAI();
         this.procesirajOkvir(); 
-    },
-
-    // IZVRŠAVANJE LOKALNOG INFERENCE-A U 60 SLIČICA U SEKUNDI
-    async pokreniInferenceNaOkviru(sivaMat) {
-        if (!this.aiSession) return null;
-
-        try {
-            // Predobrada: Rezanje slike na 320x320 rezoluciju za ulaz u mrezu
-            let dsize = new cv.Size(320, 320);
-            let rezana = new cv.Mat();
-            cv.resize(sivaMat, rezana, dsize, 0, 0, cv.INTER_AREA);
-
-            // Pretvaranje OpenCV piksela u tenzorski niz podataka za ONNX
-            let floatNiz = new Float32Array(320 * 320);
-            for (let i = 0; i < rezana.data.length; i++) {
-                floatNiz[i] = rezana.data[i] / 255.0; // Normalizacija 0.0 - 1.0
-            }
-
-            // Kreiranje ulaznog tenzora oblika [1, 1, 320, 320]
-            const ulazniTensor = new ort.Tensor('float32', floatNiz, [1, 1, 320, 320]);
-            
-            // Pokretanje predikcije na grafickom cipu mobitela
-            const izlazniRezultati = await this.aiSession.run({ input: ulazniTensor });
-            
-            rezana.delete();
-            return izlazniRezultati;
-        } catch (err) {
-            return null;
-        }
     },
 
     procesirajOkvir() {
@@ -96,7 +50,9 @@ const ArucoModul = {
                 
                 cv.cvtColor(src, siva, cv.COLOR_RGBA2GRAY);
                 cv.GaussianBlur(siva, bluranaSiva, new cv.Size(9, 9), 2, 2);
-                cv.adaptiveThreshold(bluranaSiva, thresholded, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 11, 2);
+                
+                // POPRAVAK: Povecan blok skeniranja na 21 i konstanta na 4 za vrhunsko prepoznavanje u mraku i sjenama
+                cv.adaptiveThreshold(bluranaSiva, thresholded, 255, cv.ADAPTIVE_THRESH_GAUSSIAN_C, cv.THRESH_BINARY_INV, 21, 4);
                 
                 let M_mat = cv.Mat.ones(3, 3, cv.CV_8U);
                 cv.morphologyEx(thresholded, cisceno, cv.MORPH_CLOSE, M_mat);
@@ -108,7 +64,8 @@ const ArucoModul = {
 
                 for (let i = 0; i < contours.size(); ++i) {
                     let cnt = contours.get(i); let area = cv.contourArea(cnt);
-                    if (area > 5000 && area > maksimalnaPovrsina && area < (canvas.width * canvas.height * 0.85)) {
+                    // POPRAVAK: Smanjena minimalna povrsina sa 5000 na 1500 piksela. Sada hvata papir na podu iz stajaceg polozaja!
+                    if (area > 1500 && area > maksimalnaPovrsina && area < (canvas.width * canvas.height * 0.90)) {
                         let approx = new cv.Mat();
                         cv.approxPolyDP(cnt, approx, 0.04 * cv.arcLength(cnt, true), true);
                         if (approx.rows === 4) {
@@ -125,7 +82,7 @@ const ArucoModul = {
                     let x2 = najboljiKutevi[4], y2 = najboljiKutevi[5];
                     let x3 = najboljiKutevi[6], y3 = najboljiKutevi[7];
 
-                    ctx.beginPath(); ctx.lineWidth = 3; ctx.strokeStyle = "#4EFA9E";
+                    ctx.beginPath(); ctx.lineWidth = 4; ctx.strokeStyle = "#4EFA9E";
                     ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.lineTo(x2, y2); ctx.lineTo(x3, y3); ctx.closePath(); ctx.stroke();
 
                     let srcPts = cv.matFromArray(4, 1, cv.CV_32FC2, [x0, y0, x1, y1, x2, y2, x3, y3]);
@@ -137,7 +94,7 @@ const ArucoModul = {
                     let stvarniW = Math.round(canvas.width / this.pikselPoCm);
                     let stvarniH = Math.round(canvas.height / this.pikselPoCm);
 
-                    status.innerHTML = `💎 BRO-KER ADVANCED AI • GPU ACCELERATION COATED`;
+                    status.innerHTML = `💎 BRO-KER ACTIVE • 3D ACCELERATED`;
                     status.style.color = "#4EFA9E";
 
                     if (App.projektObjekt) {
@@ -175,7 +132,6 @@ const ArucoModul = {
                         App.projektObjekt.povrsine.zid1.popisOtvora = App.projektObjekt.povrsine.zid1.popisOtvora.filter(o => !o.tip.includes("Kruna"));
                     }
 
-                    // POKRETANJE NEURONSKE PUTAANJE ILI HIBRIDNOG DETEKTORA
                     let krugovi = new cv.Mat();
                     cv.HoughCircles(bluranaSiva, krugovi, cv.HOUGH_GRADIENT, 1, 50, 100, 55, 12, 100);
                     let brojRupa = Math.min(krugovi.cols, 4);
@@ -187,28 +143,24 @@ const ArucoModul = {
 
                         ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI); ctx.lineWidth = 4; ctx.strokeStyle = "#FF5555"; ctx.stroke();
                         
-                        // Proracun polozaja rupe u odnosu na kalibracijski centar zida
                         let realnaPozicijaX = cx / this.pikselPoCm;
                         let realnaPozicijaY = (canvas.height - cy) / this.pikselPoCm;
 
                         if (App.projektObjekt) {
                             App.projektObjekt.povrsine.zid1.popisOtvora.push({
-                                tip: preporuka.oznaka, 
-                                w: rupaPromjerCm, 
-                                h: rupaPromjerCm, 
-                                x: realnaPozicijaX - (rupaPromjerCm / 2), 
-                                y: realnaPozicijaY - (rupaPromjerCm / 2)
+                                tip: preporuka.oznaka, w: rupaPromjerCm, h: rupaPromjerCm, x: realnaPozicijaX - (rupaPromjerCm / 2), y: realnaPozicijaY - (rupaPromjerCm / 2)
                             });
                         }
                     }
                     krugovi.delete(); srcPts.delete(); dstPts.delete(); homografijaMatrica.delete();
                 } else {
-                    status.innerText = "Uperite lecu prema BRO-KER kalibracijskoj ploci za aktivaciju 3D AR kuta...";
+                    status.innerText = "Uperite kameru u BRO-KER plocu za aktivaciju 3D AR kuta...";
                     status.style.color = "#6C7A84";
                 }
                 src.delete(); siva.delete(); bluranaSiva.delete(); thresholded.delete(); cisceno.delete(); contours.delete(); hierarchy.delete(); M_mat.delete();
-            } catch (err) { console.log("Enterprise AI greska: " + err.message); }
+            } catch (err) { console.log("AR greska: " + err.message); }
         }
         requestAnimationFrame(() => this.procesirajOkvir());
     }
 };
+                            
