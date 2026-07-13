@@ -6,14 +6,14 @@ const Kamera = {
     async pokreni() {
         const status = document.getElementById('kamera-status');
         try {
-            // KORAK 1: Prvo palimo kameru da preglednik odobri pristup i otkljuca privatnost
+            // Prvo aktiviramo inicijalnu kameru
             this.stream = await navigator.mediaDevices.getUserMedia({ 
                 video: { facingMode: "environment" } 
             });
             const video = document.getElementById('web-kamera');
             video.srcObject = this.stream;
 
-            // KORAK 2: Tek nakon odobrenja, sigurno citamo sve straznje lece (0.5x, straznja, macro)
+            // Citamo sve opticke senzore tek nakon dobivanja dozvole
             const uredjaji = await navigator.mediaDevices.enumerateDevices();
             let sveLece = uredjaji.filter(u => u.kind === 'videoinput');
             
@@ -23,37 +23,56 @@ const Kamera = {
             });
 
             if (this.straznjeKamere.length === 0) { this.straznjeKamere = sveLece; }
+            this.trenutniIndeksLece = 0;
             
-            status.innerText = "Kamera aktivna. Trazenje BRO-KER ploce...";
+            status.innerText = "Sustav spreman. Usjerite u BRO-KER plocu na podu...";
             ArucoModul.otpocniDetekciju();
         } catch (error) {
-            status.innerText = "Problem s pokretanjem lece: " + error.message;
+            status.innerText = "Problem s pokretanjem kamere: " + error.message;
         }
     },
 
     async pokreniSpecificnuLecu() {
         const video = document.getElementById('web-kamera');
-        if (this.stream) { this.stream.getTracks().forEach(t => t.stop()); }
+        const status = document.getElementById('kamera-status');
+
+        // POPRAVAK: Potpuno gasimo i oslobadjamo prethodne resurse prije otvaranja nove lece
+        if (this.stream) {
+            this.stream.getTracks().forEach(track => track.stop());
+            this.stream = null;
+        }
+
+        // Mala pauza od 300ms omogucava hardveru telefona da se resetuje i prihvati naredbu
+        await new Promise(resolve => setTimeout(resolve, 300));
 
         let opcije = { facingMode: "environment" };
         if (this.straznjeKamere.length > 0) {
-            opcije = { deviceId: { exact: this.straznjeKamere[this.trenutniIndeksLece].deviceId } };
+            opcije = { 
+                deviceId: { exact: this.straznjeKamere[this.trenutniIndeksLece].deviceId },
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            };
         }
 
         try {
             this.stream = await navigator.mediaDevices.getUserMedia({ video: opcije });
             video.srcObject = this.stream;
+            
+            let oznaka = this.straznjeKamere[this.trenutniIndeksLece]?.label || `Leca ${this.trenutniIndeksLece + 1}`;
+            status.innerText = `Aktivna leca: [${oznaka}]. Skenirajte pod...`;
             ArucoModul.otpocniDetekciju();
         } catch (err) {
+            // Rezervni korak ako exact ID ne dozvoli ucitavanje rezolucije
             this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
             video.srcObject = this.stream;
+            status.innerText = "Aktivirana zamjenska straznja leca...";
             ArucoModul.otpocniDetekciju();
         }
     },
 
     ciklirajLecu() {
         if (this.straznjeKamere.length <= 1) { 
-            alert("Preglednik vidi samo 1 straznju lecu. Pokusajte osvjeziti stranicu.");
+            alert("Preglednik vidi samo 1 straznju lecu. Pokusajte osvjeziti stranicu u Incognito modu.");
             return; 
         }
         this.trenutniIndeksLece = (this.trenutniIndeksLece + 1) % this.straznjeKamere.length;
