@@ -55,13 +55,23 @@ const DokumentacijaModul = {
         overlay.style.zIndex = '99999999'; overlay.style.overflowY = 'auto';
         overlay.style.padding = '24px'; overlay.style.boxSizing = 'border-box';
 
+        // POPRAVAK ZA PDF (Uklanja prazan papir)
         overlay.innerHTML = `
             <style>
                 @media print {
-                    body * { visibility: hidden !important; }
-                    #print-overlay, #print-overlay * { visibility: visible !important; }
-                    #print-overlay { position: absolute; left: 0; top: 0; width: 100%; height: auto; padding: 0; }
+                    /* Nasilno gasimo apsolutno sve osim ovog overlay-a da spriječimo prijelom na drugu stranicu */
+                    body > *:not(#print-overlay) { display: none !important; }
+                    #print-overlay { 
+                        display: block !important; 
+                        position: relative !important; 
+                        width: 100% !important; 
+                        height: auto !important; 
+                        margin: 0 !important; 
+                        padding: 0 !important; 
+                        overflow: visible !important;
+                    }
                     .no-print { display: none !important; }
+                    @page { margin: 1cm; }
                 }
             </style>
             <div class="no-print" style="display:flex; justify-content:space-between; margin-bottom:30px; background:#111417; padding:12px; margin:-24px -24px 24px -24px;">
@@ -279,7 +289,6 @@ const App = {
             
             if (napredni) {
                 this.projektObjekt = JSON.parse(napredni);
-                // Osiguranje ako se učita stari projekt bez opsega
                 if(!this.projektObjekt.konfiguracija) {
                     this.projektObjekt.konfiguracija = { zidovi: true, pod: true, sokl: true };
                 }
@@ -294,7 +303,6 @@ const App = {
         const projekti = BazaModul.dohvatiSveProjekte(); 
         el.innerHTML = '';
         
-        // NOVO: Pametno hijerarhijsko grupiranje soba ispod Klijenta
         const klijentiGrupe = {};
         projekti.forEach(p => {
             if(!klijentiGrupe[p.klijent]) klijentiGrupe[p.klijent] = [];
@@ -333,4 +341,4 @@ const App = {
     }
 };
 window.onload = () => App.init();
-           
+                                                                                           
