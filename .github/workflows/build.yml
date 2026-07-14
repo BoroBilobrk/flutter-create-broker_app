@@ -28,29 +28,30 @@ jobs:
           rm -rf android ios linux macos web windows lib test pubspec.yaml pubspec.lock
           flutter create --project-name broker_app .
           
-      - name: Sigurno podizanje Android SDK, Kotlin i Dozvola
+      - name: Sigurno podizanje Android SDK i Kotlin
         run: |
           python -c "
+          import re
           p_man = 'android/app/src/main/AndroidManifest.xml'
-          with open(p_man, 'r') as f: data = f.read()
+          with open(p_man, 'r') as f: d = f.read()
           perms = '<uses-permission android:name=\"android.permission.INTERNET\"/>\n    <uses-permission android:name=\"android.permission.CAMERA\"/>\n    <uses-permission android:name=\"android.permission.RECORD_AUDIO\"/>\n    '
-          data = data.replace('<application', perms + '<application')
-          with open(p_man, 'w') as f: f.write(data)
-          "
-          # 1. Hardkodiranje SDK verzija za kameru i WebView
-          sed -i 's/flutter.minSdkVersion/24/g' android/app/build.gradle
-          sed -i 's/flutter.compileSdkVersion/34/g' android/app/build.gradle
-          sed -i 's/flutter.targetSdkVersion/34/g' android/app/build.gradle
+          d = d.replace('<application', perms + '<application')
+          with open(p_man, 'w') as f: f.write(d)
           
-          # 2. POPRAVAK ZA KOTLIN (Glavni krivac za pucanje na 3. minuti)
-          sed -i 's/1.8.22/1.9.24/g' android/settings.gradle || true
-          sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "1.9.24"/g' android/build.gradle || true
+          p_set = 'android/settings.gradle'
+          with open(p_set, 'r') as f: s = f.read()
+          s = re.sub(r'id\s+\"org\.jetbrains\.kotlin\.android\"\s+version\s+\".*?\"', 'id \"org.jetbrains.kotlin.android\" version \"1.9.24\"', s)
+          with open(p_set, 'w') as f: f.write(s)
+          "
+          echo "flutter.minSdkVersion=24" >> android/local.properties
+          echo "flutter.compileSdkVersion=34" >> android/local.properties
+          echo "flutter.targetSdkVersion=34" >> android/local.properties
           
       - name: Instalacija Flutter paketa
         run: |
           flutter pub add flutter_inappwebview
           flutter pub add permission_handler
-          flutter pub add camera
+          flutter pub add camera:0.10.5
           
       - name: Ubacivanje Hibridne Arhitekture
         run: |
