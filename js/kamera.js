@@ -6,16 +6,16 @@ const Kamera = {
     async pokreni() {
         const status = document.getElementById('kamera-status');
         try {
-            // Prvo paljenje da mobitel zatraži i odobri dozvole
-            this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            // NOVO: Tražimo eksplicitnu dozvolu za PTZ (Pan/Tilt/Zoom) kako bismo mogli kontrolirati širinu kadra
+            this.stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: "environment", zoom: true } 
+            });
             const video = document.getElementById('web-kamera');
             video.srcObject = this.stream;
 
-            // Tek sada čitamo sve dostupne senzore (kada imamo dozvolu)
             const uredjaji = await navigator.mediaDevices.enumerateDevices();
             let sveLece = uredjaji.filter(u => u.kind === 'videoinput');
             
-            // Filtriramo samo stražnje kamere (odbacujemo prednju/selfie)
             this.straznjeKamere = sveLece.filter(k => {
                 let l = k.label.toLowerCase();
                 return !l.includes('front') && !l.includes('user') && !l.includes('prednja');
@@ -24,8 +24,7 @@ const Kamera = {
             if (this.straznjeKamere.length === 0) { this.straznjeKamere = sveLece; }
             this.trenutniIndeksLece = 0;
             
-            // Ispisujemo točan broj pronađenih leća na ekranu
-            status.innerHTML = `Sustav spreman. Pronađeno <b style="color:var(--akcent-plavi)">${this.straznjeKamere.length}</b> stražnjih leća.`;
+            status.innerHTML = `Sustav spreman. Pritisnite gumb za kalibraciju kuta.`;
             ArucoModul.otpocniDetekciju();
         } catch (error) {
             status.innerText = "Problem s kamerom: " + error.message;
@@ -36,7 +35,6 @@ const Kamera = {
         const video = document.getElementById('web-kamera');
         const status = document.getElementById('kamera-status');
 
-        // 1. HARD KILL: Brutalno zaustavljanje svih procesa na trenutnoj leći
         if (this.stream) {
             this.stream.getTracks().forEach(track => {
                 track.stop();
@@ -46,47 +44,70 @@ const Kamera = {
             video.srcObject = null;
         }
 
-        // 2. PAUZA: Čekamo 400ms da matična ploča mobitela fizički oslobodi senzor
         await new Promise(resolve => setTimeout(resolve, 400));
 
-        // 3. TARGETIRANJE: Izvlačimo serijski broj iduće leće
         let ciljaniId = this.straznjeKamere[this.trenutniIndeksLece].deviceId;
         
         let opcije = {
             video: { 
                 deviceId: ciljaniId ? { exact: ciljaniId } : undefined,
-                width: { ideal: 1920 }, // Forsiramo višu rezoluciju da natjeramo široki kut
-                height: { ideal: 1080 }
+                width: { ideal: 1920 },
+                height: { ideal: 1080 },
+                zoom: true // Održavamo zoom dozvolu na novoj leći
             }
         };
 
         try {
-            // Pokretanje specifične leće
             this.stream = await navigator.mediaDevices.getUserMedia(opcije);
             video.srcObject = this.stream;
             
             let oznaka = this.straznjeKamere[this.trenutniIndeksLece].label || `Leća ${this.trenutniIndeksLece + 1}`;
-            status.innerHTML = `Aktivna: <b style="color:var(--akcent-plavi)">${oznaka}</b> (${this.trenutniIndeksLece + 1}/${this.straznjeKamere.length})`;
+            status.innerHTML = `Aktivna: <b style="color:var(--akcent-plavi)">${oznaka}</b>`;
             ArucoModul.otpocniDetekciju();
         } catch (err) {
-            console.log("Greška pri promjeni leće, vraćam na default: ", err);
-            this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+            this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment", zoom: true } });
             video.srcObject = this.stream;
-            status.innerHTML = `Zaštita sustava: Učitana osnovna leća...`;
+            status.innerHTML = `Zaštita sustava: Učitana osnovna leća.`;
             ArucoModul.otpocniDetekciju();
         }
     },
 
     ciklirajLecu() {
         const status = document.getElementById('kamera-status');
-        if (this.straznjeKamere.length <= 1) { 
-            status.innerHTML = `<span style="color:var(--akcent-bordo)">Preglednik vidi samo 1 leću!</span> Probaj drugi preglednik.`;
+        
+        // AKO PREGLEDNIK DOPUŠTA VIŠE FIZIČKIH LEĆA
+        if (this.straznjeKamere.length > 1) { 
+            status.innerHTML = `Prebacujem fizički senzor leće...`;
+            this.trenutniIndeksLece = (this.trenutniIndeksLece + 1) % this.straznjeKamere.length;
+            this.pokreniSpecificnuLecu();
             return;
         }
-        
-        status.innerHTML = `Prebacujem senzor leće...`;
-        this.trenutniIndeksLece = (this.trenutniIndeksLece + 1) % this.straznjeKamere.length;
-        this.pokreniSpecificnuLecu();
+
+        // AKO PREGLEDNIK BLOKIRA FIZIČKE LEĆE (Vidi samo 1) -> POKUŠAVAMO PTZ ZOOM HACK
+        if (this.stream) {
+            const track = this.stream.getVideoTracks()[0];
+            const capabilities = track.getCapabilities();
+            const settings = track.getSettings();
+
+            if (capabilities.zoom) {
+                // Pokušavamo postaviti zoom na apsolutni minimum koji hardver dopušta (odzumiranje)
+                let trenutniZoom = settings.zoom || 1;
+                let minZoom = capabilities.zoom.min || 1;
+                let maxZoom = capabilities.zoom.max || 1;
+                
+                // Cikliramo zoom: ako je na minimumu, vrati ga na 1.x, inače ga stavi na minimum
+                let noviZoom = (trenutniZoom <= minZoom + 0.1) ? (minZoom + (maxZoom - minZoom) * 0.2) : minZoom;
+                
+                try {
+                    track.applyConstraints({ advanced: [{ zoom: noviZoom }] });
+                    status.innerHTML = `PTZ Override: Zoom postavljen na <b style="color:var(--akcent-plavi)">${noviZoom}x</b>`;
+                } catch (err) {
+                    status.innerHTML = `<span style="color:var(--akcent-bordo)">Hardver blokira i softverski široki kut.</span>`;
+                }
+            } else {
+                status.innerHTML = `<span style="color:var(--akcent-bordo)">Preglednik potpuno blokira leće.</span> Spremni za Flutter.`;
+            }
+        }
     },
 
     zaustavi() {
