@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BRO-KER | Pametni Keramicarski Alat</title>
     <link rel="stylesheet" href="css/stil.css">
-    
     <script async src="https://docs.opencv.org/4.5.4/opencv.js" type="text/javascript"></script>
-    
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
     <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
 </head>
@@ -19,8 +17,8 @@
     </header>
 
     <main class="broker-container">
+        
         <section id="zaslon-izbornik" class="zaslon">
-            
             <div class="alat-kartica" style="width:100%; margin-bottom: 15px; margin-top: 15px; text-align: left; box-sizing: border-box;">
                 <span style="font-size:10px; font-weight:700; color:var(--tekst-sporedni); display:block; margin-bottom:8px; letter-spacing:1px;">IZGLED KORISNIČKOG SUČELJA (TEMA)</span>
                 <select id="odabir-teme" style="width:100%; font-weight:bold; color:var(--akcent-plavi); background:var(--bg-input); border:1px solid var(--boja-okvira);" onchange="App.promijeniTemu(this.value)">
@@ -31,9 +29,9 @@
             </div>
             
             <div class="alat-kartica" style="width:100%; margin-bottom: 20px;">
-                <span style="font-size:10px; font-weight:700; color:var(--tekst-sporedni); display:block; margin-bottom:10px; letter-spacing:1px;">OTVORI NOVI PROJEKT / DODAJ PROSTORIJU</span>
+                <span style="font-size:10px; font-weight:700; color:var(--tekst-sporedni); display:block; margin-bottom:10px; letter-spacing:1px;">UPRAVLJANJE PROJEKTNIM NALOZIMA</span>
                 <input type="text" id="input-klijent" placeholder="Ime klijenta (npr. Hotel Jadran)" style="width:100%; background:var(--bg-input); border:1px solid var(--boja-okvira); color:var(--tekst-glavni); padding:12px; margin-bottom:10px;">
-                <input type="text" id="input-prostorija" placeholder="Naziv prostorije (npr. Kupaonica 101)" style="width:100%; background:var(--bg-input); border:1px solid var(--boja-okvira); color:var(--tekst-glavni); padding:12px; margin-bottom:15px;">
+                <input type="text" id="input-prostorija" placeholder="Naziv prostorije (npr. Kupaonica Kat 1)" style="width:100%; background:var(--bg-input); border:1px solid var(--boja-okvira); color:var(--tekst-glavni); padding:12px; margin-bottom:15px;">
                 
                 <span style="font-size:10px; font-weight:700; color:var(--tekst-sporedni); display:block; margin-bottom:8px; letter-spacing:1px;">OPSEG RADOVA ZA OVU PROSTORIJU:</span>
                 <div style="display:flex; gap:8px; margin-bottom:20px;">
@@ -82,14 +80,28 @@
                 </select>
             </div>
 
-            <div class="alat-kartica" style="width:100%; margin-bottom: 8px; display: flex; gap: 10px;">
-                <div style="flex:1;">
-                    <label id="label-dim-w" style="font-size:10px; color:var(--tekst-sporedni); font-weight:bold;">ŠIRINA POVRŠINE (cm)</label>
-                    <input type="number" id="input-zid-w" style="width:100%; background:var(--bg-input); border:1px solid var(--boja-okvira); color:var(--tekst-glavni); padding:8px; font-weight:bold;" onchange="App.sacuvajPoljaUObjekt()">
+            <div class="alat-kartica" style="width:100%; margin-bottom: 8px;">
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <div style="flex:1;">
+                        <label id="label-dim-w" style="font-size:10px; color:var(--tekst-sporedni); font-weight:bold;">ŠIRINA PROSTORA (cm)</label>
+                        <input type="number" id="input-zid-w" style="width:100%; background:var(--bg-input); border:1px solid var(--boja-okvira); color:var(--tekst-glavni); padding:8px; font-weight:bold;" onchange="App.sacuvajPoljaUObjekt()">
+                    </div>
+                    <div style="flex:1;" id="kontejner-visina-zida">
+                        <label style="font-size:10px; color:var(--tekst-sporedni); font-weight:bold;">VISINA STRAPA (cm)</label>
+                        <input type="number" id="input-zid-h" style="width:100%; background:var(--bg-input); border:1px solid var(--boja-okvira); color:var(--tekst-glavni); padding:8px; font-weight:bold;" onchange="App.sacuvajPoljaUObjekt()">
+                    </div>
                 </div>
-                <div style="flex:1;">
-                    <label id="label-dim-h" style="font-size:10px; color:var(--tekst-sporedni); font-weight:bold;">VISINA POVRŠINE (cm)</label>
-                    <input type="number" id="input-zid-h" style="width:100%; background:var(--bg-input); border:1px solid var(--boja-okvira); color:var(--tekst-glavni); padding:8px; font-weight:bold;" onchange="App.sacuvajPoljaUObjekt()">
+                
+                <div id="sekcija-visina-oblaganja" style="display:flex; align-items:center; gap:10px; border-top:1px solid var(--boja-okvira); padding-top:10px; margin-top:5px;">
+                    <div style="flex:1;">
+                        <label style="font-size:10px; color:var(--akcent-plavi); font-weight:bold;">VISINA OBLAGANJA (cm)</label>
+                        <input type="number" id="input-oblaganje-h" style="width:100%; background:var(--bg-input); border:1px solid var(--boja-okvira); color:var(--tekst-glavni); padding:8px; font-weight:bold;" onchange="App.sacuvajPoljaUObjekt()">
+                    </div>
+                    <div style="flex:1; padding-top:15px;">
+                        <label style="background:var(--bg-input); border:1px solid var(--boja-okvira); padding:8px; border-radius:4px; color:var(--tekst-glavni); font-size:10px; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:6px; cursor:pointer;">
+                            <input type="checkbox" id="chk-tus-zona" style="width:14px; height:14px; accent-color:var(--akcent-plavi);" onchange="App.toggleTusZona(this.checked)"> TUŠ ZONA (DO VRHA)
+                        </label>
+                    </div>
                 </div>
             </div>
 
@@ -108,13 +120,20 @@
                 </div>
             </div>
 
-            <div id="sekcija-pomicanje-rastera" class="alat-kartica" style="width:100%; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px;">
-                <label style="font-size:10px; color:var(--tekst-sporedni); font-weight:bold; letter-spacing:1px;">RUČNO PORAVNANJE MREŽE</label>
-                <div style="display: flex; align-items: center; gap: 10px;">
-                    <button class="gumb-ostri" style="margin:0; padding:10px; width:45px;" onclick="MatematikaEngine.nudgeRaster(-0.5)">◀</button>
-                    <input type="range" id="slider-odmak-x" min="0" max="60" value="0" step="0.5" style="flex:1; accent-color:var(--akcent-plavi); height:6px; cursor:pointer;" oninput="MatematikaEngine.postaviOdmakX(this.value)">
-                    <button class="gumb-ostri" style="margin:0; padding:10px; width:45px;" onclick="MatematikaEngine.nudgeRaster(0.5)">▶</button>
-                    <span id="prikaz-odmaka" style="font-size:11px; font-weight:bold; color:var(--akcent-plavi); min-width:45px; text-align:right;">0.0 cm</span>
+            <div id="sekcija-pomicanje-rastera" class="alat-kartica" style="width:100%; margin-bottom: 10px; display: flex; flex-direction: column; gap: 10px;">
+                <div>
+                    <label style="font-size:10px; color:var(--tekst-sporedni); font-weight:bold; letter-spacing:1px; display:block; margin-bottom:4px;">HORIZONTALNO PORAVNANJE (X-os)</label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="range" id="slider-odmak-x" min="0" max="120" value="0" step="0.5" style="flex:1; accent-color:var(--akcent-plavi); height:6px;" oninput="App.promijeniOdmakX(this.value)">
+                        <span id="prikaz-odmaka-x" style="font-size:11px; font-weight:bold; color:var(--akcent-plavi); min-width:50px; text-align:right;">0.0 cm</span>
+                    </div>
+                </div>
+                <div id="blizanci-y-os">
+                    <label style="font-size:10px; color:var(--tekst-sporedni); font-weight:bold; letter-spacing:1px; display:block; margin-bottom:4px;">VERTIKALNO PORAVNANJE (Y-os)</label>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <input type="range" id="slider-odmak-y" min="0" max="120" value="0" step="0.5" style="flex:1; accent-color:var(--akcent-plavi); height:6px;" oninput="App.promijeniOdmakY(this.value)">
+                        <span id="prikaz-odmaka-y" style="font-size:11px; font-weight:bold; color:var(--akcent-plavi); min-width:50px; text-align:right;">0.0 cm</span>
+                    </div>
                 </div>
             </div>
 
@@ -126,7 +145,7 @@
                 ➕ DODAJ OTVOR / KRUNU MANUELNO
             </button>
             <button class="gumb-ostri" style="margin-bottom: 20px; border-color: var(--akcent-zeleni); color: var(--akcent-zeleni);" onclick="App.spasiTrenutnoStanjeUBazu()">
-                💾 SPREMI PROJEKT U MEMORIJU
+                💾 SPREMI ZASLON U PROJEKT
             </button>
 
             <div class="kontrole-radne">
@@ -136,23 +155,19 @@
         </section>
     </main>
 
-        <section id="zaslon-kamera" style="position:fixed !important; top:0 !important; left:0 !important; width:100vw !important; height:100vh !important; background:transparent !important; z-index:9999999 !important; display:none; box-sizing:border-box !important;">
-        
-        <video id="web-kamera" style="display:none;"></video>
+    <section id="zaslon-kamera" style="position:fixed !important; top:0 !important; left:0 !important; width:100vw !important; height:100vh !important; background:transparent !important; z-index:9999999 !important; display:none; box-sizing:border-box !important;">
         <canvas id="aruco-canvas" style="width:100% !important; height:100% !important; object-fit:cover !important; position:absolute !important; top:0 !important; left:0 !important; pointer-events:none !important; z-index:20 !important;"></canvas>
-        
         <div style="position:absolute !important; top:20px !important; left:5% !important; width:90% !important; display:flex !important; flex-direction:column !important; gap:8px !important; box-sizing:border-box !important; z-index:10000000 !important;">
-            <div id="kamera-status" style="background:rgba(10,12,14,0.96) !important; border:1px solid var(--boja-okvira) !important; color:var(--tekst-glavni) !important; padding:10px !important; font-size:11px !important; font-weight:bold !important; text-align:center !important; width:100% !important; box-sizing:border-box !important; letter-spacing:0.5px;">Komunikacija s Nativnom jezgrom...</div>
-            <button class="gumb-ostri" style="margin:0; width:100%; background:rgba(20,26,33,0.98); border:2px solid var(--boja-okvira); color:var(--tekst-glavni); font-weight:bold; padding:14px; font-size:11px; letter-spacing:0.5px;" onclick="Kamera.ciklirajLecu()">
+            <div id="kamera-status" style="background:rgba(10,12,14,0.96) !important; border:1px solid var(--boja-okvira) !important; color:var(--tekst-glavni) !important; padding:10px !important; font-size:11px !important; font-weight:bold !important; text-align:center !important; width:100% !important; box-sizing:border-box !important;">Komunikacija s Nativnom jezgrom...</div>
+            <button class="gumb-ostri" style="margin:0; width:100%; background:rgba(20,26,33,0.98); border:2px solid var(--boja-okvira); color:var(--tekst-glavni); font-weight:bold; padding:14px;" onclick="Kamera.ciklirajLecu()">
                 🔄 PROMIJENI FIZIČKU LEĆU (NATIVE)
             </button>
             <div style="display:flex !important; gap:8px !important; width:100% !important;">
-                <button class="gumb-ostri gumb-kontra" style="margin:0; flex:1; padding:14px; font-weight:bold; font-size:11px;" onclick="Kamera.zaustavi()">✕ ZATVORI</button>
-                <button class="gumb-ostri gumb-potvrda" style="margin:0; flex:2; padding:14px; font-weight:bold; font-size:11px;" onclick="Kamera.uhvatiMjere()">TESTIRAJ KADAR</button>
+                <button class="gumb-ostri gumb-kontra" style="margin:0; flex:1; padding:14px;" onclick="Kamera.zaustavi()">✕ ZATVORI</button>
+                <button class="gumb-ostri gumb-potvrda" style="margin:0; flex:2; padding:14px;" onclick="Kamera.uhvatiMjere()">ZAKLJUČAJ MJERE</button>
             </div>
         </div>
-        </section>
-    
+    </section>
 
     <script src="js/baza.js"></script>
     <script src="js/matematika.js"></script>
@@ -160,4 +175,5 @@
     <script src="js/aruco.js"></script>
     <script src="js/app.js"></script>
 </body>
-</html>
+                        </html>
+                        
