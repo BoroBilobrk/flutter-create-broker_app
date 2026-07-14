@@ -1,260 +1,143 @@
-/* RESET I OSNOVNE POSTAVKE SVRŠENE PRECIZNOSTI */
-* {
-    box-sizing: border-box;
-    border-radius: 0 !important; /* STROGO OŠTRI RUBOVI ZA SVE KOMPONENTE */
+/* ==========================================================================
+   BRO-KER ENTERPRISE ENGINE | TRI INTEGRIRANE TEME
+   ========================================================================== */
+
+/* 1. DEFAULT TEMA: INDUSTRIAL STEALTH (Neon-Tamna) */
+:root, body.theme-stealth {
+    --bg-glavna: #000000;
+    --bg-kartica: #0A0C0E;
+    --bg-input: #12161A;
+    --boja-okvira: #22282C;
+    --tekst-glavni: #FFFFFF;
+    --tekst-sporedni: #6C7A84;
+    --akcent-zeleni: #4EFA9E;
+    --akcent-bordo: #FF5555;
+    --akcent-plavi: #4EFA9E;
+    --efekt-stakla: none;
+    --sjena: none;
+    --zaobljenje: 0px;
 }
 
+/* 2. TEMA: ARCHITECT STUDIO (Minimalistička siva) */
+body.theme-architect {
+    --bg-glavna: #1E2229;
+    --bg-kartica: #2A313E;
+    --bg-input: #1F242E;
+    --boja-okvira: #3B4556;
+    --tekst-glavni: #F7FAFC;
+    --tekst-sporedni: #8C9BA5;
+    --akcent-zeleni: #4EFA9E;
+    --akcent-bordo: #FF5555;
+    --akcent-plavi: #E5A93C; /* Zlatno-amber tonovi */
+    --efekt-stakla: none;
+    --sjena: 0 4px 12px rgba(0,0,0,0.25);
+    --zaobljenje: 8px;
+}
+
+/* 3. TEMA: HUD TACTICAL (Prozirni stakleni dizajn) */
+body.theme-hud {
+    --bg-glavna: #090C10;
+    --bg-kartica: rgba(10, 14, 20, 0.75);
+    --bg-input: rgba(18, 24, 35, 0.5);
+    --boja-okvira: rgba(0, 240, 255, 0.3);
+    --tekst-glavni: #E2E8F0;
+    --tekst-sporedni: #00F0FF;
+    --akcent-zeleni: #4EFA9E;
+    --akcent-bordo: #FF5555;
+    --akcent-plavi: #00F0FF; /* Ledeno plavi laser */
+    --efekt-stakla: blur(12px);
+    --sjena: 0 8px 32px 0 rgba(0, 240, 255, 0.05);
+    --zaobljenje: 4px;
+}
+
+/* BAZNI ELEMENTI USKLAĐENI S VARIJABLAMA */
 body {
+    background-color: var(--bg-glavna);
+    color: var(--tekst-glavni);
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #0A0C0E; /* Duboka mat crna */
-    color: #E6E8EA; /* Svijetli sivo-bijeli tekst za maksimalan kontrast */
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    overflow-x: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* PREMIUM ZAGLAVLJE */
 .broker-header {
-    background-color: #111417; /* Sjena tamnog škriljevca */
-    padding: 14px 24px;
+    background-color: var(--bg-kartica);
+    border-bottom: 1px solid var(--boja-okvira);
+    backdrop-filter: var(--efekt-stakla);
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid #22282C;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    padding: 15px 20px;
 }
 
-.mini-logo {
-    display: flex;
-    align-items: center;
-    font-weight: 700;
-    font-size: 14px;
-    letter-spacing: 2px;
-    color: #FFFFFF;
-}
-
-.header-logo-img {
-    height: 24px;
-    width: 24px;
-    margin-right: 12px;
-    object-fit: contain;
-}
-
-#naslov-prikaza {
-    font-size: 11px;
-    margin: 0;
-    margin-left: auto;
-    color: #6C7A84;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    font-weight: 600;
-}
-
-/* DIZAJN GLAVNOG IZBORNIKA I LOGOTIPA */
-.logo-kontejner {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin: 50px 0 40px 0;
-    text-align: center;
-}
-
-.glavni-logo-img {
-    width: 180px;
-    height: 180px;
-    object-fit: contain;
-    filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.6));
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    padding: 5px;
-    background-color: #111417;
-}
-
-.logo-podnaslov {
-    margin-top: 15px;
-    font-size: 10px;
-    letter-spacing: 3px;
-    color: #6C7A84;
-    font-weight: bold;
-    text-transform: uppercase;
-}
-
-/* UPRAVLJANJE ZASLONIMA */
-.zaslon {
-    display: none;
-    padding: 16px;
-    width: 100%;
-    max-width: 480px;
+.broker-container {
+    padding: 20px;
+    max-width: 600px;
     margin: 0 auto;
-    flex-direction: column;
-}
-
-.aktivni-zaslon {
-    display: flex !important;
-}
-
-/* PREMIUM INDUSTRIJSKI GUMBOVI */
-.gumb-ostri {
-    background-color: #161A1D;
-    color: #FFFFFF;
-    border: 1px solid #343D44;
-    padding: 18px 24px;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 2px;
-    cursor: pointer;
-    width: 100%;
-    text-transform: uppercase;
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.15s ease;
-}
-
-.gumb-ostri:active {
-    background-color: #22282C;
-    border-color: #434E57;
-}
-
-.gumb-ikona {
-    margin-right: 10px;
-    font-size: 14px;
-}
-
-.gumb-sekundarni {
-    background-color: transparent;
-    border-color: #22282C;
-    color: #8C9BA5;
-}
-
-.gumb-kontra {
-    background-color: #2D1919;
-    border-color: #5C3434;
-    color: #FF8080;
-}
-
-.gumb-potvrda {
-    background-color: #19242D;
-    border-color: #34495C;
-    color: #80BFFF;
-}
-
-.gumb-zeleni {
-    background-color: #14281E;
-    border-color: #2E5C43;
-    color: #4EFA9E;
-}
-
-/* STRUKTURA ZA VIDEO / KAMERU */
-.video-okvir {
-    position: relative;
-    width: 100%;
-    height: 400px;
-    background-color: #000000;
-    border: 1px solid #22282C;
-    box-shadow: inset 0 0 40px rgba(0,0,0,0.8);
-    margin-bottom: 20px;
-}
-
-#web-kamera, #aruco-canvas {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    object-fit: cover;
-}
-
-.nstatus {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: rgba(17, 20, 23, 0.9);
-    border-top: 1px solid #22282C;
-    padding: 14px;
-    font-size: 12px;
-    font-weight: 600;
-    text-align: center;
-    letter-spacing: 0.5px;
-}
-
-/* RADNI PROSTOR I GRID KARTICE */
-.canvas-prostor {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    padding: 20px 0;
-    background-color: #07080A;
-    border: 1px solid #161A1D;
-    margin-bottom: 16px;
-}
-
-.nadzorna-ploca {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-    margin-bottom: 20px;
 }
 
 .alat-kartica {
-    background-color: #111417;
-    border: 1px solid #1C2125;
+    background-color: var(--bg-kartica);
+    border: 1px solid var(--boja-okvira);
+    border-radius: var(--zaobljenje);
+    box-shadow: var(--sjena);
+    backdrop-filter: var(--efekt-stakla);
     padding: 16px;
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
 }
 
-/* PREMIUM KVADRATNI PREKIDAČI (SWITCHES) */
-.prekidac-kontejner {
-    display: flex;
-    flex-direction: column;
-    position: relative;
+/* STILIZACIJA GUMBOVA */
+.gumb-ostri {
+    width: 100%;
+    background-color: var(--bg-input);
+    border: 1px solid var(--boja-okvira);
+    border-radius: var(--zaobljenje);
+    color: var(--tekst-glavni);
+    padding: 12px;
+    font-weight: bold;
     cursor: pointer;
-    user-select: none;
-}
-
-.prekidac-tekst {
-    font-size: 11px;
-    color: #8C9BA5;
-    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 1px;
-    margin-bottom: 10px;
+    font-size: 11px;
+    transition: all 0.2s ease;
 }
 
-.prekidac-kontejner input {
-    position: absolute;
-    opacity: 0;
-    cursor: pointer;
-    height: 0;
-    width: 0;
+.gumb-potvrda {
+    background-color: var(--bg-input);
+    border: 2px solid var(--akcent-zeleni);
+    color: var(--akcent-zeleni);
 }
 
-.kvadratni-prekidac {
-    height: 24px;
-    width: 44px;
-    background-color: #161A1D;
-    border: 1px solid #2A3237;
-    position: relative;
-    transition: background-color 0.2s;
+.gumb-potvrda:active {
+    background-color: var(--akcent-zeleni);
+    color: var(--bg-glavna);
 }
 
-.kvadratni-prekidac:after {
-    content: "";
-    position: absolute;
-    left: 3px;
-    top: 3px;
-    width: 16px;
-    height: 16px;
-    background-color: #434E57;
-    transition: transform 0.2s;
+.gumb-zeleni {
+    background-color: var(--bg-input);
+    border: 2px solid var(--akcent-plavi);
+    color: var(--akcent-plavi);
 }
 
-.prekidac-kontejner input:checked ~ .kvadratni-prekidac {
-    background-color: #1F2A33;
-    border-color: #3D5566;
+.gumb-kontra {
+    background-color: var(--bg-input);
+    border: 2px solid var(--akcent-bordo);
+    color: var(--akcent-bordo);
 }
 
-.prekidac-kontejner input:checked ~ .kvadratni-prekidac:after {
-    transform: translateX(20px);
-    background-color: #59A6DC; /* Prepoznatljiva plava boja za aktivne elemente */
+/* INPUT POLJA */
+input, select {
+    background-color: var(--bg-input);
+    border: 1px solid var(--boja-okvira);
+    border-radius: var(--zaobljenje);
+    color: var(--tekst-glavni);
+    padding: 12px;
+    font-size: 13px;
+    box-sizing: border-box;
+}
+
+input:focus, select:focus {
+    border-color: var(--akcent-plavi);
+    outline: none;
 }
