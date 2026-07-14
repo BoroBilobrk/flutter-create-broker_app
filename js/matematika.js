@@ -6,7 +6,6 @@ const MatematikaEngine = {
         let w = p.w || 100;
         let h = p.h || 265;
         let oblH = (p.tip === 'Zid') ? (p.visinaOblaganja || h) : h;
-
         let plW = p.rotacija ? p.plocicaH : p.plocicaW;
         let plH = p.rotacija ? p.plocicaW : p.plocicaH;
         let f = p.fuga || 0;
@@ -17,11 +16,10 @@ const MatematikaEngine = {
         kontejner.style.width = (w * scale) + 'px';
         kontejner.style.height = (h * scale) + 'px';
         kontejner.style.position = 'relative';
-        kontejner.style.backgroundColor = '#1A1D20'; // Goli beton
+        kontejner.style.backgroundColor = '#1A1D20'; 
         kontejner.style.border = '2px solid #343D44';
         kontejner.innerHTML = '';
 
-        // Keramika (Glavno područje oblaganja)
         let keramikaDiv = document.createElement('div');
         keramikaDiv.style.position = 'absolute';
         keramikaDiv.style.bottom = '0';
@@ -38,12 +36,10 @@ const MatematikaEngine = {
         `;
 
         if (p.slikaTeksture) {
-            // Ako je učitana slika, crtamo je kao pozadinu pločice, a fuge idu preko nje!
             keramikaDiv.style.backgroundColor = 'transparent';
             keramikaDiv.style.backgroundImage = gridLines + `, url(${p.slikaTeksture})`;
             keramikaDiv.style.backgroundSize = `${(plW + f/10) * scale}px ${(plH + f/10) * scale}px`;
         } else {
-            // Sivi standard ako nema teksture
             keramikaDiv.style.backgroundColor = '#2C3236';
             keramikaDiv.style.backgroundImage = gridLines;
             keramikaDiv.style.backgroundSize = `${(plW + f/10) * scale}px ${(plH + f/10) * scale}px`;
@@ -52,7 +48,6 @@ const MatematikaEngine = {
         keramikaDiv.style.backgroundPosition = `${bgX}px ${bgY}px`;
         kontejner.appendChild(keramikaDiv);
 
-        // Renderiranje TUŠ ZONA s pripadajućom teksturom
         if (p.tusZone && p.tusZone.length > 0) {
             p.tusZone.forEach(tz => {
                 let tzDiv = document.createElement('div');
@@ -77,7 +72,6 @@ const MatematikaEngine = {
             });
         }
 
-        // Renderiranje OTVORA (crne rupe)
         if (p.popisOtvora && p.popisOtvora.length > 0) {
             p.popisOtvora.forEach(o => {
                 let oDiv = document.createElement('div');
@@ -93,6 +87,47 @@ const MatematikaEngine = {
             });
         }
     },
+
+    izracunajPrecizniSkart(p) {
+        let plW = p.rotacija ? p.plocicaH : p.plocicaW;
+        let plH = p.rotacija ? p.plocicaW : p.plocicaH;
+        let f = p.fuga / 10; 
+        let oblH = (p.tip === 'Zid') ? (p.visinaOblaganja || p.h) : p.h;
+
+        let brojRedova = Math.ceil(oblH / (plH + f));
+        let ukupnoPlocica = 0;
+
+        for (let r = 0; r < brojRedova; r++) {
+            let odmakEfektivni = (p.odmakX || 0) % (plW + f);
+            let prviRez = plW - odmakEfektivni;
+            if (prviRez > p.w) prviRez = p.w;
+
+            let preostaloS = p.w - prviRez;
+            let brojCijelih = 0;
+            let zadnjiRez = 0;
+            
+            if (preostaloS > 0) {
+                brojCijelih = Math.floor(preostaloS / (plW + f));
+                zadnjiRez = preostaloS - (brojCijelih * (plW + f));
+            }
+
+            let plocicaURedu = brojCijelih;
+            
+            // LOGIKA UŠTEDE: Ako se levi i desni rez mogu dobiti iz JEDNE fizičke pločice
+            if (prviRez > 0 && zadnjiRez > 0) {
+                if ((prviRez + zadnjiRez) <= plW) {
+                    plocicaURedu += 1; 
+                } else {
+                    plocicaURedu += 2; 
+                }
+            } else {
+                if (prviRez > 0) plocicaURedu += 1;
+                if (zadnjiRez > 0) plocicaURedu += 1;
+            }
+            ukupnoPlocica += plocicaURedu;
+        }
+        return ukupnoPlocica;
+    },
     
     pokreniTihiZbirniProracun(p) {
         let plW = p.rotacija ? p.plocicaH : p.plocicaW;
@@ -100,6 +135,7 @@ const MatematikaEngine = {
         let oblH = (p.tip === 'Zid') ? (p.visinaOblaganja || p.h) : p.h;
         
         let povrsinaZida = (p.w * oblH) / 10000;
+        let dodatnePlociceTus = 0;
         
         if (p.tusZone) {
             p.tusZone.forEach(tz => {
@@ -107,6 +143,7 @@ const MatematikaEngine = {
                 if (vrhTusa > oblH) {
                     let prebacajH = vrhTusa - Math.max(tz.y, oblH);
                     povrsinaZida += (tz.w * prebacajH) / 10000;
+                    dodatnePlociceTus += Math.ceil((tz.w * prebacajH) / (plW * plH)); // gruba procjena za vrh tuša
                 }
             });
         }
@@ -126,8 +163,9 @@ const MatematikaEngine = {
         }
 
         p.kvadratura = Math.max(povrsinaZida, 0);
-        let povPlocice = (plW * plH) / 10000;
-        p.izracunCijelih = Math.ceil(p.kvadratura / povPlocice * 1.1);
+        
+        // NOVO: Pozivamo precizni matematički engine za rezove umjesto "slijepih" 10%
+        p.izracunCijelih = this.izracunajPrecizniSkart(p) + dodatnePlociceTus;
     },
 
     prikaziDijalogZaOtvor() {
@@ -159,3 +197,4 @@ const MatematikaEngine = {
         App.sacuvajPoljaUObjekt();
     }
 };
+                
