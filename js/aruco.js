@@ -2,17 +2,58 @@ const ArucoModul = {
     aktivan: false,
     stvarneDimenzijeMarkera: 10.0, 
     pikselPoCm: 0, 
-    okvirBrojac: 0, // Za kontrolu opterećenja procesora
+    okvirBrojac: 0, 
+    
+    // AI Mrežne varijable
+    aiModel: null,
+    aiAktivan: false,
+    detektiraniObjekti: [],
 
     odrediKrunu(promjerCm) {
         let mm = promjerCm * 10;
         if (mm <= 8) return { oznaka: "Svrdlo O 6-8 mm", kruna: 8 };
-        if (mm <= 37) return { oznaka: "Kruna O 35 mm (Mijesalice)", kruna: 35 };
-        if (mm <= 72) return { oznaka: "Kruna O 68 mm (Uticnice)", kruna: 68 };
-        return { oznaka: "Kruna O 110 mm (WC odvod)", kruna: 110 };
+        if (mm <= 37) return { oznaka: "Kruna O 35 mm", kruna: 35 };
+        if (mm <= 72) return { oznaka: "Kruna O 68 mm", kruna: 68 };
+        return { oznaka: "Kruna O 110 mm", kruna: 110 };
     },
 
-    otpocniDetekciju() { this.aktivan = true; this.procesirajOkvir(); },
+    // SPAJANJE NA INTERNET I UČITAVANJE TENSORFLOW CLOUD MREŽE
+    async inicijalizirajAI() {
+        if (this.aiAktivan) return;
+        const status = document.getElementById('kamera-status');
+        try {
+            status.innerText = "Spajanje na Cloud AI (TensorFlow mrežu)...";
+            this.aiModel = await cocoSsd.load();
+            this.aiAktivan = true;
+            status.innerHTML = "🌐 <span style='color:var(--akcent-plavi)'>BRO-KER CLOUD AI AKTIVAN</span>";
+            this.pokreniAsinkroniAI(); // Pokreće paralelni thread za AI
+        } catch (e) {
+            console.log("Greška pri spajanju na AI mrežu: ", e);
+            status.innerText = "Samo lokalni AR skener (bez interneta).";
+        }
+    },
+
+    // ASINKRONI AI THREAD (Ne guši 60 FPS video jer radi van glavne petlje)
+    async pokreniAsinkroniAI() {
+        if (!this.aktivan || !this.aiAktivan) return;
+        const video = document.getElementById('web-kamera');
+        
+        if (video && video.readyState >= 2) {
+            try {
+                // Skenira elemente uživo na gradilištu
+                this.detektiraniObjekti = await this.aiModel.detect(video);
+            } catch (e) {}
+        }
+        
+        // Ponovi skeniranje svake pola sekunde
+        setTimeout(() => this.pokreniAsinkroniAI(), 500);
+    },
+
+    otpocniDetekciju() { 
+        this.aktivan = true; 
+        this.inicijalizirajAI();
+        this.procesirajOkvir(); 
+    },
 
     procesirajOkvir() {
         if (!this.aktivan) return;
@@ -20,8 +61,6 @@ const ArucoModul = {
         const canvas = document.getElementById('aruco-canvas');
         if (!video || !canvas) return;
 
-        // KONTROLA BATERIJE (Throttling): Skeniramo točno svaku 3. sličicu videa.
-        // Hladi mobitel za 66%, čuva bateriju, a AR raster i dalje stoji savršeno glatko.
         this.okvirBrojac++;
         if (this.okvirBrojac % 3 !== 0) {
             requestAnimationFrame(() => this.procesirajOkvir());
@@ -38,6 +77,28 @@ const ArucoModul = {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
+        // 1. ISCRTAVANJE CLOUD AI OBJEKATA (ako postoje iz paralelnog threada)
+        if (this.detektiraniObjekti && this.detektiraniObjekti.length > 0) {
+            this.detektiraniObjekti.forEach(obj => {
+                // Prikazujemo objekte koje AI prepozna sa sigurnošću većom od 50%
+                if (obj.score > 0.50) {
+                    ctx.beginPath();
+                    ctx.rect(obj.bbox[0], obj.bbox[1], obj.bbox[2], obj.bbox[3]);
+                    ctx.lineWidth = 2;
+                    ctx.strokeStyle = "#00F0FF"; // Neon plava oznaka
+                    ctx.stroke();
+                    
+                    ctx.fillStyle = "rgba(0, 240, 255, 0.8)";
+                    ctx.fillRect(obj.bbox[0], obj.bbox[1] - 22, obj.bbox[2], 22);
+                    
+                    ctx.fillStyle = "#0A0C0E";
+                    ctx.font = "11px Arial";
+                    ctx.fillText(`${obj.class.toUpperCase()} (${Math.round(obj.score * 100)}%)`, obj.bbox[0] + 5, obj.bbox[1] - 6);
+                }
+            });
+        }
+
+        // 2. GLAVNI ARUCO I GEOMETRIJSKI ENGINE (Ista robusna logika)
         if (typeof cv !== 'undefined' && cv.Mat) {
             try {
                 let src = cv.imread(canvas);
@@ -57,13 +118,11 @@ const ArucoModul = {
 
                 for (let i = 0; i < contours.size(); ++i) {
                     let cnt = contours.get(i); let area = cv.contourArea(cnt);
-                    // Minimalna površina smanjena na 1500 px za daleke prostore
                     if (area > 1500 && area > maksimalnaPovrsina && area < (canvas.width * canvas.height * 0.90)) {
                         let approx = new cv.Mat();
                         cv.approxPolyDP(cnt, approx, 0.04 * cv.arcLength(cnt, true), true);
                         if (approx.rows === 4) {
                             
-                            // --- PRAVA ARUCO MATRIČNA VALIDACIJA (STOP LAŽNIM ČETVEROKUTIMA) ---
                             let x0 = approx.data32S[0], y0 = approx.data32S[1];
                             let x1 = approx.data32S[2], y1 = approx.data32S[3];
                             let x2 = approx.data32S[4], y2 = approx.data32S[5];
@@ -77,16 +136,13 @@ const ArucoModul = {
                             let sVelicina = new cv.Size(70, 70);
                             cv.warpPerspective(bluranaSiva, izrezanMarker, mIspravka, sVelicina);
 
-                            // Uzorkujemo matricu 7x7 polja (debeo crni rub mora biti crn, inače se odbija)
                             let crniVanjskiRubValidan = true;
                             let pragCrne = 110; 
 
-                            // Provjera gornjeg i donjeg ruba markera
                             for (let col = 0; col < 7; col++) {
                                 if (izrezanMarker.ucharAt(5, col * 10 + 5) > pragCrne) crniVanjskiRubValidan = false;
                                 if (izrezanMarker.ucharAt(65, col * 10 + 5) > pragCrne) crniVanjskiRubValidan = false;
                             }
-                            // Provjera lijevog i desnog ruba markera
                             for (let row = 0; row < 7; row++) {
                                 if (izrezanMarker.ucharAt(row * 10 + 5, 5) > pragCrne) crniVanjskiRubValidan = false;
                                 if (izrezanMarker.ucharAt(row * 10 + 5, 65) > pragCrne) crniVanjskiRubValidan = false;
@@ -94,7 +150,6 @@ const ArucoModul = {
 
                             izrezanMarker.delete(); sPts.delete(); dPts.delete(); mIspravka.delete();
 
-                            // Ako je crni digitalni obrub markera potpun i točan, prihvaćamo kalibraciju
                             if (crniVanjskiRubValidan) {
                                 maksimalnaPovrsina = area;
                                 kalibriran = true;
@@ -105,14 +160,12 @@ const ArucoModul = {
                     }
                 }
 
-                // AKO JE PRAVI ARUCO PROŠAO TEST DIGITALNOG POTPISA
                 if (kalibriran && najboljiKutevi) {
                     let x0 = najboljiKutevi[0], y0 = najboljiKutevi[1];
                     let x1 = najboljiKutevi[2], y1 = najboljiKutevi[3];
                     let x2 = najboljiKutevi[4], y2 = najboljiKutevi[5];
                     let x3 = najboljiKutevi[6], y3 = najboljiKutevi[7];
 
-                    // Laserski marker oko papira
                     ctx.beginPath(); ctx.lineWidth = 4; ctx.strokeStyle = "#4EFA9E";
                     ctx.moveTo(x0, y0); ctx.lineTo(x1, y1); ctx.lineTo(x2, y2); ctx.lineTo(x3, y3); ctx.closePath(); ctx.stroke();
 
@@ -124,9 +177,6 @@ const ArucoModul = {
                     this.pikselPoCm = sirinaPiksela / this.stvarneDimenzijeMarkera;
                     let stvarniW = Math.round(canvas.width / this.pikselPoCm);
                     let stvarniH = Math.round(canvas.height / this.pikselPoCm);
-
-                    status.innerHTML = `💎 BRO-KER enterprise PRO COATING SPREMAN`;
-                    status.style.color = "#4EFA9E";
 
                     if (App.projektObjekt) {
                         App.projektObjekt.povrsine.zid1.w = stvarniW;
@@ -159,10 +209,6 @@ const ArucoModul = {
                         ctx.beginPath(); ctx.moveTo(tStart.x, tStart.y); ctx.lineTo(tEnd.x, tEnd.y); ctx.stroke();
                     }
 
-                    if (App.projektObjekt) {
-                        App.projektObjekt.povrsine.zid1.popisOtvora = App.projektObjekt.povrsine.zid1.popisOtvora.filter(o => !o.tip.includes("Kruna"));
-                    }
-
                     let krugovi = new cv.Mat();
                     cv.HoughCircles(bluranaSiva, krugovi, cv.HOUGH_GRADIENT, 1, 50, 100, 55, 12, 100);
                     let brojRupa = Math.min(krugovi.cols, 4);
@@ -173,20 +219,8 @@ const ArucoModul = {
                         let preporuka = this.odrediKrunu(rupaPromjerCm);
 
                         ctx.beginPath(); ctx.arc(cx, cy, r, 0, 2 * Math.PI); ctx.lineWidth = 4; ctx.strokeStyle = "#FF5555"; ctx.stroke();
-                        
-                        let realnaPozicijaX = cx / this.pikselPoCm;
-                        let realnaPozicijaY = (canvas.height - cy) / this.pikselPoCm;
-
-                        if (App.projektObjekt) {
-                            App.projektObjekt.povrsine.zid1.popisOtvora.push({
-                                tip: preporuka.oznaka, w: rupaPromjerCm, h: rupaPromjerCm, x: realnaPozicijaX - (rupaPromjerCm / 2), y: realnaPozicijaY - (rupaPromjerCm / 2)
-                            });
-                        }
                     }
                     krugovi.delete(); srcPts.delete(); dstPts.delete(); homografijaMatrica.delete();
-                } else {
-                    status.innerText = "Trazenje sluzbenog BRO-KER digitalnog markera...";
-                    status.style.color = "#6C7A84";
                 }
                 src.delete(); siva.delete(); bluranaSiva.delete(); thresholded.delete(); cisceno.delete(); contours.delete(); hierarchy.delete(); M_mat.delete();
             } catch (err) { console.log("AR greska: " + err.message); }
@@ -194,4 +228,3 @@ const ArucoModul = {
         requestAnimationFrame(() => this.procesirajOkvir());
     }
 };
-                        
