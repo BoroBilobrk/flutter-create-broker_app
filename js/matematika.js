@@ -1,291 +1,161 @@
 const MatematikaEngine = {
-    trenutnaPovrsina: null,
-    plocicaW: 120, plocicaH: 60, fuga: 0.2,
-    odmakX: 0, 
-    bazaOstataka: [], iskoristeniOstatciCount: 0, potrosenoCijelihPlocica: 0,
+    osvjeziIzObjekta(p) {
+        const kontejner = document.getElementById('mreza-zida');
+        if (!kontejner) return;
 
-    osvjeziIzObjekta(povrsinaObj) {
-        this.trenutnaPovrsina = povrsinaObj;
+        let w = p.w || 100;
+        let h = p.h || 265;
+        let oblH = (p.tip === 'Zid') ? (p.visinaOblaganja || h) : h;
+
+        let plW = p.rotacija ? p.plocicaH : p.plocicaW;
+        let plH = p.rotacija ? p.plocicaW : p.plocicaH;
+        let f = p.fuga || 0;
+
+        let scale = kontejner.parentElement.clientWidth / w;
+        if (scale > 3) scale = 3;
+
+        kontejner.style.width = (w * scale) + 'px';
+        kontejner.style.height = (h * scale) + 'px';
+        kontejner.style.position = 'relative';
+        kontejner.style.backgroundColor = '#1A1D20'; // Goli beton
+        kontejner.style.border = '2px solid #343D44';
+        kontejner.innerHTML = '';
+
+        // Keramika (Glavno područje oblaganja)
+        let keramikaDiv = document.createElement('div');
+        keramikaDiv.style.position = 'absolute';
+        keramikaDiv.style.bottom = '0';
+        keramikaDiv.style.left = '0';
+        keramikaDiv.style.width = '100%';
+        keramikaDiv.style.height = (oblH * scale) + 'px';
+
+        let bgX = p.odmakX * scale;
+        let bgY = -(p.odmakY * scale);
         
-        this.plocicaW = parseFloat(this.trenutnaPovrsina.plocicaW) || 120;
-        this.plocicaH = parseFloat(this.trenutnaPovrsina.plocicaH) || 60;
-        this.fuga = (parseFloat(this.trenutnaPovrsina.fuga) || 2) / 10; 
-        this.odmakX = parseFloat(this.trenutnaPovrsina.odmakX) || 0;
-        
-        const slider = document.getElementById('slider-odmak-x');
-        const prikaza = document.getElementById('prikaz-odmaka');
-        if (slider) {
-            slider.max = this.plocicaW; 
-            slider.value = this.odmakX;
+        let gridLines = `
+            linear-gradient(to right, #111417 ${f * scale / 10}px, transparent ${f * scale / 10}px),
+            linear-gradient(to bottom, #111417 ${f * scale / 10}px, transparent ${f * scale / 10}px)
+        `;
+
+        if (p.slikaTeksture) {
+            // Ako je učitana slika, crtamo je kao pozadinu pločice, a fuge idu preko nje!
+            keramikaDiv.style.backgroundColor = 'transparent';
+            keramikaDiv.style.backgroundImage = gridLines + `, url(${p.slikaTeksture})`;
+            keramikaDiv.style.backgroundSize = `${(plW + f/10) * scale}px ${(plH + f/10) * scale}px`;
+        } else {
+            // Sivi standard ako nema teksture
+            keramikaDiv.style.backgroundColor = '#2C3236';
+            keramikaDiv.style.backgroundImage = gridLines;
+            keramikaDiv.style.backgroundSize = `${(plW + f/10) * scale}px ${(plH + f/10) * scale}px`;
         }
-        if (prikaza) prikaza.innerText = this.odmakX.toFixed(1) + ' cm';
+        
+        keramikaDiv.style.backgroundPosition = `${bgX}px ${bgY}px`;
+        kontejner.appendChild(keramikaDiv);
 
-        this.iscrtajMrezuPlocica();
+        // Renderiranje TUŠ ZONA s pripadajućom teksturom
+        if (p.tusZone && p.tusZone.length > 0) {
+            p.tusZone.forEach(tz => {
+                let tzDiv = document.createElement('div');
+                tzDiv.style.position = 'absolute';
+                tzDiv.style.left = (tz.x * scale) + 'px';
+                tzDiv.style.bottom = (tz.y * scale) + 'px';
+                tzDiv.style.width = (tz.w * scale) + 'px';
+                tzDiv.style.height = (tz.h * scale) + 'px';
+                
+                if (p.slikaTeksture) {
+                    tzDiv.style.backgroundImage = gridLines + `, url(${p.slikaTeksture})`;
+                    tzDiv.style.backgroundPosition = `${bgX - (tz.x * scale)}px ${bgY + (tz.y * scale)}px`;
+                } else {
+                    tzDiv.style.backgroundColor = '#3A4248';
+                    tzDiv.style.backgroundImage = gridLines;
+                    tzDiv.style.backgroundPosition = `${bgX}px ${bgY}px`;
+                }
+                
+                tzDiv.style.backgroundSize = keramikaDiv.style.backgroundSize;
+                tzDiv.style.border = '2px dashed #4EFA9E';
+                kontejner.appendChild(tzDiv);
+            });
+        }
+
+        // Renderiranje OTVORA (crne rupe)
+        if (p.popisOtvora && p.popisOtvora.length > 0) {
+            p.popisOtvora.forEach(o => {
+                let oDiv = document.createElement('div');
+                oDiv.style.position = 'absolute';
+                oDiv.style.left = (o.x * scale) + 'px';
+                oDiv.style.bottom = (o.y * scale) + 'px';
+                oDiv.style.width = (o.w * scale) + 'px';
+                oDiv.style.height = (o.h * scale) + 'px';
+                oDiv.style.backgroundColor = '#000000';
+                oDiv.style.border = '1px solid #FF4C4C';
+                oDiv.innerHTML = `<span style="color:#FF4C4C; font-size:9px; position:absolute; top:4px; left:4px; font-weight:bold; letter-spacing:1px;">${o.tip.toUpperCase()}</span>`;
+                kontejner.appendChild(oDiv);
+            });
+        }
     },
+    
+    pokreniTihiZbirniProracun(p) {
+        let plW = p.rotacija ? p.plocicaH : p.plocicaW;
+        let plH = p.rotacija ? p.plocicaW : p.plocicaH;
+        let oblH = (p.tip === 'Zid') ? (p.visinaOblaganja || p.h) : p.h;
+        
+        let povrsinaZida = (p.w * oblH) / 10000;
+        
+        if (p.tusZone) {
+            p.tusZone.forEach(tz => {
+                let vrhTusa = tz.y + tz.h;
+                if (vrhTusa > oblH) {
+                    let prebacajH = vrhTusa - Math.max(tz.y, oblH);
+                    povrsinaZida += (tz.w * prebacajH) / 10000;
+                }
+            });
+        }
 
-    postaviOdmakX(vrijednost) {
-        this.odmakX = parseFloat(vrijednost) || 0;
-        const prikaza = document.getElementById('prikaz-odmaka');
-        if (prikaza) prikaza.innerText = this.odmakX.toFixed(1) + ' cm';
-        if (this.trenutnaPovrsina) this.trenutnaPovrsina.odmakX = this.odmakX;
-        this.iscrtajMrezuPlocica();
-    },
+        if (p.popisOtvora) {
+            p.popisOtvora.forEach(o => {
+                let dnoOtvor = o.y;
+                let vrhOtvor = o.y + o.h;
+                let efektivniVrh = Math.min(vrhOtvor, oblH);
+                let efektivnoDno = Math.max(dnoOtvor, 0);
+                let efektivnaVisina = efektivniVrh - efektivnoDno;
+                
+                if (efektivnaVisina > 0) {
+                    povrsinaZida -= (o.w * efektivnaVisina) / 10000;
+                }
+            });
+        }
 
-    nudgeRaster(iznos) {
-        let noviOdmak = this.odmakX + iznos;
-        if (noviOdmak < 0) noviOdmak = this.plocicaW + iznos; 
-        if (noviOdmak > this.plocicaW) noviOdmak = 0; 
-        const slider = document.getElementById('slider-odmak-x');
-        if (slider) slider.value = noviOdmak;
-        this.postaviOdmakX(noviOdmak);
+        p.kvadratura = Math.max(povrsinaZida, 0);
+        let povPlocice = (plW * plH) / 10000;
+        p.izracunCijelih = Math.ceil(p.kvadratura / povPlocice * 1.1);
     },
 
     prikaziDijalogZaOtvor() {
-        const stariModal = document.getElementById('broker-modal');
-        if (stariModal) stariModal.remove();
-        const modalDiv = document.createElement('div');
-        modalDiv.id = 'broker-modal';
-        modalDiv.style.position = 'fixed'; modalDiv.style.top = '0'; modalDiv.style.left = '0';
-        modalDiv.style.width = '100%'; modalDiv.style.height = '100%';
-        modalDiv.style.backgroundColor = 'rgba(10, 12, 14, 0.95)';
-        modalDiv.style.display = 'flex'; modalDiv.style.alignItems = 'center'; modalDiv.style.justifyContent = 'center';
-        modalDiv.style.zIndex = '9999999';
-
-        let jePod = this.trenutnaPovrsina.tip === 'Pod';
-        modalDiv.innerHTML = `
-            <div style="background-color: #111417; border: 1px solid #343D44; width: 90%; max-width: 360px; padding: 24px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                    <span style="font-size: 11px; font-weight: 700; letter-spacing: 1.5px; color: #FFF; text-transform: uppercase;">DODAJ OTVOR NA ZID</span>
-                    <span style="cursor: pointer; font-size: 20px; color: #6C7A84;" onclick="document.getElementById('broker-modal').remove()">✕</span>
-                </div>
-                <div style="margin-bottom:12px;">
-                    <label style="font-size:10px; color:#6C7A84; font-weight:bold; display:block; margin-bottom:4px;">TIP ELEMENTA</label>
-                    <select id="modal-tip-otvora" style="width:100%; background:#0A0C0E; border:1px solid #343D44; color:#FFF; padding:10px;">
-                        ${jePod ? `<option value="Slivnik">PODNI SLIVNIK / KANALICA</option>` : `<option value="Vrata">VRATA</option><option value="Prozor">PROZOR</option>`}
-                    </select>
-                </div>
-                <div style="display:flex; gap:10px; margin-bottom:12px;">
-                    <div style="flex:1;">
-                        <label style="font-size:10px; color:#6C7A84; font-weight:bold;">SIRINA (cm)</label>
-                        <input type="number" id="modal-otvor-w" value="70" style="width:100%; background:#0A0C0E; border:1px solid #343D44; color:#FFF; padding:8px;">
-                    </div>
-                    <div style="flex:1;">
-                        <label style="font-size:10px; color:#6C7A84; font-weight:bold;">VISINA (cm)</label>
-                        <input type="number" id="modal-otvor-h" value="200" style="width:100%; background:#0A0C0E; border:1px solid #343D44; color:#FFF; padding:8px;">
-                    </div>
-                </div>
-                <div style="display:flex; gap:10px; margin-bottom:20px;">
-                    <div style="flex:1;">
-                        <label style="font-size:10px; color:#6C7A84; font-weight:bold;">OD LIJEVA X (cm)</label>
-                        <input type="number" id="modal-otvor-x" value="40" style="width:100%; background:#0A0C0E; border:1px solid #343D44; color:#FFF; padding:8px;">
-                    </div>
-                    <div style="flex:1;">
-                        <label style="font-size:10px; color:#6C7A84; font-weight:bold;">OD PODA Y (cm)</label>
-                        <input type="number" id="modal-otvor-y" value="0" style="width:100%; background:#0A0C0E; border:1px solid #343D44; color:#FFF; padding:8px;">
-                    </div>
-                </div>
-                <button class="gumb-ostri" style="margin:0; width:100%; background-color:#19242D; border-color:#34495C;" onclick="MatematikaEngine.zakljucajOtvorIzForme()">UBACI NA CRTEZ</button>
-            </div>
-        `;
-        document.body.appendChild(modalDiv);
-    },
-
-    zakljucajOtvorIzForme() {
-        const tip = document.getElementById('modal-tip-otvora').value;
-        const w = parseFloat(document.getElementById('modal-otvor-w').value) || 70;
-        const h = parseFloat(document.getElementById('modal-otvor-h').value) || 200;
-        const x = parseFloat(document.getElementById('modal-otvor-x').value) || 0;
-        const y = parseFloat(document.getElementById('modal-otvor-y').value) || 0;
+        let odabir = prompt("ODABIR ELEMENTA:\n1 - Rupa u zidu (Vrata/Prozor)\n2 - Tuš Zona (Dodatna keramika na zidu)", "1");
+        if (!odabir) return;
         
-        this.trenutnaPovrsina.popisOtvora.push({ tip, w, h, x, y });
-        document.getElementById('broker-modal').remove();
-        this.iscrtajMrezuPlocica();
-    },
-
-    iscrtajMrezuPlocica() {
-        const kontejner = document.getElementById('mreza-zida');
-        if (!kontejner || !this.trenutnaPovrsina) return;
+        let tip = odabir === "2" ? "Tuš Zona" : "Vrata / Prozor";
         
-        kontejner.innerHTML = ''; 
-        this.bazaOstataka = []; this.iskoristeniOstatciCount = 0; this.potrosenoCijelihPlocica = 0;
+        let w = parseFloat(prompt(`Širina za ${tip} (cm):`, tip === "Tuš Zona" ? "90" : "80"));
+        let h = parseFloat(prompt(`Visina za ${tip} (cm):`, tip === "Tuš Zona" ? "265" : "200"));
+        let x = parseFloat(prompt("Pozicija X (udaljenost od lijevog kuta zida u cm):", "0"));
+        let y = parseFloat(prompt("Pozicija Y (udaljenost od poda u cm):", "0"));
 
-        let sW = this.trenutnaPovrsina.w; let sH = this.trenutnaPovrsina.h;
-        if (this.trenutnaPovrsina.tip === 'Sokl') { sW = this.trenutnaPovrsina.h; sH = this.trenutnaPovrsina.w; }
-
-        const maxMoguciW = kontejner.parentElement.clientWidth;
-        const skala = maxMoguciW / sW;
-
-        kontejner.style.width = (sW * skala) + 'px';
-        kontejner.style.height = (sH * skala) + 'px';
-        kontejner.style.position = 'relative'; 
-
-        let efektivnaSirina = this.plocicaW + this.fuga;
-        let efektivnaVisina = (this.trenutnaPovrsina.tip === 'Sokl') ? sH : this.plocicaH + this.fuga;
-        let minimalniRez = 8.0;
-
-        let ostatakKuta = sW % efektivnaSirina;
-        let pocetniPomakX = 0;
-        if (ostatakKuta > 0 && ostatakKuta < minimalniRez) {
-            pocetniPomakX = (efektivnaSirina - ostatakKuta) / 2;
+        if (isNaN(w) || isNaN(h) || isNaN(x) || isNaN(y)) {
+            alert("Neispravan unos dimenzija. Unesite brojeve."); return;
         }
 
-        let startnaTockaX = this.odmakX;
-        while (startnaTockaX > 0) { startnaTockaX -= efektivnaSirina; }
-
-        let tekuceY = 0;
-        while (tekuceY < sH) {
-            let tekuceX = startnaTockaX;
-            while (tekuceX < sW) {
-                let w = efektivnaSirina; let h = efektivnaVisina;
-                let stvarniX = tekuceX < 0 ? 0 : tekuceX;
-                if (tekuceX < 0) { w = efektivnaSirina + tekuceX; } 
-                else if (tekuceX + w > sW) { w = sW - tekuceX; }
-                if (tekuceY + h > sH) h = sH - tekuceY;
-
-                let unutarOtvora = false;
-                let sijeceOtvor = false;
-                let detaljiKrunice = null;
-
-                if (this.trenutnaPovrsina.popisOtvora) {
-                    for (let otvor of this.trenutnaPovrsina.popisOtvora) {
-                        let xPrek = Math.max(0, Math.min(stvarniX + w, otvor.x + otvor.w) - Math.max(stvarniX, otvor.x));
-                        let yPrek = Math.max(0, Math.min(tekuceY + h, otvor.y + otvor.h) - Math.max(tekuceY, otvor.y));
-                        
-                        if ((xPrek * yPrek) > 0) {
-                            if (otvor.tip.includes("Kruna")) {
-                                sijeceOtvor = true;
-                                detaljiKrunice = {
-                                    oznaka: otvor.tip,
-                                    odmakLijevo: (otvor.x + (otvor.w / 2)) - tekuceX,
-                                    odmakDno: (otvor.y + (otvor.h / 2)) - tekuceY
-                                };
-                            } else {
-                                if (Math.abs((xPrek * yPrek) - (w * h)) < 1.0) unutarOtvora = true;
-                                else sijeceOtvor = true;
-                            }
-                        }
-                    }
-                }
-
-                if (unutarOtvora || w <= 0.1 || h <= 0.1) { tekuceX += efektivnaSirina; continue; }
-
-                this.potrosenoCijelihPlocica++;
-
-                const plocicaDiv = document.createElement('div');
-                plocicaDiv.style.position = 'absolute';
-                plocicaDiv.style.left = (stvarniX * skala) + 'px';
-                plocicaDiv.style.bottom = (tekuceY * skala) + 'px';
-                plocicaDiv.style.width = ((w - this.fuga) * skala) + 'px';
-                plocicaDiv.style.height = ((h - this.fuga) * skala) + 'px';
-                plocicaDiv.style.border = '1px solid #0A0C0E';
-                
-                if (detaljiKrunice) plocicaDiv.style.backgroundColor = '#4A1525'; 
-                else if (sijeceOtvor) plocicaDiv.style.backgroundColor = '#4C3319';
-                else plocicaDiv.style.backgroundColor = '#22282C';
-
-                let trenutnoW = w - this.fuga; let trenutnoH = h - this.fuga;
-                
-                // POPRAVLJENO: Proslijedjena tocna varijabla "jeRezana" umjesto sijeceOtvor!
-                let jeRezana = (w < (this.plocicaW - 0.5)) || (h < (this.plocicaH - 0.5)) || sijeceOtvor;
-                plocicaDiv.onclick = () => this.prikazi2DDetaljModal(trenutnoW, trenutnoH, jeRezana, false, detaljiKrunice);
-                
-                kontejner.appendChild(plocicaDiv);
-                tekuceX += efektivnaSirina;
-            }
-            tekuceY += efektivnaVisina;
-        }
-        this.trenutnaPovrsina.izracunCijelih = this.potrosenoCijelihPlocica;
-    },
-
-    prikazi2DDetaljModal(w, h, jeRezana, izOstatka, nalogKrunice) {
-        const stariModal = document.getElementById('broker-modal');
-        if (stariModal) stariModal.remove();
+        if (!App.projektObjekt) return;
+        const p = App.projektObjekt.povrsine[App.aktivnaPovrsinaKey];
         
-        const modalDiv = document.createElement('div');
-        modalDiv.id = 'broker-modal';
-        modalDiv.style.position = 'fixed'; modalDiv.style.top = '0'; modalDiv.style.left = '0';
-        modalDiv.style.width = '100%'; modalDiv.style.height = '100%';
-        modalDiv.style.backgroundColor = 'rgba(10, 12, 14, 0.95)';
-        modalDiv.style.display = 'flex'; modalDiv.style.alignItems = 'center'; modalDiv.style.justifyContent = 'center';
-        modalDiv.style.zIndex = '9999999';
-
-        let naslov = jeRezana ? "RAVNI REZ NA STOLU" : "TVORNOVICKI ELEMENT";
-        let uputeHtml = "";
-
-        if (nalogKrunice) {
-            naslov = "NACRT ZA BUSENJE PLOCICE";
-            uputeHtml = `
-                <div style="background:#2C141A; padding:12px; font-size:11px; color:#FF5555; border-left:4px solid #FF5555; margin-bottom:15px; text-align:left; line-height:1.6;">
-                    <strong>🛠️ OPERACIJA: ${nalogKrunice.oznaka.toUpperCase()}</strong><br>
-                    • Od lijevog brida plocice odmjeri: <strong>${nalogKrunice.odmakLijevo.toFixed(1)} cm</strong><br>
-                    • Od donjeg brida plocice odmjeri: <strong>${nalogKrunice.odmakDno.toFixed(1)} cm</strong><br>
-                </div>
-            `;
-        }
-
-        modalDiv.innerHTML = `
-            <div style="background-color: #111417; border: 1px solid #343D44; width: 90%; max-width: 360px; padding: 24px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <span style="font-size: 11px; font-weight: 700; color: #4EFA9E; letter-spacing:1px; text-transform:uppercase;">${naslov}</span>
-                    <span style="cursor: pointer; font-size: 20px; color: #6C7A84;" onclick="document.getElementById('broker-modal').remove()">✕</span>
-                </div>
-                ${uputeHtml}
-                <div style="width: 100%; height: 180px; background-color: #0A0C0E; border: 1px dashed #343D44; display: flex; align-items: center; justify-content: center; position: relative; margin-bottom:15px;">
-                    <div style="width: 160px; height: 100px; background-color: #22282C; border: 2px solid #FFFFFF; position: relative;">
-                        ${nalogKrunice ? `<div style="position:absolute; left:${(nalogKrunice.odmakLijevo/w)*100}%; bottom:${(nalogKrunice.odmakDno/h)*100}%; transform:translate(-50%, 50%); width:10px; height:10px; background-color:#FF5555; border-radius:50%; z-index:10;"></div>` : ''}
-                        <span style="position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: bold; color: #FFF;">${w.toFixed(1)} cm</span>
-                        <span style="position: absolute; right: -55px; top: 50%; transform: translateY(-50%); font-size: 11px; font-weight: bold; color: #FFF;">${h.toFixed(1)} cm</span>
-                    </div>
-                </div>
-                <button class="gumb-ostri" style="margin:0; width:100%;" onclick="document.getElementById('broker-modal').remove()">ZATVORI</button>
-            </div>
-        `;
-        document.body.appendChild(modalDiv);
-    },
-
-    pokreniTihiZbirniProracun(p) {
-        let sW = p.w; let sH = p.h;
-        if (p.tip === 'Sokl') { sW = p.h; sH = p.w; }
-        
-        let pW = parseFloat(p.plocicaW) || (p.tip === 'Pod' ? 60 : 120);
-        let pH = parseFloat(p.plocicaH) || (p.tip === 'Pod' ? 60 : 60);
-        let f = (parseFloat(p.fuga) || 2) / 10;
-        let efSirina = pW + f; let efVisina = (p.tip === 'Sokl') ? sH : pH + f;
-        
-        let odmakX = parseFloat(p.odmakX) || 0;
-        let minimalniRez = 8.0;
-        let ostatakKuta = sW % efSirina;
-        let pocetniPomakX = 0;
-        if (ostatakKuta > 0 && ostatakKuta < minimalniRez) {
-            pocetniPomakX = (efSirina - ostatakKuta) / 2;
+        if (tip === "Tuš Zona") {
+            if (!p.tusZone) p.tusZone = [];
+            p.tusZone.push({tip, w, h, x, y});
+        } else {
+            if (!p.popisOtvora) p.popisOtvora = [];
+            p.popisOtvora.push({tip, w, h, x, y});
         }
         
-        let startnaTockaX = (pocetniPomakX > 0 ? -pocetniPomakX : 0) + odmakX;
-        while (startnaTockaX > 0) { startnaTockaX -= efSirina; }
-        
-        let komada = 0; let tekuceY = 0;
-        while (tekuceY < sH) {
-            let tekuceX = startnaTockaX;
-            while (tekuceX < sW) {
-                let w = efSirina; let h = efVisina;
-                let stvarniX = tekuceX < 0 ? 0 : tekuceX;
-                if (tekuceX < 0) { w = efSirina + tekuceX; } 
-                else if (tekuceX + w > sW) { w = sW - tekuceX; }
-                if (tekuceY + h > sH) h = sH - tekuceY;
-                let unutarOtvora = false;
-                if (p.popisOtvora) {
-                    for (let otv of p.popisOtvora) {
-                        if (otv.tip.includes("Kruna")) continue;
-                        let xPrek = Math.max(0, Math.min(stvarniX + w, otv.x + otv.w) - Math.max(stvarniX, otv.x));
-                        let yPrek = Math.max(0, Math.min(tekuceY + h, otv.y + otv.h) - Math.max(tekuceY, otv.y));
-                        if ((xPrek * yPrek) > 0 && Math.abs((xPrek * yPrek) - (w * h)) < 1.0) unutarOtvora = true;
-                    }
-                }
-                if (!unutarOtvora && w > 0.1 && h > 0.1) komada++;
-                tekuceX += efSirina;
-            }
-            tekuceY += efVisina;
-        }
-        p.izracunCijelih = komada; p.kvadratura = (sW * sH) / 10000;
+        App.sacuvajPoljaUObjekt();
     }
 };
