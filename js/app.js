@@ -1,4 +1,30 @@
 const DokumentacijaModul = {
+    generirajSVGZid(p) {
+        if (!p) return '';
+        let mjerilo = 0.5; // Skaliranje za PDF prikaz
+        let w = p.w * mjerilo;
+        let h = (p.tip === 'Zid' ? p.h : p.h) * mjerilo;
+        let oblH = (p.tip === 'Zid' ? p.visinaOblaganja : p.h) * mjerilo;
+        
+        let plW = (p.rotacija ? p.plocicaH : p.plocicaW) * mjerilo;
+        let plH = (p.rotacija ? p.plocicaW : p.plocicaH) * mjerilo;
+        
+        let bgX = (p.odmakX || 0) * mjerilo;
+        let bgY = (p.odmakY || 0) * mjerilo; // Za PDF Y ide odozgo
+
+        let rId = 'pat-' + Math.random().toString(36).substr(2, 9);
+        
+        return `
+        <svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" style="background:#F5F6F7; border:1px solid #CBD5E1; display:block; margin:auto;">
+            <defs>
+                <pattern id="${rId}" patternUnits="userSpaceOnUse" width="${plW}" height="${plH}" x="${bgX}" y="${h - bgY}">
+                    <rect x="0" y="0" width="${plW}" height="${plH}" fill="#94A3B8" stroke="#1E293B" stroke-width="0.5"/>
+                </pattern>
+            </defs>
+            <rect x="0" y="${h - oblH}" width="${w}" height="${oblH}" fill="url(#${rId})" />
+        </svg>`;
+    },
+
     generisiZbirniTroskovnik(projekt) {
         if (!projekt) return;
         const p = App.osvjeziSveKvadraturneProracune(projekt);
@@ -10,17 +36,16 @@ const DokumentacijaModul = {
             let komZidovi = (p.zid1.izracunCijelih||0) + (p.zid2.izracunCijelih||0) + (p.zid3.izracunCijelih||0) + (p.zid4.izracunCijelih||0);
             
             htmlZidovi = `
-                <h3 style="font-size:13px; text-transform:uppercase; margin-top:30px;">1. SPECIFIKACIJA ZIDOVA</h3>
-                <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
+                <table style="width:100%; border-collapse:collapse; font-size:12px; margin-top:10px;">
                     <thead>
-                        <tr style="background:#2C3236; color:#FFFFFF;"><th style="padding:10px; text-align:left;">Površina</th><th style="padding:10px; text-align:left;">Neto kvadratura</th><th style="padding:10px; text-align:left;">Naručiti (kom)</th></tr>
+                        <tr style="background:#2C3236; color:#FFFFFF;"><th style="padding:8px; text-align:left;">Površina</th><th style="padding:8px; text-align:left;">Neto kvadratura</th><th style="padding:8px; text-align:left;">Naručiti (kom) *Real-Cut</th></tr>
                     </thead>
                     <tbody>
-                        <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 1 (Glavni)</td><td style="padding:10px;">${(p.zid1.kvadratura||0).toFixed(2)} m2</td><td style="padding:10px;">${p.zid1.izracunCijelih||0}</td></tr>
-                        <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 2 (Desni)</td><td style="padding:10px;">${(p.zid2.kvadratura||0).toFixed(2)} m2</td><td style="padding:10px;">${p.zid2.izracunCijelih||0}</td></tr>
-                        <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 3 (Stražnji)</td><td style="padding:10px;">${(p.zid3.kvadratura||0).toFixed(2)} m2</td><td style="padding:10px;">${p.zid3.izracunCijelih||0}</td></tr>
-                        <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 4 (Lijevi)</td><td style="padding:10px;">${(p.zid4.kvadratura||0).toFixed(2)} m2</td><td style="padding:10px;">${p.zid4.izracunCijelih||0}</td></tr>
-                        <tr style="background:#EAEDEF; font-weight:bold;"><td style="padding:10px;">UKUPNO ZIDOVI</td><td style="padding:10px;">${m2Zidovi.toFixed(2)} m2</td><td style="padding:10px;">${komZidovi}</td></tr>
+                        <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:8px;">Zid 1 (Glavni)</td><td style="padding:8px;">${(p.zid1.kvadratura||0).toFixed(2)} m2</td><td style="padding:8px; font-weight:bold;">${p.zid1.izracunCijelih||0}</td></tr>
+                        <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:8px;">Zid 2 (Desni)</td><td style="padding:8px;">${(p.zid2.kvadratura||0).toFixed(2)} m2</td><td style="padding:8px; font-weight:bold;">${p.zid2.izracunCijelih||0}</td></tr>
+                        <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:8px;">Zid 3 (Stražnji)</td><td style="padding:8px;">${(p.zid3.kvadratura||0).toFixed(2)} m2</td><td style="padding:8px; font-weight:bold;">${p.zid3.izracunCijelih||0}</td></tr>
+                        <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:8px;">Zid 4 (Lijevi)</td><td style="padding:8px;">${(p.zid4.kvadratura||0).toFixed(2)} m2</td><td style="padding:8px; font-weight:bold;">${p.zid4.izracunCijelih||0}</td></tr>
+                        <tr style="background:#EAEDEF; font-weight:bold;"><td style="padding:8px;">UKUPNO ZIDOVI</td><td style="padding:8px;">${m2Zidovi.toFixed(2)} m2</td><td style="padding:8px; color:#0EA5E9;">${komZidovi} kom</td></tr>
                     </tbody>
                 </table>
             `;
@@ -28,15 +53,53 @@ const DokumentacijaModul = {
 
         let htmlPod = '';
         if (projekt.konfiguracija.pod || projekt.konfiguracija.sokl) {
-            htmlPod = `<h3 style="font-size:13px; text-transform:uppercase; margin-top:30px;">2. SPECIFIKACIJA PODA I SOKLA</h3>
-                       <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;"><tbody>`;
+            htmlPod = `<table style="width:100%; border-collapse:collapse; font-size:12px; margin-top:10px;"><tbody>`;
             if (projekt.konfiguracija.pod) {
-                htmlPod += `<tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Pod kupaonice</td><td style="padding:10px;">${(p.pod.kvadratura||0).toFixed(2)} m2 (${p.pod.izracunCijelih||0} kom)</td></tr>`;
+                htmlPod += `<tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:8px; font-weight:bold;">Pod kupaonice</td><td style="padding:8px;">${(p.pod.kvadratura||0).toFixed(2)} m2</td><td style="padding:8px; font-weight:bold; color:#0EA5E9;">${p.pod.izracunCijelih||0} kom</td></tr>`;
             }
             if (projekt.konfiguracija.sokl) {
-                htmlPod += `<tr><td style="padding:10px;">Sokl / Cokl</td><td style="padding:10px;">${((p.sokl.h||0)/100).toFixed(2)} m (${p.sokl.izracunCijelih||0} kom)</td></tr>`;
+                htmlPod += `<tr><td style="padding:8px; font-weight:bold;">Sokl / Cokl</td><td style="padding:8px;">${((p.sokl.h||0)/100).toFixed(2)} m</td><td style="padding:8px; font-weight:bold; color:#0EA5E9;">${p.sokl.izracunCijelih||0} kom</td></tr>`;
             }
             htmlPod += `</tbody></table>`;
+        }
+
+        // KRIŽNI PRIKAZ (UNFOLD LAYOUT)
+        let krizniPrikaz = '';
+        if (projekt.konfiguracija.zidovi && projekt.konfiguracija.pod) {
+            krizniPrikaz = `
+            <h3 style="font-size:12px; text-transform:uppercase; margin-top:30px; text-align:center; color:#64748B;">KRIŽNI PRIKAZ (UNFOLD) - PREMA SLIDER ODACIMA</h3>
+            <div style="display:table; margin: 0 auto; border-spacing:10px;">
+                <div style="display:table-row;">
+                    <div style="display:table-cell; width:150px; text-align:center; vertical-align:middle;"></div>
+                    <div style="display:table-cell; width:150px; text-align:center; vertical-align:middle;">
+                        <div style="font-size:9px; font-weight:bold;">ZID 3 (Stražnji)</div>
+                        ${this.generirajSVGZid(p.zid3)}
+                    </div>
+                    <div style="display:table-cell; width:150px; text-align:center; vertical-align:middle;"></div>
+                </div>
+                <div style="display:table-row;">
+                    <div style="display:table-cell; width:150px; text-align:center; vertical-align:middle;">
+                        <div style="font-size:9px; font-weight:bold;">ZID 4 (Lijevi)</div>
+                        ${this.generirajSVGZid(p.zid4)}
+                    </div>
+                    <div style="display:table-cell; width:150px; text-align:center; vertical-align:middle; background:#ECFDF5; border:2px solid #0EA5E9; padding:5px;">
+                        <div style="font-size:9px; font-weight:bold; color:#0EA5E9;">POD (Centar)</div>
+                        ${this.generirajSVGZid(p.pod)}
+                    </div>
+                    <div style="display:table-cell; width:150px; text-align:center; vertical-align:middle;">
+                        <div style="font-size:9px; font-weight:bold;">ZID 2 (Desni)</div>
+                        ${this.generirajSVGZid(p.zid2)}
+                    </div>
+                </div>
+                <div style="display:table-row;">
+                    <div style="display:table-cell; width:150px; text-align:center; vertical-align:middle;"></div>
+                    <div style="display:table-cell; width:150px; text-align:center; vertical-align:middle;">
+                        <div style="font-size:9px; font-weight:bold;">ZID 1 (Glavni)</div>
+                        ${this.generirajSVGZid(p.zid1)}
+                    </div>
+                    <div style="display:table-cell; width:150px; text-align:center; vertical-align:middle;"></div>
+                </div>
+            </div>`;
         }
 
         const stariPrikaz = document.getElementById('print-overlay');
@@ -49,20 +112,31 @@ const DokumentacijaModul = {
         overlay.style.backgroundColor = '#FFFFFF'; overlay.style.color = '#1A1D20';
         overlay.style.zIndex = '99999999'; overlay.style.overflowY = 'auto';
         overlay.style.padding = '24px';
+        
         overlay.innerHTML = `
-            <div class="no-print" style="display:flex; justify-content:space-between; margin-bottom:30px; background:#111417; padding:12px; margin:-24px -24px 24px -24px;">
+            <style>
+                @media print {
+                    body > *:not(#print-overlay) { display: none !important; }
+                    #print-overlay { display: block !important; position: relative !important; width: 100% !important; height: auto !important; margin: 0 !important; padding: 0 !important; }
+                    .no-print { display: none !important; }
+                    @page { margin: 1cm; }
+                }
+            </style>
+            <div class="no-print" style="display:flex; justify-content:space-between; margin-bottom:20px; background:#111417; padding:12px; margin:-24px -24px 20px -24px;">
                 <button style="background:#14281E; color:#4EFA9E; border:1px solid #2E5C43; padding:12px; font-weight:bold; cursor:pointer;" onclick="window.print()">🖨️ POKRENI PDF</button>
                 <button style="background:#2C3236; color:#8C9BA5; border:1px solid #343D44; padding:12px; font-weight:bold; cursor:pointer;" onclick="document.getElementById('print-overlay').remove()">✕ ZATVORI</button>
             </div>
-            <div style="font-weight: bold; font-size: 26px; border-bottom: 3px solid #2C3236; padding-bottom: 15px;">BRO-KER Zbirni Troškovnik</div>
-            <div style="margin: 24px 0; background-color: #F5F6F7; padding: 20px; border-left: 5px solid #2C3236;">
+            <div style="font-weight: bold; font-size: 20px; border-bottom: 2px solid #2C3236; padding-bottom: 10px;">BRO-KER Zbirni Troškovnik (Real-Cut)</div>
+            <div style="margin: 15px 0; background-color: #F5F6F7; padding: 15px; border-left: 5px solid #0EA5E9;">
                 <strong>KLIJENT: ${projekt.klijent.toUpperCase()} | PROSTORIJA: ${projekt.prostorija}</strong>
             </div>
             ${htmlZidovi} ${htmlPod}
+            ${krizniPrikaz}
         `;
         document.body.appendChild(overlay);
     }
 };
+
 
 const App = {
     trenutniKlijent: '', trenutnaProstorija: '', aktivnaPovrsinaKey: 'zid1', projektObjekt: null,
