@@ -93,6 +93,7 @@ jobs:
           }
 
           class _BrokerMainScreenState extends State<BrokerMainScreen> {
+            final GlobalKey webViewKey = GlobalKey(); // KLJUČNO! Održava HTML stranicu na životu
             CameraController? _cameraController;
             bool _isCameraActive = false;
             List<CameraDescription> backCameras = [];
@@ -120,12 +121,15 @@ jobs:
                 body: SafeArea(
                   child: Stack(
                     children: [
+                      // 1. Dno: Kamera
                       if (_isCameraActive && _cameraController != null && _cameraController!.value.isInitialized)
                         Positioned.fill(
                           child: CameraPreview(_cameraController!),
                         ),
+                      // 2. Vrh: Stakleni Web
                       Positioned.fill(
                         child: InAppWebView(
+                          key: webViewKey, // Ovaj mali ključ rješava tvoj problem reseta
                           initialUrlRequest: URLRequest(url: WebUri('https://borobilobrk.github.io/flutter-create-broker_app/')),
                           initialSettings: InAppWebViewSettings(
                             transparentBackground: true,
