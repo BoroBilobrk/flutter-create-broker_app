@@ -1,4 +1,4 @@
-name: BRO-KER APK Build
+ name: BRO-KER APK Build
 
 on:
   push:
@@ -28,34 +28,42 @@ jobs:
 
       - name: Kreiranje Flutter arhitekture
         run: |
-          # FORSIRAMO IME BEZ CRTICA KAKO FLUTTER NE BI PUKNUO
           flutter create --project-name broker_app .
 
-      - name: Sigurno dodavanje Android dozvola (Python injekcija)
+      - name: Sigurno dodavanje Android dozvola
         run: |
           python -c "
           path = 'android/app/src/main/AndroidManifest.xml'
           with open(path, 'r') as f: data = f.read()
-          perms = '<uses-permission android:name=\"android.permission.INTERNET\"/>\n    <uses-permission android:name=\"android.permission.CAMERA\"/>\n    <uses-permission android:name=\"android.permission.RECORD_AUDIO\"/>\n    <uses-permission android:name=\"android.permission.VIDEO_CAPTURE\"/>\n    '
+          perms = '<uses-permission android:name=\"android.permission.INTERNET\"/>\n    <uses-permission android:name=\"android.permission.CAMERA\"/>\n    <uses-permission android:name=\"android.permission.RECORD_AUDIO\"/>\n    '
           data = data.replace('<application', perms + '<application')
           with open(path, 'w') as f: f.write(data)
           "
 
-      - name: Instalacija paketa
+      - name: Instalacija Flutter paketa
         run: |
           flutter pub add flutter_inappwebview
           flutter pub add permission_handler
+          flutter pub add camera
 
-      - name: Ubacivanje WebView Oklopa (main.dart)
+      - name: Ubacivanje Hibridne Arhitekture (main.dart)
         run: |
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
           import 'package:flutter_inappwebview/flutter_inappwebview.dart';
           import 'package:permission_handler/permission_handler.dart';
+          import 'package:camera/camera.dart';
+
+          List<CameraDescription> globalCameras = [];
 
           void main() async {
             WidgetsFlutterBinding.ensureInitialized();
             await Permission.camera.request();
+            try {
+              globalCameras = await availableCameras();
+            } catch (e) {
+              print('Kamera error: $e');
+            }
             runApp(const BrokerApp());
           }
 
@@ -66,38 +74,89 @@ jobs:
               return MaterialApp(
                 title: 'BRO-KER',
                 debugShowCheckedModeBanner: false,
-                theme: ThemeData(scaffoldBackgroundColor: Colors.black),
-                home: const BrokerWebView(),
+                home: const BrokerMainScreen(),
               );
             }
           }
 
-          class BrokerWebView extends StatefulWidget {
-            const BrokerWebView({Key? key}) : super(key: key);
+          class BrokerMainScreen extends StatefulWidget {
+            const BrokerMainScreen({Key? key}) : super(key: key);
             @override
-            State<BrokerWebView> createState() => _BrokerWebViewState();
+            State<BrokerMainScreen> createState() => _BrokerMainScreenState();
           }
 
-          class _BrokerWebViewState extends State<BrokerWebView> {
+          class _BrokerMainScreenState extends State<BrokerMainScreen> {
+            CameraController? _cameraController;
+            bool _isCameraActive = false;
+            List<CameraDescription> backCameras = [];
+            int currentLensIndex = 0;
+
+            @override
+            void initState() {
+              super.initState();
+              backCameras = globalCameras.where((c) => c.lensDirection == CameraLensDirection.back).toList();
+            }
+
+            Future<void> _initCamera(CameraDescription camera) async {
+              if (_cameraController != null) {
+                await _cameraController!.dispose();
+              }
+              _cameraController = CameraController(camera, ResolutionPreset.max, enableAudio: false);
+              await _cameraController!.initialize();
+              if (mounted) setState(() {});
+            }
+
             @override
             Widget build(BuildContext context) {
               return Scaffold(
                 backgroundColor: Colors.black,
                 body: SafeArea(
-                  child: InAppWebView(
-                    initialUrlRequest: URLRequest(url: WebUri('https://borobilobrk.github.io/flutter-create-broker_app/')),
-                    initialSettings: InAppWebViewSettings(
-                      mediaPlaybackRequiresUserGesture: false,
-                      allowsInlineMediaPlayback: true,
-                      javaScriptEnabled: true,
-                      domStorageEnabled: true,
-                      transparentBackground: true,
-                    ),
-                    onPermissionRequest: (controller, request) async {
-                      return PermissionResponse(
-                          resources: request.resources,
-                          action: PermissionResponseAction.GRANT);
-                    },
+                  child: Stack(
+                    children: [
+                      // 1. SLOJ (DNO): Nativna Kamera
+                      if (_isCameraActive && _cameraController != null && _cameraController!.value.isInitialized)
+                        Positioned.fill(
+                          child: CameraPreview(_cameraController!),
+                        ),
+                      // 2. SLOJ (VRH): Prozirno Web Sučelje
+                      Positioned.fill(
+                        child: InAppWebView(
+                          initialUrlRequest: URLRequest(url: WebUri('https://borobilobrk.github.io/flutter-create-broker_app/')),
+                          initialSettings: InAppWebViewSettings(
+                            transparentBackground: true,
+                            mediaPlaybackRequiresUserGesture: false,
+                            allowsInlineMediaPlayback: true,
+                            javaScriptEnabled: true,
+                          ),
+                          onWebViewCreated: (controller) {
+                            // Slušamo komande iz JavaScripta
+                            controller.addJavaScriptHandler(handlerName: 'FlutterKamera', callback: (args) async {
+                              String akcija = args[0];
+                              if (akcija == 'pokreni') {
+                                if (backCameras.isNotEmpty) {
+                                  await _initCamera(backCameras[currentLensIndex]);
+                                  setState(() { _isCameraActive = true; });
+                                  return backCameras.length.toString();
+                                }
+                                return "0";
+                              } else if (akcija == 'cikliraj') {
+                                if (backCameras.length > 1) {
+                                  currentLensIndex = (currentLensIndex + 1) % backCameras.length;
+                                  await _initCamera(backCameras[currentLensIndex]);
+                                  return "${currentLensIndex + 1}/${backCameras.length}";
+                                }
+                                return "Samo 1 leća prepoznata u Native kodu";
+                              } else if (akcija == 'ugasi') {
+                                setState(() { _isCameraActive = false; });
+                                _cameraController?.dispose();
+                                _cameraController = null;
+                                return "OK";
+                              }
+                            });
+                          },
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               );
