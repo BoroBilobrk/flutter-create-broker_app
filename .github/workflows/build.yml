@@ -28,7 +28,7 @@ jobs:
           rm -rf android ios linux macos web windows lib test pubspec.yaml pubspec.lock
           flutter create --project-name broker_app .
           
-      - name: Sigurno podizanje Android SDK i Dozvola
+      - name: Sigurno podizanje Android SDK, Kotlin i Dozvola
         run: |
           python -c "
           p_man = 'android/app/src/main/AndroidManifest.xml'
@@ -37,9 +37,14 @@ jobs:
           data = data.replace('<application', perms + '<application')
           with open(p_man, 'w') as f: f.write(data)
           "
+          # 1. Hardkodiranje SDK verzija za kameru i WebView
           sed -i 's/flutter.minSdkVersion/24/g' android/app/build.gradle
           sed -i 's/flutter.compileSdkVersion/34/g' android/app/build.gradle
           sed -i 's/flutter.targetSdkVersion/34/g' android/app/build.gradle
+          
+          # 2. POPRAVAK ZA KOTLIN (Glavni krivac za pucanje na 3. minuti)
+          sed -i 's/1.8.22/1.9.24/g' android/settings.gradle || true
+          sed -i 's/ext.kotlin_version = .*/ext.kotlin_version = "1.9.24"/g' android/build.gradle || true
           
       - name: Instalacija Flutter paketa
         run: |
