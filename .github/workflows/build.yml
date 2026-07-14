@@ -26,20 +26,25 @@ jobs:
           flutter-version: '3.22.0'
           channel: 'stable'
 
-      - name: Automatsko kreiranje Flutter strukture (Inicijalizacija)
+      - name: Kreiranje Flutter arhitekture
         run: |
-          # Brišemo stari flutter kod ako je krivo spojen
-          rm -rf lib test android ios web macos windows linux
-          # Generiramo svježu, cistu Flutter arhitekturu unutar ove mape
-          flutter create .
-          # Inicijaliziramo dozvole u novom Android manifestu
-          sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-permission android:name="android.permission.RECORD_AUDIO"/>\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>\n    <uses-permission android:name="android.permission.VIDEO_CAPTURE" />' android/app/src/main/AndroidManifest.xml
+          # FORSIRAMO IME BEZ CRTICA KAKO FLUTTER NE BI PUKNUO
+          flutter create --project-name broker_app .
 
-      - name: Instalacija Web-View paketa i dozvola
+      - name: Sigurno dodavanje Android dozvola (Python injekcija)
+        run: |
+          python -c "
+          path = 'android/app/src/main/AndroidManifest.xml'
+          with open(path, 'r') as f: data = f.read()
+          perms = '<uses-permission android:name=\"android.permission.INTERNET\"/>\n    <uses-permission android:name=\"android.permission.CAMERA\"/>\n    <uses-permission android:name=\"android.permission.RECORD_AUDIO\"/>\n    <uses-permission android:name=\"android.permission.VIDEO_CAPTURE\"/>\n    '
+          data = data.replace('<application', perms + '<application')
+          with open(path, 'w') as f: f.write(data)
+          "
+
+      - name: Instalacija paketa
         run: |
           flutter pub add flutter_inappwebview
           flutter pub add permission_handler
-          flutter pub get
 
       - name: Ubacivanje WebView Oklopa (main.dart)
         run: |
@@ -51,7 +56,6 @@ jobs:
           void main() async {
             WidgetsFlutterBinding.ensureInitialized();
             await Permission.camera.request();
-            await Permission.microphone.request();
             runApp(const BrokerApp());
           }
 
@@ -81,8 +85,7 @@ jobs:
                 backgroundColor: Colors.black,
                 body: SafeArea(
                   child: InAppWebView(
-                    // OVO JE LINK S TVOG STAROG REPOZITORIJA KOJI VUČE SVE PODATKE
-                    initialUrlRequest: URLRequest(url: WebUri('https://borobilobrk.github.io/flutter-broker_app/')),
+                    initialUrlRequest: URLRequest(url: WebUri('https://borobilobrk.github.io/flutter-create-broker_app/')),
                     initialSettings: InAppWebViewSettings(
                       mediaPlaybackRequiresUserGesture: false,
                       allowsInlineMediaPlayback: true,
@@ -105,7 +108,7 @@ jobs:
       - name: Izgradnja APK datoteke
         run: flutter build apk --release
 
-      - name: Spremanje gotovog APK-a (Ispravljena v4 verzija)
+      - name: Spremanje gotovog APK-a
         uses: actions/upload-artifact@v4
         with:
           name: BRO-KER-App
