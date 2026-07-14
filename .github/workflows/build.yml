@@ -1,4 +1,4 @@
- name: BRO-KER APK Build
+name: BRO-KER APK Build
 
 on:
   push:
@@ -113,12 +113,10 @@ jobs:
                 body: SafeArea(
                   child: Stack(
                     children: [
-                      // 1. SLOJ (DNO): Nativna Kamera
                       if (_isCameraActive && _cameraController != null && _cameraController!.value.isInitialized)
                         Positioned.fill(
                           child: CameraPreview(_cameraController!),
                         ),
-                      // 2. SLOJ (VRH): Prozirno Web Sučelje
                       Positioned.fill(
                         child: InAppWebView(
                           initialUrlRequest: URLRequest(url: WebUri('https://borobilobrk.github.io/flutter-create-broker_app/')),
@@ -129,7 +127,6 @@ jobs:
                             javaScriptEnabled: true,
                           ),
                           onWebViewCreated: (controller) {
-                            // Slušamo komande iz JavaScripta
                             controller.addJavaScriptHandler(handlerName: 'FlutterKamera', callback: (args) async {
                               String akcija = args[0];
                               if (akcija == 'pokreni') {
