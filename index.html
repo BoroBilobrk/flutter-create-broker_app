@@ -5,7 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BRO-KER | Pametni Keramicarski Alat</title>
     <link rel="stylesheet" href="css/stil.css">
+    
     <script async src="https://docs.opencv.org/4.5.4/opencv.js" type="text/javascript"></script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd"></script>
 </head>
 <body>
 
@@ -15,7 +19,6 @@
     </header>
 
     <main class="broker-container">
-        
         <section id="zaslon-izbornik" class="zaslon">
             
             <div class="alat-kartica" style="width:100%; margin-bottom: 15px; margin-top: 15px; text-align: left; box-sizing: border-box;">
@@ -28,7 +31,7 @@
             </div>
             
             <div class="alat-kartica" style="width:100%; margin-bottom: 20px;">
-                <span style="font-size:10px; font-weight:700; color:var(--tekst-sporedni); display:block; margin-bottom:10px; letter-spacing:1px;">OTVORI NOVI PROJEKT / DODAJ PROSTORIJU KLIJENTU</span>
+                <span style="font-size:10px; font-weight:700; color:var(--tekst-sporedni); display:block; margin-bottom:10px; letter-spacing:1px;">OTVORI NOVI PROJEKT / DODAJ PROSTORIJU</span>
                 <input type="text" id="input-klijent" placeholder="Ime klijenta (npr. Hotel Jadran)" style="width:100%; background:var(--bg-input); border:1px solid var(--boja-okvira); color:var(--tekst-glavni); padding:12px; margin-bottom:10px;">
                 <input type="text" id="input-prostorija" placeholder="Naziv prostorije (npr. Kupaonica 101)" style="width:100%; background:var(--bg-input); border:1px solid var(--boja-okvira); color:var(--tekst-glavni); padding:12px; margin-bottom:15px;">
                 
