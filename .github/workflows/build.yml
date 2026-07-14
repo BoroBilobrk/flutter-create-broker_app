@@ -1,52 +1,59 @@
 name: BRO-KER APK Build
-
 on:
   push:
     branches:
       - main
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Preuzimanje koda
         uses: actions/checkout@v4
-
+        
       - name: Postavljanje Jave
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
-
+          
       - name: Postavljanje Fluttera
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.22.0'
           channel: 'stable'
-
-      - name: Kreiranje Flutter arhitekture
+          
+      - name: Čišćenje i Inicijalizacija
         run: |
+          # Brišemo stare sistemske mape da spriječimo konflikt (HTML ostaje netaknut)
+          rm -rf android ios linux macos web windows lib test pubspec.yaml pubspec.lock
           flutter create --project-name broker_app .
-
-      - name: Sigurno dodavanje Android dozvola
+          
+      - name: Sigurno podizanje Android SDK i Dozvola
         run: |
           python -c "
-          path = 'android/app/src/main/AndroidManifest.xml'
-          with open(path, 'r') as f: data = f.read()
+          import re
+          # 1. Manifest dozvole
+          p_man = 'android/app/src/main/AndroidManifest.xml'
+          with open(p_man, 'r') as f: data = f.read()
           perms = '<uses-permission android:name=\"android.permission.INTERNET\"/>\n    <uses-permission android:name=\"android.permission.CAMERA\"/>\n    <uses-permission android:name=\"android.permission.RECORD_AUDIO\"/>\n    '
           data = data.replace('<application', perms + '<application')
-          with open(path, 'w') as f: f.write(data)
+          with open(p_man, 'w') as f: f.write(data)
+          # 2. Build Gradle (Podižemo minimalnu Android API verziju za kameru)
+          p_grad = 'android/app/build.gradle'
+          with open(p_grad, 'r') as f: grad_data = f.read()
+          grad_data = re.sub(r'minSdkVersion\s+.*', 'minSdkVersion 24', grad_data)
+          grad_data = re.sub(r'compileSdkVersion\s+.*', 'compileSdkVersion 34', grad_data)
+          with open(p_grad, 'w') as f: f.write(grad_data)
           "
-
+          
       - name: Instalacija Flutter paketa
         run: |
           flutter pub add flutter_inappwebview
           flutter pub add permission_handler
           flutter pub add camera
-
-      - name: Ubacivanje Hibridne Arhitekture (main.dart)
+          
+      - name: Ubacivanje Hibridne Arhitekture
         run: |
           cat << 'EOF' > lib/main.dart
           import 'package:flutter/material.dart';
@@ -160,10 +167,10 @@ jobs:
             }
           }
           EOF
-
+          
       - name: Izgradnja APK datoteke
         run: flutter build apk --release
-
+        
       - name: Spremanje gotovog APK-a
         uses: actions/upload-artifact@v4
         with:
