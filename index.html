@@ -136,21 +136,23 @@
         </section>
     </main>
 
-    <section id="zaslon-kamera" style="position:fixed !important; top:0 !important; left:0 !important; width:100vw !important; height:100vh !important; background:#000000 !important; z-index:9999999 !important; display:none; box-sizing:border-box !important;">
-        <video id="web-kamera" autoplay playsinline style="width:100% !important; height:100% !important; object-fit:cover !important; position:absolute !important; top:0 !important; left:0 !important; z-index:10 !important;"></video>
+        <section id="zaslon-kamera" style="position:fixed !important; top:0 !important; left:0 !important; width:100vw !important; height:100vh !important; background:transparent !important; z-index:9999999 !important; display:none; box-sizing:border-box !important;">
+        
+        <video id="web-kamera" style="display:none;"></video>
         <canvas id="aruco-canvas" style="width:100% !important; height:100% !important; object-fit:cover !important; position:absolute !important; top:0 !important; left:0 !important; pointer-events:none !important; z-index:20 !important;"></canvas>
         
         <div style="position:absolute !important; top:20px !important; left:5% !important; width:90% !important; display:flex !important; flex-direction:column !important; gap:8px !important; box-sizing:border-box !important; z-index:10000000 !important;">
-            <div id="kamera-status" style="background:rgba(10,12,14,0.96) !important; border:1px solid var(--boja-okvira) !important; color:var(--tekst-glavni) !important; padding:10px !important; font-size:11px !important; font-weight:bold !important; text-align:center !important; width:100% !important; box-sizing:border-box !important; letter-spacing:0.5px;">Učitavanje video modula...</div>
+            <div id="kamera-status" style="background:rgba(10,12,14,0.96) !important; border:1px solid var(--boja-okvira) !important; color:var(--tekst-glavni) !important; padding:10px !important; font-size:11px !important; font-weight:bold !important; text-align:center !important; width:100% !important; box-sizing:border-box !important; letter-spacing:0.5px;">Komunikacija s Nativnom jezgrom...</div>
             <button class="gumb-ostri" style="margin:0; width:100%; background:rgba(20,26,33,0.98); border:2px solid var(--boja-okvira); color:var(--tekst-glavni); font-weight:bold; padding:14px; font-size:11px; letter-spacing:0.5px;" onclick="Kamera.ciklirajLecu()">
-                🔄 PROMIJENI LEĆU (0.5x ŠIROKOKUTNA / 1x STANDARD)
+                🔄 PROMIJENI FIZIČKU LEĆU (NATIVE)
             </button>
             <div style="display:flex !important; gap:8px !important; width:100% !important;">
-                <button class="gumb-ostri gumb-kontra" style="margin:0; flex:1; padding:14px; font-weight:bold; font-size:11px;" onclick="Kamera.zaustavi()">✕ PREKINI</button>
-                <button class="gumb-ostri gumb-potvrda" style="margin:0; flex:2; padding:14px; font-weight:bold; font-size:11px;" onclick="Kamera.uhvatiMjere()">💾 ZAKLJUČAJ MJERE</button>
+                <button class="gumb-ostri gumb-kontra" style="margin:0; flex:1; padding:14px; font-weight:bold; font-size:11px;" onclick="Kamera.zaustavi()">✕ ZATVORI</button>
+                <button class="gumb-ostri gumb-potvrda" style="margin:0; flex:2; padding:14px; font-weight:bold; font-size:11px;" onclick="Kamera.uhvatiMjere()">TESTIRAJ KADAR</button>
             </div>
         </div>
-    </section>
+        </section>
+    
 
     <script src="js/baza.js"></script>
     <script src="js/matematika.js"></script>
