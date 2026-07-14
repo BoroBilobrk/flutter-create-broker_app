@@ -12,10 +12,10 @@ jobs:
 
     steps:
       - name: Preuzimanje koda
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Postavljanje Jave
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
@@ -23,17 +23,90 @@ jobs:
       - name: Postavljanje Fluttera
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.19.0'
+          flutter-version: '3.22.0'
           channel: 'stable'
 
-      - name: Instalacija paketa
-        run: flutter pub get
+      - name: Automatsko kreiranje Flutter strukture (Inicijalizacija)
+        run: |
+          # Brišemo stari flutter kod ako je krivo spojen
+          rm -rf lib test android ios web macos windows linux
+          # Generiramo svježu, cistu Flutter arhitekturu unutar ove mape
+          flutter create .
+          # Inicijaliziramo dozvole u novom Android manifestu
+          sed -i '/<application/i \    <uses-permission android:name="android.permission.INTERNET"/>\n    <uses-permission android:name="android.permission.CAMERA"/>\n    <uses-permission android:name="android.permission.RECORD_AUDIO"/>\n    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>\n    <uses-permission android:name="android.permission.VIDEO_CAPTURE" />' android/app/src/main/AndroidManifest.xml
+
+      - name: Instalacija Web-View paketa i dozvola
+        run: |
+          flutter pub add flutter_inappwebview
+          flutter pub add permission_handler
+          flutter pub get
+
+      - name: Ubacivanje WebView Oklopa (main.dart)
+        run: |
+          cat << 'EOF' > lib/main.dart
+          import 'package:flutter/material.dart';
+          import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+          import 'package:permission_handler/permission_handler.dart';
+
+          void main() async {
+            WidgetsFlutterBinding.ensureInitialized();
+            await Permission.camera.request();
+            await Permission.microphone.request();
+            runApp(const BrokerApp());
+          }
+
+          class BrokerApp extends StatelessWidget {
+            const BrokerApp({Key? key}) : super(key: key);
+            @override
+            Widget build(BuildContext context) {
+              return MaterialApp(
+                title: 'BRO-KER',
+                debugShowCheckedModeBanner: false,
+                theme: ThemeData(scaffoldBackgroundColor: Colors.black),
+                home: const BrokerWebView(),
+              );
+            }
+          }
+
+          class BrokerWebView extends StatefulWidget {
+            const BrokerWebView({Key? key}) : super(key: key);
+            @override
+            State<BrokerWebView> createState() => _BrokerWebViewState();
+          }
+
+          class _BrokerWebViewState extends State<BrokerWebView> {
+            @override
+            Widget build(BuildContext context) {
+              return Scaffold(
+                backgroundColor: Colors.black,
+                body: SafeArea(
+                  child: InAppWebView(
+                    // OVO JE LINK S TVOG STAROG REPOZITORIJA KOJI VUČE SVE PODATKE
+                    initialUrlRequest: URLRequest(url: WebUri('https://borobilobrk.github.io/flutter-broker_app/')),
+                    initialSettings: InAppWebViewSettings(
+                      mediaPlaybackRequiresUserGesture: false,
+                      allowsInlineMediaPlayback: true,
+                      javaScriptEnabled: true,
+                      domStorageEnabled: true,
+                      transparentBackground: true,
+                    ),
+                    onPermissionRequest: (controller, request) async {
+                      return PermissionResponse(
+                          resources: request.resources,
+                          action: PermissionResponseAction.GRANT);
+                    },
+                  ),
+                ),
+              );
+            }
+          }
+          EOF
 
       - name: Izgradnja APK datoteke
         run: flutter build apk --release
 
-      - name: Spremanje gotovog APK-a
-        uses: actions/upload-artifact@v3
+      - name: Spremanje gotovog APK-a (Ispravljena v4 verzija)
+        uses: actions/upload-artifact@v4
         with:
           name: BRO-KER-App
           path: build/app/outputs/flutter-apk/app-release.apk
