@@ -1,3 +1,7 @@
+/* ==========================================================================
+   BRO-KER ENTERPRISE SYSTEM ENGINE
+   ========================================================================== */
+
 const DokumentacijaModul = {
     generisiZbirniTroskovnik(projekt) {
         if (!projekt) return;
@@ -58,17 +62,18 @@ const DokumentacijaModul = {
             <div style="margin: 24px 0; background-color: #F5F6F7; padding: 20px; border-left: 5px solid #2C3236; font-size:13px; line-height:1.6; color:#333;">
                 <strong>PROJEKTNI NALOG: ${projekt.prostorija.toUpperCase()}</strong><br>
                 Klijent / Lokacija: ${projekt.klijent}<br>
-                Sustav optimizacije: BRO-KER Multi-Surface 3D CAD
+                Datum proračuna: ${new Date().toLocaleDateString('hr-HR')}<br>
+                Sustav optimizacije: BRO-KER Multi-Surface 3D CAD Engine
             </div>
             <h3 style="font-size:13px; text-transform:uppercase; margin-top:30px;">1. SPECIFIKACIJA ZIDOVA (Keramika: ${fmtZidW}x${fmtZidH} cm | Fuga: ${fgZid} mm)</h3>
             <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
                 <thead>
-                    <tr style="background:#2C3236; color:#FFFFFF;"><th style="padding:10px; text-align:left;">Povrsina</th><th style="padding:10px; text-align:left;">Kvadratura</th><th style="padding:10px; text-align:left;">Kolicina</th></tr>
+                    <tr style="background:#2C3236; color:#FFFFFF;"><th style="padding:10px; text-align:left;">Površina</th><th style="padding:10px; text-align:left;">Kvadratura</th><th style="padding:10px; text-align:left;">Količina za narudžbu</th></tr>
                 </thead>
                 <tbody>
                     <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 1 (Prednji)</td><td style="padding:10px;">${qZid1.toFixed(2)} m2</td><td style="padding:10px;">${komZid1} kom</td></tr>
                     <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 2 (Desni)</td><td style="padding:10px;">${qZid2.toFixed(2)} m2</td><td style="padding:10px;">${komZid2} kom</td></tr>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 3 (Straznji)</td><td style="padding:10px;">${qZid3.toFixed(2)} m2</td><td style="padding:10px;">${komZid3} kom</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 3 (Stražnji)</td><td style="padding:10px;">${qZid3.toFixed(2)} m2</td><td style="padding:10px;">${komZid3} kom</td></tr>
                     <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 4 (Lijevi)</td><td style="padding:10px;">${qZid4.toFixed(2)} m2</td><td style="padding:10px;">${komZid4} kom</td></tr>
                     <tr style="background:#EAEDEF; font-weight:bold;"><td style="padding:10px;">UKUPNO ZIDOVI</td><td style="padding:10px;">${m2Zidovi.toFixed(2)} m2</td><td style="padding:10px;">${komZidovi} kom</td></tr>
                 </tbody>
@@ -76,8 +81,8 @@ const DokumentacijaModul = {
             <h3 style="font-size:13px; text-transform:uppercase; margin-top:30px;">2. SPECIFIKACIJA PODA I SOKLA</h3>
             <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
                 <tbody>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Podna povrsina (Neto)</td><td style="padding:10px;">${m2Pod.toFixed(2)} m2 (${komPod} kom)</td></tr>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Sokl (Linearni metri)</td><td style="padding:10px;">${(duzinaSokla/100).toFixed(2)} m (${komSokla} kom)</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Podna površina (Neto format: ${p.pod.plocicaW || 60}x${p.pod.plocicaH || 60} cm)</td><td style="padding:10px;">${m2Pod.toFixed(2)} m2 (${komPod} kom)</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Sokl (Linearni metri oko sobe)</td><td style="padding:10px;">${(duzinaSokla/100).toFixed(2)} m (${komSokla} kom)</td></tr>
                 </tbody>
             </table>
         `;
@@ -93,14 +98,35 @@ const App = {
 
     init() {
         console.log("BRO-KER Sustav Inicijaliziran.");
+        
+        // AUTOMATSKO UČITAVANJE TEME IZ LOKALNE MEMORIJE MOBITELA
+        const spremljenaTema = localStorage.getItem('BROKER_PREFERIRANA_TEMA') || 'stealth';
+        this.promijeniTemu(spremljenaTema);
+
         this.promijeniZaslon('zaslon-izbornik');
     },
 
+    promijeniTemu(nazivTeme) {
+        // Čistimo sve stare teme
+        document.body.classList.remove('theme-stealth', 'theme-architect', 'theme-hud');
+        
+        // Dodajemo novu klasu na body
+        document.body.classList.add('theme-' + nazivTeme);
+        
+        // Spremamo odabir u localStorage
+        localStorage.setItem('BROKER_PREFERIRANA_TEMA', nazivTeme);
+        
+        // Sinkroniziramo HTML dropdown selektor
+        const selektor = document.getElementById('odabir-teme');
+        if (selektor) selektor.value = nazivTeme;
+        
+        console.log("Tema uspješno fiksirana: " + nazivTeme);
+    },
+
     promijeniZaslon(idZaslona) {
-        // POPRAVAK: Slijepo i nasilno gasimo apsolutno sve zaslone s !important izbjeljivanjem
+        // Nasilno skrivanje svih ekrana s !important
         document.querySelectorAll('.zaslon').forEach(z => {
             z.style.setProperty('display', 'none', 'important');
-            z.classList.remove('aktivni-zaslon');
         });
         
         const camSection = document.getElementById('zaslon-kamera');
@@ -108,17 +134,14 @@ const App = {
         
         if (idZaslona === 'zaslon-kamera') {
             if (camSection) camSection.style.setProperty('display', 'block', 'important');
-            if (header) header.style.setProperty('display', 'none', 'important'); // Skrivamo i crno zaglavlje radi kamere
+            if (header) header.style.setProperty('display', 'none', 'important');
             Kamera.pokreni();
         } else {
             if (camSection) camSection.style.setProperty('display', 'none', 'important');
             if (header) header.style.setProperty('display', 'flex', 'important');
             
             const cilj = document.getElementById(idZaslona);
-            if (cilj) {
-                cilj.style.setProperty('display', 'block', 'important');
-                cilj.classList.add('aktivni-zaslon');
-            }
+            if (cilj) cilj.style.setProperty('display', 'block', 'important');
             
             if (idZaslona === 'zaslon-radni') {
                 document.getElementById('naslov-prikaza').innerText = `${this.trenutniKlijent} - Rad`;
@@ -148,6 +171,7 @@ const App = {
         this.aktivnaPovrsinaKey = 'zid1';
         document.getElementById('odabir-povrsine').value = 'zid1';
 
+        // ČISTA ARHITEKTURA: povrsine je jedini ispravni naziv (dug riješen)
         this.projektObjekt = {
             klijent: klijentInput,
             prostorija: prostorijaInput,
@@ -173,8 +197,7 @@ const App = {
 
     ucitajPovrsinuUUrednik() {
         if (!this.projektObjekt) return;
-        let komponente = this.projektObjekt.povrsine || this.projektObjekt.povrsines;
-        const p = komponente[this.aktivnaPovrsinaKey];
+        const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
         if (!p) return;
         
         document.getElementById('input-zid-w').value = p.w;
@@ -182,29 +205,20 @@ const App = {
         document.getElementById('input-plocica-h').value = p.plocicaH || 60;
         document.getElementById('input-fuga').value = p.fuga || 2;
 
-        const sekcijaZona = document.getElementById('sekcija-zona');
         const sekcijaFormat = document.getElementById('sekcija-format-plocice');
-        const sekcijaPomicanje = document.getElementById('sekcija-pomicanje-rastera');
         const gumbOtvor = document.getElementById('gumb-dodaj-otvor');
 
         if (p.tip === 'Zid') {
             document.getElementById('input-zid-h').value = p.h;
-            if (sekcijaZona) sekcijaZona.style.display = 'grid';
             if (sekcijaFormat) sekcijaFormat.style.display = 'flex';
-            if (sekcijaPomicanje) sekcijaPomicanje.style.display = 'flex';
             if (gumbOtvor) gumbOtvor.innerText = "➕ DODAJ OTVOR / KRUNU MANUELNO";
-            document.getElementById('check-visina').checked = p.hZona || false;
-            document.getElementById('check-tus').checked = p.vZona || false;
-        } else {
-            if (sekcijaZona) sekcijaZona.style.display = 'none';
         }
         MatematikaEngine.osvjeziIzObjekta(p);
     },
 
     sacuvajPoljaUObjekt() {
         if (!this.projektObjekt) return;
-        let komponente = this.projektObjekt.povrsine || this.projektObjekt.povrsines;
-        const p = komponente[this.aktivnaPovrsinaKey];
+        const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
         if (!p) return;
         
         p.w = parseFloat(document.getElementById('input-zid-w').value) || 0;
@@ -214,22 +228,22 @@ const App = {
         let tekuciH = parseFloat(document.getElementById('input-plocica-h').value) || 60;
         let tekuciF = parseFloat(document.getElementById('input-fuga').value) || 2;
 
-        Object.keys(komponente).forEach(key => {
-            komponente[key].plocicaW = tekuciW;
-            komponente[key].plocicaH = tekuciH;
-            komponente[key].fuga = tekuciF;
+        Object.keys(this.projektObjekt.povrsine).forEach(key => {
+            this.projektObjekt.povrsine[key].plocicaW = tekuciW;
+            this.projektObjekt.povrsine[key].plocicaH = tekuciH;
+            this.projektObjekt.povrsine[key].fuga = tekuciF;
         });
 
         if (this.aktivnaPovrsinaKey === 'zid1') {
-            komponente.zid3.w = p.w; komponente.zid3.h = p.h; komponente.pod.w = p.w;
-            komponente.zid2.h = p.h; komponente.zid4.h = p.h;
+            this.projektObjekt.povrsine.zid3.w = p.w; this.projektObjekt.povrsine.zid3.h = p.h; this.projektObjekt.povrsine.pod.w = p.w;
+            this.projektObjekt.povrsine.zid2.h = p.h; this.projektObjekt.povrsine.zid4.h = p.h;
         }
         if (this.aktivnaPovrsinaKey === 'zid2') {
-            komponente.zid4.w = p.w; komponente.zid4.h = p.h; komponente.pod.h = p.w;
+            this.projektObjekt.povrsine.zid4.w = p.w; this.projektObjekt.povrsine.zid4.h = p.h; this.projektObjekt.povrsine.pod.h = p.w;
         }
 
-        Object.keys(komponente).forEach(key => {
-            MatematikaEngine.pokreniTihiZbirniProracun(komponente[key]);
+        Object.keys(this.projektObjekt.povrsine).forEach(key => {
+            MatematikaEngine.pokreniTihiZbirniProracun(this.projektObjekt.povrsine[key]);
         });
 
         MatematikaEngine.osvjeziIzObjekta(p);
@@ -237,11 +251,12 @@ const App = {
 
     spasiTrenutnoStanjeUBazu() {
         this.sacuvajPoljaUObjekt();
-        let komponente = this.projektObjekt.povrsine || this.projektObjekt.povrsines;
-        this.projektObjekt.povrsine = komponente;
-
-        BazaModul.spasiProjekt(this.trenutniKlijent, this.trenutnaProstorija, komponente.zid1.w, komponente.zid1.h, komponente.zid1.popisOtvora, this.projektObjekt);
-        localStorage.setItem('BROKER_COMP_' + this.trenutniKlijent, JSON.stringify(this.projektObjekt));
+        
+        // POPRAVAK BUG-A: Jedinstveni ključ po klijentu i prostoriji (nema prepisivanja etaža)
+        let jedinstveniKljuc = 'BROKER_COMP_' + this.trenutniKlijent + '_' + this.trenutnaProstorija;
+        localStorage.setItem(jedinstveniKljuc, JSON.stringify(this.projektObjekt));
+        
+        BazaModul.spasiProjekt(this.trenutniKlijent, this.trenutnaProstorija, this.projektObjekt.povrsine.zid1.w, this.projektObjekt.povrsine.zid1.h, this.projektObjekt.povrsine.zid1.popisOtvora, this.projektObjekt);
         alert("Kompletna kupaonica spremljena!");
     },
 
@@ -250,10 +265,11 @@ const App = {
         const staro = projekti.find(proj => proj.id === idProjekta);
         if (staro) {
             this.trenutniKlijent = staro.klijent; this.trenutnaProstorija = staro.prostorija;
-            let napredni = localStorage.getItem('BROKER_COMP_' + staro.klijent);
+            let jedinstveniKljuc = 'BROKER_COMP_' + staro.klijent + '_' + staro.prostorija;
+            let napredni = localStorage.getItem(jedinstveniKljuc);
+            
             if (napredni) {
                 this.projektObjekt = JSON.parse(napredni);
-                if (this.projektObjekt.povrsines && !this.projektObjekt.povrsine) this.projektObjekt.povrsine = this.projektObjekt.povrsines;
             }
             this.aktivnaPovrsinaKey = 'zid1';
             this.promijeniZaslon('zaslon-radni');
@@ -265,15 +281,14 @@ const App = {
         const projekti = BazaModul.dohvatiSveProjekte(); el.innerHTML = '';
         projekti.forEach(p => {
             const kartica = document.createElement('div'); kartica.className = 'alat-kartica';
-            kartica.innerHTML = `<div onclick="App.ucitajProjektIzBaze('${p.id}')" style="cursor:pointer;text-align:left;"><div style="font-weight:bold;color:#FFF;">${p.klijent}</div><div style="font-size:11px;color:#8C9BA5;">${p.prostorija}</div></div>`;
+            kartica.innerHTML = `<div onclick="App.ucitajProjektIzBaze('${p.id}')" style="cursor:pointer;text-align:left;"><div style="font-weight:bold;color:var(--tekst-glavni);">${p.klijent}</div><div style="font-size:11px;color:var(--tekst-sporedni);">${p.prostorija}</div></div>`;
             el.appendChild(kartica);
         });
     },
 
     osvjeziSveKvadraturneProracune(proj) {
-        let kom = proj.povrsine || proj.povrsines;
-        Object.keys(kom).forEach(k => MatematikaEngine.pokreniTihiZbirniProracun(kom[k]));
-        return kom;
+        Object.keys(proj.povrsine).forEach(k => MatematikaEngine.pokreniTihiZbirniProracun(proj.povrsine[k]));
+        return proj.povrsine;
     },
 
     otvoriDokumentaciju() {
@@ -282,4 +297,3 @@ const App = {
     }
 };
 window.onload = () => App.init();
-                
