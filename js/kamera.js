@@ -6,27 +6,29 @@ const Kamera = {
     async pokreni() {
         const status = document.getElementById('kamera-status');
         try {
-            this.stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { facingMode: "environment" } 
-            });
+            // Prvo paljenje da mobitel zatraži i odobri dozvole
+            this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
             const video = document.getElementById('web-kamera');
             video.srcObject = this.stream;
 
+            // Tek sada čitamo sve dostupne senzore (kada imamo dozvolu)
             const uredjaji = await navigator.mediaDevices.enumerateDevices();
             let sveLece = uredjaji.filter(u => u.kind === 'videoinput');
             
+            // Filtriramo samo stražnje kamere (odbacujemo prednju/selfie)
             this.straznjeKamere = sveLece.filter(k => {
                 let l = k.label.toLowerCase();
-                return !l.includes('front') && !l.includes('user') && !l.includes('prednja') && !l.includes('selfie');
+                return !l.includes('front') && !l.includes('user') && !l.includes('prednja');
             });
 
             if (this.straznjeKamere.length === 0) { this.straznjeKamere = sveLece; }
             this.trenutniIndeksLece = 0;
             
-            status.innerText = "Sustav spreman. Uperite u BRO-KER plocu na podu...";
+            // Ispisujemo točan broj pronađenih leća na ekranu
+            status.innerHTML = `Sustav spreman. Pronađeno <b style="color:var(--akcent-plavi)">${this.straznjeKamere.length}</b> stražnjih leća.`;
             ArucoModul.otpocniDetekciju();
         } catch (error) {
-            status.innerText = "Problem s pokretanjem kamere: " + error.message;
+            status.innerText = "Problem s kamerom: " + error.message;
         }
     },
 
@@ -34,43 +36,56 @@ const Kamera = {
         const video = document.getElementById('web-kamera');
         const status = document.getElementById('kamera-status');
 
+        // 1. HARD KILL: Brutalno zaustavljanje svih procesa na trenutnoj leći
         if (this.stream) {
-            this.stream.getTracks().forEach(track => track.stop());
+            this.stream.getTracks().forEach(track => {
+                track.stop();
+                track.enabled = false;
+            });
             this.stream = null;
+            video.srcObject = null;
         }
 
-        await new Promise(resolve => setTimeout(resolve, 300));
+        // 2. PAUZA: Čekamo 400ms da matična ploča mobitela fizički oslobodi senzor
+        await new Promise(resolve => setTimeout(resolve, 400));
 
-        let opcije = { facingMode: "environment" };
-        if (this.straznjeKamere.length > 0) {
-            opcije = { 
-                deviceId: this.straznjeKamere[this.trenutniIndeksLece].deviceId,
-                width: { ideal: 1280 },
-                height: { ideal: 720 }
-            };
-        }
+        // 3. TARGETIRANJE: Izvlačimo serijski broj iduće leće
+        let ciljaniId = this.straznjeKamere[this.trenutniIndeksLece].deviceId;
+        
+        let opcije = {
+            video: { 
+                deviceId: ciljaniId ? { exact: ciljaniId } : undefined,
+                width: { ideal: 1920 }, // Forsiramo višu rezoluciju da natjeramo široki kut
+                height: { ideal: 1080 }
+            }
+        };
 
         try {
-            this.stream = await navigator.mediaDevices.getUserMedia({ video: opcije });
+            // Pokretanje specifične leće
+            this.stream = await navigator.mediaDevices.getUserMedia(opcije);
             video.srcObject = this.stream;
             
-            let oznaka = this.straznjeKamere[this.trenutniIndeksLece]?.label || `Leca ${this.trenutniIndeksLece + 1}`;
-            status.innerText = `Aktivna leca: [${oznaka}]. Skenirajte pod...`;
+            let oznaka = this.straznjeKamere[this.trenutniIndeksLece].label || `Leća ${this.trenutniIndeksLece + 1}`;
+            status.innerHTML = `Aktivna: <b style="color:var(--akcent-plavi)">${oznaka}</b> (${this.trenutniIndeksLece + 1}/${this.straznjeKamere.length})`;
             ArucoModul.otpocniDetekciju();
         } catch (err) {
+            console.log("Greška pri promjeni leće, vraćam na default: ", err);
             this.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
             video.srcObject = this.stream;
-            status.innerText = "Aktivirana zamjenska straznja leca...";
+            status.innerHTML = `Zaštita sustava: Učitana osnovna leća...`;
             ArucoModul.otpocniDetekciju();
         }
     },
 
     ciklirajLecu() {
-        // POPRAVAK: Umjesto iskakanja dosadnog prozora (alerta), radimo automatsko tiho saltanje
+        const status = document.getElementById('kamera-status');
         if (this.straznjeKamere.length <= 1) { 
-            console.log("Inkognito restrikcija. Pokusavam prisilno prebacivanje.");
+            status.innerHTML = `<span style="color:var(--akcent-bordo)">Preglednik vidi samo 1 leću!</span> Probaj drugi preglednik.`;
+            return;
         }
-        this.trenutniIndeksLece = (this.trenutniIndeksLece + 1) % (this.straznjeKamere.length || 1);
+        
+        status.innerHTML = `Prebacujem senzor leće...`;
+        this.trenutniIndeksLece = (this.trenutniIndeksLece + 1) % this.straznjeKamere.length;
         this.pokreniSpecificnuLecu();
     },
 
