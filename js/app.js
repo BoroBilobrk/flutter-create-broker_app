@@ -353,7 +353,7 @@ const App = {
     promijeniOdmakY(v) {
         const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey]; p.odmakY = parseFloat(v);
         document.getElementById('prikaz-odmaka-y').innerText = `${v} cm`; 
-        if (typeof MatematikaEngine !== 'undefined') MatematikaEngine.osvjeziIzObjekta(p);
+                if (typeof MatematikaEngine !== 'undefined') MatematikaEngine.osvjeziIzObjekta(p);
     },
 
     sacuvajPoljaUObjekt() {
@@ -493,7 +493,125 @@ const App = {
         this.zatvoriFotogrametriju();
     },
 
-    pokreniAIDetekciju() {
+    // ============================================================
+    // AI DETEKCIJA OTVORA (fotogrametrija) - konfiguracija i pomocne funkcije
+    // ============================================================
+    // Original 'pokreniAIDetekciju' je koristio cistu OpenCV heuristiku
+    // (HoughCircles) pod nazivom "AI" - radi, ali ne razlikuje utikacnicu
+    // od okrugle sjene i ne uci na primjerima. Ako se ispod postavi putanja
+    // do stvarno treniranog ONNX modela, koristit ce se prava detekcija;
+    // dok modela nema, koristi se poboljsana klasicna heuristika (fallback).
+    ONNX_MODEL_PUTANJA: null, // npr. 'models/instalacije-yolov8n.onnx' kad ga istreniras
+    onnxSession: null,
+
+    async ucitajONNXModelAkoPostoji() {
+        if (!this.ONNX_MODEL_PUTANJA || this.onnxSession) return this.onnxSession;
+        if (typeof ort === 'undefined') return null;
+        try {
+            this.onnxSession = await ort.InferenceSession.create(this.ONNX_MODEL_PUTANJA);
+            console.log("ONNX model ucitan: " + this.ONNX_MODEL_PUTANJA);
+        } catch (e) {
+            console.log("ONNX model nije ucitan (radim s klasicnom heuristikom): " + e.message);
+            this.onnxSession = null;
+        }
+        return this.onnxSession;
+    },
+
+    // Priprema sliku za model: resize na kvadrat modelInputSize x modelInputSize,
+    // normalizacija na 0-1, NCHW raspored - standard za YOLO ONNX exporte.
+    // NAPOMENA: prilagodi modelInputSize i normalizaciju tocno onome sto tvoj
+    // trenirani model ocekuje (provjeri u export skripti / metapodacima modela).
+    pripremiTenzorZaONNX(imgElement, modelInputSize = 640) {
+        const canvas = document.createElement('canvas');
+        canvas.width = modelInputSize; canvas.height = modelInputSize;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(imgElement, 0, 0, modelInputSize, modelInputSize);
+        const { data } = ctx.getImageData(0, 0, modelInputSize, modelInputSize);
+
+        const brojPiksela = modelInputSize * modelInputSize;
+        const floatData = new Float32Array(3 * brojPiksela);
+        for (let i = 0; i < brojPiksela; i++) {
+            floatData[i] = data[i * 4] / 255;                       // R
+            floatData[brojPiksela + i] = data[i * 4 + 1] / 255;     // G
+            floatData[2 * brojPiksela + i] = data[i * 4 + 2] / 255; // B
+        }
+        return new ort.Tensor('float32', floatData, [1, 3, modelInputSize, modelInputSize]);
+    },
+
+    // Ocekuje ONNX model exportovan s ugradjenim NMS-om (izlaz oblika
+    // [N, 6] = [x1, y1, x2, y2, confidence, class_id], u koordinatama
+    // modelInputSize x modelInputSize). To je najcesci format kad se
+    // Ultralytics YOLO model exporta s 'nms=True'. Ako tvoj model ima
+    // drugaciji izlazni oblik, PRILAGODI OVU FUNKCIJU tom obliku prije
+    // koristenja - inace ce rezultati biti besmisleni.
+    async detektirajKrozONNX(imgElement, modelInputSize = 640) {
+        const session = await this.ucitajONNXModelAkoPostoji();
+        if (!session) return null;
+
+        try {
+            const tenzor = this.pripremiTenzorZaONNX(imgElement, modelInputSize);
+            const nazivUlaza = session.inputNames[0];
+            const rezultati = await session.run({ [nazivUlaza]: tenzor });
+            const izlaz = rezultati[session.outputNames[0]];
+
+            let detekcije = [];
+            const brojDetekcija = izlaz.dims[0];
+            const skalaX = imgElement.naturalWidth / modelInputSize;
+            const skalaY = imgElement.naturalHeight / modelInputSize;
+
+            for (let i = 0; i < brojDetekcija; i++) {
+                const off = i * 6;
+                const x1 = izlaz.data[off], y1 = izlaz.data[off + 1];
+                const x2 = izlaz.data[off + 2], y2 = izlaz.data[off + 3];
+                const conf = izlaz.data[off + 4];
+                if (conf < 0.4) continue; // prag pouzdanosti - podesi po potrebi
+                detekcije.push({
+                    x: ((x1 + x2) / 2) * skalaX,
+                    y: ((y1 + y2) / 2) * skalaY,
+                    r: (Math.max(x2 - x1, y2 - y1) / 2) * ((skalaX + skalaY) / 2)
+                });
+            }
+            return detekcije;
+        } catch (e) {
+            console.log("ONNX inferenca neuspjesna, koristim fallback: " + e.message);
+            return null;
+        }
+    },
+
+    // Klasicna heuristika (fallback kad nema ONNX modela) - poboljsana u
+    // odnosu na original: dvoprolazni Hough (hvata i manje i vece otvore)
+    // + potiskivanje preklapajucih duplikata.
+    detektirajKrozHough(gray, mat) {
+        let sviKrugovi = [];
+        const prolazi = [
+            { minR: Math.floor(mat.cols / 60), maxR: Math.floor(mat.cols / 18), param2: 32 }, // manji otvori (uticnice, cijevi)
+            { minR: Math.floor(mat.cols / 20), maxR: Math.floor(mat.cols / 8),  param2: 40 }  // veci otvori (WC odvod)
+        ];
+
+        prolazi.forEach(cfg => {
+            let krugovi = new cv.Mat();
+            cv.HoughCircles(gray, krugovi, cv.HOUGH_GRADIENT, 1, mat.cols / 15, 100, cfg.param2, cfg.minR, cfg.maxR);
+            for (let i = 0; i < krugovi.cols; i++) {
+                sviKrugovi.push({ x: krugovi.data32F[i * 3], y: krugovi.data32F[i * 3 + 1], r: krugovi.data32F[i * 3 + 2] });
+            }
+            krugovi.delete();
+        });
+
+        return this.filtrirajPreklapajuceKrugove(sviKrugovi);
+    },
+
+    // Ako se dva detektirana kruga preklapaju vise od 60% manjeg radijusa,
+    // zadrzi samo prvi (izbjegava duple oznake na istoj rupi).
+    filtrirajPreklapajuceKrugove(krugovi) {
+        let zadrzani = [];
+        krugovi.forEach(k => {
+            let preklapaSPostojecim = zadrzani.some(z => Math.hypot(z.x - k.x, z.y - k.y) < Math.min(z.r, k.r) * 0.6);
+            if (!preklapaSPostojecim) zadrzani.push(k);
+        });
+        return zadrzani;
+    },
+
+    async pokreniAIDetekciju() {
         if (typeof cv === 'undefined' || !cv.Mat) {
             alert("OpenCV AI modul se još učitava. Pričekajte 5 sekundi pa pokušajte ponovno.");
             return;
@@ -509,76 +627,64 @@ const App = {
         const ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        let mat = cv.imread(imgElement);
-        let gray = new cv.Mat();
-        
-        cv.cvtColor(mat, gray, cv.COLOR_RGBA2GRAY, 0);
-        cv.medianBlur(gray, gray, 5);
+        let pronadjeneTocke = []; // {x, y, r} u pikselima originalne slike
+        let izvorOznaka = "Klasicna detekcija";
 
-        let circles = new cv.Mat();
-        let minR = Math.floor(mat.cols / 60); 
-        let maxR = Math.floor(mat.cols / 10); 
-
-        cv.HoughCircles(gray, circles, cv.HOUGH_GRADIENT, 1, mat.cols/15, 100, 30, minR, maxR);
-
-        let pronadjeneKote = [];
-        
-        if (circles.cols > 0) {
-            for (let i = 0; i < circles.cols; ++i) {
-                let x = circles.data32F[i * 3];
-                let y = circles.data32F[i * 3 + 1];
-                let radius = circles.data32F[i * 3 + 2];
-
-                ctx.beginPath();
-                ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
-                ctx.lineWidth = 4;
-                ctx.strokeStyle = '#0EA5E9';
-                ctx.stroke();
-                
-                ctx.beginPath();
-                ctx.arc(x, y, 6, 0, 2 * Math.PI, false);
-                ctx.fillStyle = '#FF4C4C';
-                ctx.fill();
-
-                const postotakX = x / imgElement.naturalWidth;
-                const postotakY = y / imgElement.naturalHeight;
-
-                const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
-                const stvarniZidW = p.w || 240;
-                const stvarniZidH = p.h || 265;
-                
-                let tockaX = postotakX * stvarniZidW;
-                let tockaY = stvarniZidH - (postotakY * stvarniZidH);
-
-                pronadjeneKote.push({x: tockaX, y: tockaY});
-            }
-            
-            setTimeout(() => {
-                let potvrda = confirm(`🧠 AI JE PRONAŠAO ${circles.cols} INSTALACIJA!\nVidite li plave nišane na slici?\nŽelite li da program automatski upiše ove kote u mrežu pločica?`);
-                if(potvrda) {
-                    const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
-                    if (!p.popisOtvora) p.popisOtvora = [];
-                    
-                    pronadjeneKote.forEach(kota => {
-                        let finalX = kota.x - 2.5; 
-                        let finalY = kota.y - 2.5;
-                        p.popisOtvora.push({ tip: "AI Kalibrirano", w: 5, h: 5, x: finalX, y: finalY });
-                    });
-                    
-                    this.sacuvajPoljaUObjekt();
-                    alert("AI je uspješno preslikao i kalibrirao sve rupe na mrežni nacrt!");
-                    this.zatvoriFotogrametriju();
-                } else {
-                    ctx.clearRect(0, 0, canvas.width, canvas.height); 
-                }
-            }, 200);
-
+        // 1) Pokusaj s pravim ONNX modelom ako je konfiguriran i uspjesno ucitan
+        let onnxRezultat = await this.detektirajKrozONNX(imgElement);
+        if (onnxRezultat && onnxRezultat.length > 0) {
+            pronadjeneTocke = onnxRezultat;
+            izvorOznaka = "ONNX AI model";
         } else {
-            alert("AI nije uspio detektirati pravilne geometrijske krugove na ovoj fotografiji. Pokušajte izoštriti sliku ili koristite ručni Tap-to-Drill klikom na cijev.");
+            // 2) Fallback: poboljsana klasicna heuristika (dvoprolazni Hough + NMS)
+            let mat = cv.imread(imgElement);
+            let gray = new cv.Mat();
+            cv.cvtColor(mat, gray, cv.COLOR_RGBA2GRAY, 0);
+            cv.medianBlur(gray, gray, 5);
+            pronadjeneTocke = this.detektirajKrozHough(gray, mat);
+            mat.delete(); gray.delete();
         }
 
-        mat.delete(); gray.delete(); circles.delete();
+        if (pronadjeneTocke.length === 0) {
+            alert("Nije uspjelo detektirati pravilne geometrijske otvore na ovoj fotografiji. Pokušajte izoštriti sliku ili koristite ručni Tap-to-Drill klikom na cijev.");
+            return;
+        }
+
+        let pronadjeneKote = [];
+        pronadjeneTocke.forEach(k => {
+            ctx.beginPath(); ctx.arc(k.x, k.y, k.r, 0, 2 * Math.PI, false);
+            ctx.lineWidth = 4; ctx.strokeStyle = '#0EA5E9'; ctx.stroke();
+            ctx.beginPath(); ctx.arc(k.x, k.y, 6, 0, 2 * Math.PI, false);
+            ctx.fillStyle = '#FF4C4C'; ctx.fill();
+
+            const postotakX = k.x / imgElement.naturalWidth;
+            const postotakY = k.y / imgElement.naturalHeight;
+            const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
+            const stvarniZidW = p.w || 240;
+            const stvarniZidH = p.h || 265;
+            pronadjeneKote.push({
+                x: postotakX * stvarniZidW,
+                y: stvarniZidH - (postotakY * stvarniZidH)
+            });
+        });
+
+        setTimeout(() => {
+            let potvrda = confirm(`🧠 ${izvorOznaka.toUpperCase()} JE PRONAŠAO ${pronadjeneKote.length} INSTALACIJA!\nVidite li oznake na slici?\nŽelite li da program automatski upiše ove kote u mrežu pločica?`);
+            if (potvrda) {
+                const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
+                if (!p.popisOtvora) p.popisOtvora = [];
+                pronadjeneKote.forEach(kota => {
+                    p.popisOtvora.push({ tip: izvorOznaka, w: 5, h: 5, x: kota.x - 2.5, y: kota.y - 2.5 });
+                });
+                this.sacuvajPoljaUObjekt();
+                alert("Uspješno preslikano i kalibrirano na mrežni nacrt!");
+                this.zatvoriFotogrametriju();
+            } else {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
+        }, 200);
     }
+
 };
 
 window.onload = () => {
