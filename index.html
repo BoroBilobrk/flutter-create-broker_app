@@ -163,7 +163,7 @@
                 </button>
                 <label class="gumb-ostri" style="flex:2; background:rgba(14,165,233,0.1); border-color:var(--akcent-plavi); color:var(--akcent-plavi); display:flex; align-items:center; justify-content:center; cursor:pointer; margin:0;">
                     🎯 FOTOGRAMETRIJA
-                    <input type="file" accept="image/*" style="display:none;" onchange="App.ucitajSlikuZidaZaBusenje(this)">
+                    <input type="file" accept="image/*" style="display:none;" onchange="AIModul.ucitajSlikuZidaZaBusenje(this)">
                 </label>
             </div>
             
@@ -186,17 +186,17 @@
     <div id="modal-fotogrametrija" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#111417; z-index:99999999; flex-direction:column;">
         <div style="padding:15px; background:#1A1D20; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #343D44;">
             <h3 style="color:var(--akcent-plavi); margin:0; font-size:13px; letter-spacing:1px;">🎯 AI FOTOGRAMETRIJA</h3>
-            <button class="gumb-ostri gumb-kontra" style="margin:0; padding:8px 12px; font-size:10px;" onclick="App.zatvoriFotogrametriju()">ZATVORI</button>
+            <button class="gumb-ostri gumb-kontra" style="margin:0; padding:8px 12px; font-size:10px;" onclick="AIModul.zatvoriFotogrametriju()">ZATVORI</button>
         </div>
         
         <div style="padding:15px; background:#2C3236; display:flex; gap:10px; align-items:center; border-bottom:1px solid #343D44;">
             <span style="color:#FFF; font-size:10px; font-weight:bold;">ZUMIRAJ:</span>
-            <input type="range" id="zoom-slider" min="1" max="5" step="0.1" value="1" style="flex:1; accent-color:var(--akcent-plavi);" oninput="App.zumirajSliku(this.value)">
+            <input type="range" id="zoom-slider" min="1" max="5" step="0.1" value="1" style="flex:1; accent-color:var(--akcent-plavi);" oninput="AIModul.zumirajSliku(this.value)">
             <span id="zoom-prikaz" style="color:var(--akcent-plavi); font-size:12px; font-weight:bold; min-width:35px; text-align:right;">1.0x</span>
         </div>
 
         <div style="padding:10px; background:#111417; display:flex; justify-content:center;">
-            <button class="gumb-ostri" style="width:100%; background:#0EA5E9; color:#FFF; font-weight:bold; border:none; padding:12px; font-size:12px; letter-spacing:1px;" onclick="App.pokreniAIDetekciju()">
+            <button class="gumb-ostri" style="width:100%; background:#0EA5E9; color:#FFF; font-weight:bold; border:none; padding:12px; font-size:12px; letter-spacing:1px;" onclick="AIModul.pokreniAIDetekciju()">
                 🧠 POKRENI AI SKENIRANJE RUPA
             </button>
         </div>
@@ -206,15 +206,14 @@
 
         <div id="foto-kontejner" style="flex:1; overflow:auto; background:#000; padding:20px;">
             <div id="zoom-wrapper" style="position:relative; transform-origin: top left; transition: transform 0.1s ease-out; display:inline-block;">
-                <img id="foto-zid" style="display:block; max-width:90vw; cursor:crosshair;" onclick="App.klikniNaSliku(event)">
+                <img id="foto-zid" style="display:block; max-width:90vw; cursor:crosshair;" onclick="AIModul.klikniNaSliku(event)">
                 <canvas id="ai-overlay" style="position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></canvas>
             </div>
         </div>
     </div>
 
     <script src="js/baza.js"></script>
-    <script src="js/matematika.js"></script>
     <script src="js/kamera.js"></script>
-    <script src="js/app.js"></script>
-</body>
+    <script src="js/matematika.js"></script>
+    <script src="js/pdf.js"></script>    <script src="js/ai.js"></script>     <script src="js/app.js"></script>    </body>
 </html>
