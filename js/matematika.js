@@ -57,13 +57,20 @@ const MatematikaEngine = {
                 tzDiv.style.width = (tz.w * scale) + 'px';
                 tzDiv.style.height = (tz.h * scale) + 'px';
                 
-                if (p.slikaTeksture) {
+                // NOVO: Ako zid ima definiranu teksturu za tuš, koristi nju!
+                if (p.slikaTekstureTusa) {
+                    tzDiv.style.backgroundColor = 'transparent';
+                    tzDiv.style.backgroundImage = gridLines + `, url(${p.slikaTekstureTusa})`;
+                    // Poravnanje fuga sa zidom (čak i kod druge teksture fuge se gađaju)
+                    tzDiv.style.backgroundPosition = `${bgX - (tz.x * scale)}px ${bgY + (tz.y * scale)}px`;
+                } else if (p.slikaTeksture) {
+                    tzDiv.style.backgroundColor = 'transparent';
                     tzDiv.style.backgroundImage = gridLines + `, url(${p.slikaTeksture})`;
                     tzDiv.style.backgroundPosition = `${bgX - (tz.x * scale)}px ${bgY + (tz.y * scale)}px`;
                 } else {
                     tzDiv.style.backgroundColor = '#3A4248';
                     tzDiv.style.backgroundImage = gridLines;
-                    tzDiv.style.backgroundPosition = `${bgX}px ${bgY}px`;
+                    tzDiv.style.backgroundPosition = `${bgX - (tz.x * scale)}px ${bgY + (tz.y * scale)}px`;
                 }
                 
                 tzDiv.style.backgroundSize = keramikaDiv.style.backgroundSize;
@@ -113,7 +120,6 @@ const MatematikaEngine = {
 
             let plocicaURedu = brojCijelih;
             
-            // LOGIKA UŠTEDE: Ako se levi i desni rez mogu dobiti iz JEDNE fizičke pločice
             if (prviRez > 0 && zadnjiRez > 0) {
                 if ((prviRez + zadnjiRez) <= plW) {
                     plocicaURedu += 1; 
@@ -143,7 +149,7 @@ const MatematikaEngine = {
                 if (vrhTusa > oblH) {
                     let prebacajH = vrhTusa - Math.max(tz.y, oblH);
                     povrsinaZida += (tz.w * prebacajH) / 10000;
-                    dodatnePlociceTus += Math.ceil((tz.w * prebacajH) / (plW * plH)); // gruba procjena za vrh tuša
+                    dodatnePlociceTus += Math.ceil((tz.w * prebacajH) / (plW * plH)); 
                 }
             });
         }
@@ -163,8 +169,6 @@ const MatematikaEngine = {
         }
 
         p.kvadratura = Math.max(povrsinaZida, 0);
-        
-        // NOVO: Pozivamo precizni matematički engine za rezove umjesto "slijepih" 10%
         p.izracunCijelih = this.izracunajPrecizniSkart(p) + dodatnePlociceTus;
     },
 
@@ -197,4 +201,3 @@ const MatematikaEngine = {
         App.sacuvajPoljaUObjekt();
     }
 };
-                
