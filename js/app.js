@@ -1,7 +1,7 @@
 const DokumentacijaModul = {
     generirajSVGZid(p) {
         if (!p) return '';
-        let mjerilo = 0.5; // Skaliranje za PDF prikaz
+        let mjerilo = 0.5;
         let w = p.w * mjerilo;
         let h = (p.tip === 'Zid' ? p.h : p.h) * mjerilo;
         let oblH = (p.tip === 'Zid' ? p.visinaOblaganja : p.h) * mjerilo;
@@ -10,7 +10,7 @@ const DokumentacijaModul = {
         let plH = (p.rotacija ? p.plocicaW : p.plocicaH) * mjerilo;
         
         let bgX = (p.odmakX || 0) * mjerilo;
-        let bgY = (p.odmakY || 0) * mjerilo; // Za PDF Y ide odozgo
+        let bgY = (p.odmakY || 0) * mjerilo; 
 
         let rId = 'pat-' + Math.random().toString(36).substr(2, 9);
         
@@ -28,7 +28,6 @@ const DokumentacijaModul = {
     generisiZbirniTroskovnik(projekt) {
         if (!projekt) return;
         const p = App.osvjeziSveKvadraturneProracune(projekt);
-        if (!p) { alert("Greska pri ucitavanju."); return; }
 
         let htmlZidovi = '';
         if (projekt.konfiguracija.zidovi) {
@@ -63,11 +62,10 @@ const DokumentacijaModul = {
             htmlPod += `</tbody></table>`;
         }
 
-        // KRIŽNI PRIKAZ (UNFOLD LAYOUT)
         let krizniPrikaz = '';
         if (projekt.konfiguracija.zidovi && projekt.konfiguracija.pod) {
             krizniPrikaz = `
-            <h3 style="font-size:12px; text-transform:uppercase; margin-top:30px; text-align:center; color:#64748B;">KRIŽNI PRIKAZ (UNFOLD) - PREMA SLIDER ODACIMA</h3>
+            <h3 style="font-size:12px; text-transform:uppercase; margin-top:30px; text-align:center; color:#64748B;">KRIŽNI PRIKAZ (UNFOLD) - PREMA SLIDER ODMACIMA</h3>
             <div style="display:table; margin: 0 auto; border-spacing:10px;">
                 <div style="display:table-row;">
                     <div style="display:table-cell; width:150px; text-align:center; vertical-align:middle;"></div>
@@ -107,36 +105,35 @@ const DokumentacijaModul = {
 
         const overlay = document.createElement('div');
         overlay.id = 'print-overlay';
-        overlay.style.position = 'fixed'; overlay.style.top = '0'; overlay.style.left = '0';
-        overlay.style.width = '100%'; overlay.style.height = '100%';
-        overlay.style.backgroundColor = '#FFFFFF'; overlay.style.color = '#1A1D20';
-        overlay.style.zIndex = '99999999'; overlay.style.overflowY = 'auto';
-        overlay.style.padding = '24px';
         
+        // CSS POPRAVAK: Ubijamo crni artefakt za print
         overlay.innerHTML = `
             <style>
                 @media print {
+                    html, body { background-color: #FFFFFF !important; color: #000000 !important; margin: 0 !important; padding: 0 !important; height: auto !important; overflow: visible !important; }
                     body > *:not(#print-overlay) { display: none !important; }
-                    #print-overlay { display: block !important; position: relative !important; width: 100% !important; height: auto !important; margin: 0 !important; padding: 0 !important; }
+                    #print-overlay { display: block !important; position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; min-height: 100vh !important; background-color: #FFFFFF !important; margin: 0 !important; padding: 0 !important; z-index: 999999; }
                     .no-print { display: none !important; }
                     @page { margin: 1cm; }
                 }
             </style>
-            <div class="no-print" style="display:flex; justify-content:space-between; margin-bottom:20px; background:#111417; padding:12px; margin:-24px -24px 20px -24px;">
-                <button style="background:#14281E; color:#4EFA9E; border:1px solid #2E5C43; padding:12px; font-weight:bold; cursor:pointer;" onclick="window.print()">🖨️ POKRENI PDF</button>
-                <button style="background:#2C3236; color:#8C9BA5; border:1px solid #343D44; padding:12px; font-weight:bold; cursor:pointer;" onclick="document.getElementById('print-overlay').remove()">✕ ZATVORI</button>
+            <div id="print-overlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background-color:#FFFFFF; color:#1A1D20; z-index:99999999; overflow-y:auto; padding:24px; box-sizing:border-box;">
+                <div class="no-print" style="display:flex; justify-content:space-between; margin-bottom:20px; background:#111417; padding:12px; margin:-24px -24px 20px -24px;">
+                    <button style="background:#14281E; color:#4EFA9E; border:1px solid #2E5C43; padding:12px; font-weight:bold; cursor:pointer;" onclick="window.print()">🖨️ POKRENI PDF</button>
+                    <button style="background:#2C3236; color:#8C9BA5; border:1px solid #343D44; padding:12px; font-weight:bold; cursor:pointer;" onclick="document.getElementById('print-overlay').remove()">✕ ZATVORI</button>
+                </div>
+                <div style="font-weight: bold; font-size: 20px; border-bottom: 2px solid #2C3236; padding-bottom: 10px;">BRO-KER Zbirni Troškovnik (Real-Cut)</div>
+                <div style="margin: 15px 0; background-color: #F5F6F7; padding: 15px; border-left: 5px solid #0EA5E9;">
+                    <strong>KLIJENT: ${projekt.klijent.toUpperCase()} | PROSTORIJA: ${projekt.prostorija}</strong>
+                </div>
+                ${htmlZidovi} ${htmlPod}
+                ${krizniPrikaz}
             </div>
-            <div style="font-weight: bold; font-size: 20px; border-bottom: 2px solid #2C3236; padding-bottom: 10px;">BRO-KER Zbirni Troškovnik (Real-Cut)</div>
-            <div style="margin: 15px 0; background-color: #F5F6F7; padding: 15px; border-left: 5px solid #0EA5E9;">
-                <strong>KLIJENT: ${projekt.klijent.toUpperCase()} | PROSTORIJA: ${projekt.prostorija}</strong>
-            </div>
-            ${htmlZidovi} ${htmlPod}
-            ${krizniPrikaz}
         `;
-        document.body.appendChild(overlay);
+        document.body.appendChild(overlay.firstElementChild.nextElementSibling); // Append style and div
+        document.body.appendChild(document.getElementById('print-overlay'));
     }
 };
-
 
 const App = {
     trenutniKlijent: '', trenutnaProstorija: '', aktivnaPovrsinaKey: 'zid1', projektObjekt: null,
@@ -190,12 +187,12 @@ const App = {
             klijent: klijentInput, prostorija: prostorijaInput,
             konfiguracija: { zidovi: hZidovi, pod: hPod, sokl: hSokl },
             povrsine: {
-                zid1: { tip: 'Zid', w: 240, h: 265, visinaOblaganja: 265, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null },
-                zid2: { tip: 'Zid', w: 200, h: 265, visinaOblaganja: 120, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null },
-                zid3: { tip: 'Zid', w: 240, h: 265, visinaOblaganja: 120, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null },
-                zid4: { tip: 'Zid', w: 200, h: 265, visinaOblaganja: 120, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null },
-                pod:  { tip: 'Pod',  w: 240, h: 200, visinaOblaganja: 0, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null },
-                sokl: { tip: 'Sokl', w: 8,    h: 0,   visinaOblaganja: 0, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: 8,  fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null }
+                zid1: { tip: 'Zid', w: 240, h: 265, visinaOblaganja: 265, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null, slikaTekstureTusa: null },
+                zid2: { tip: 'Zid', w: 200, h: 265, visinaOblaganja: 120, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null, slikaTekstureTusa: null },
+                zid3: { tip: 'Zid', w: 240, h: 265, visinaOblaganja: 120, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null, slikaTekstureTusa: null },
+                zid4: { tip: 'Zid', w: 200, h: 265, visinaOblaganja: 120, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null, slikaTekstureTusa: null },
+                pod:  { tip: 'Pod',  w: 240, h: 200, visinaOblaganja: 0, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null, slikaTekstureTusa: null },
+                sokl: { tip: 'Sokl', w: 8,    h: 0,   visinaOblaganja: 0, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: 8,  fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null, slikaTekstureTusa: null }
             }
         };
         this.promijeniZaslon('zaslon-radni');
@@ -220,25 +217,38 @@ const App = {
         const sekOblaganja = document.getElementById('sekcija-visina-oblaganja');
         const konVisina = document.getElementById('kontejner-visina-zida');
         const sekPodOpcije = document.getElementById('sekcija-pod-opcije');
+        const sekTusTekstura = document.getElementById('sekcija-tekstura-tusa');
 
-        // Osvježavanje statusa i gumba teksture pločice
         const statusTeksture = document.getElementById('naziv-teksture-status');
         const gumbBrisi = document.getElementById('gumb-brisi-teksturu');
+        const statusTekstureTusa = document.getElementById('naziv-teksture-tusa-status');
+        const gumbBrisiTusa = document.getElementById('gumb-brisi-teksturu-tusa');
         
+        // Prikaz osnovne teksture ZA OVAJ ZID
         if (p.slikaTeksture) {
-            statusTeksture.innerHTML = `<b style="color:var(--akcent-zeleni);">UČITANA AKTIVNA TEKSTURA</b>`;
+            statusTeksture.innerHTML = `<b style="color:var(--akcent-zeleni);">Učitana tekstura</b>`;
             gumbBrisi.style.display = 'inline-block';
         } else {
-            statusTeksture.innerHTML = `Nema aktivne teksture pločice`;
+            statusTeksture.innerHTML = `Zid: Nema teksture`;
             gumbBrisi.style.display = 'none';
         }
 
+        // Prikaz teksture tuša ZA OVAJ ZID
+        if (p.slikaTekstureTusa) {
+            statusTekstureTusa.innerHTML = `<b style="color:var(--akcent-zeleni);">Učitan dekor</b>`;
+            gumbBrisiTusa.style.display = 'inline-block';
+        } else {
+            statusTekstureTusa.innerHTML = `Tuš: Nema teksture`;
+            gumbBrisiTusa.style.display = 'none';
+        }
+
         if (p.tip === 'Zid') {
-            konVisina.style.display = 'block'; sekOblaganja.style.display = 'flex'; sekPodOpcije.style.display = 'none';
+            konVisina.style.display = 'block'; sekOblaganja.style.display = 'flex'; 
+            sekPodOpcije.style.display = 'none'; sekTusTekstura.style.display = 'flex';
             document.getElementById('input-zid-h').value = p.h;
             document.getElementById('input-oblaganje-h').value = p.visinaOblaganja;
         } else {
-            konVisina.style.display = 'none'; sekOblaganja.style.display = 'none'; 
+            konVisina.style.display = 'none'; sekOblaganja.style.display = 'none'; sekTusTekstura.style.display = 'none';
             if(p.tip === 'Pod') {
                 sekPodOpcije.style.display = 'flex';
                 document.getElementById('chk-rotacija').checked = p.rotacija || false;
@@ -249,27 +259,42 @@ const App = {
         MatematikaEngine.osvjeziIzObjekta(p);
     },
 
+    // UČITAVANJE SAMO ZA TRENUTNI ZID
     ucitajTeksturuPlocice(input) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
             reader.onload = (e) => {
                 const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
-                p.slikaTeksture = e.target.result; // Sprema b64 sliku izravno u projekt
-                document.getElementById('naziv-teksture-status').innerHTML = `<b style="color:var(--akcent-zeleni);">UČITANA AKTIVNA TEKSTURA</b>`;
-                document.getElementById('gumb-brisi-teksturu').style.display = 'inline-block';
-                MatematikaEngine.osvjeziIzObjekta(p);
+                p.slikaTeksture = e.target.result;
+                this.ucitajPovrsinuUUrednik(); 
             };
             reader.readAsDataURL(input.files[0]);
         }
     },
-
     ukloniTeksturuPlocice() {
         const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
         p.slikaTeksture = null;
-        document.getElementById('naziv-teksture-status').innerHTML = `Nema aktivne teksture pločice`;
-        document.getElementById('gumb-brisi-teksturu').style.display = 'none';
-        document.getElementById('foto-tekstura').value = ''; // Reset input elementa
-        MatematikaEngine.osvjeziIzObjekta(p);
+        document.getElementById('foto-tekstura').value = ''; 
+        this.ucitajPovrsinuUUrednik();
+    },
+
+    // UČITAVANJE DEKORA (TUŠ) SAMO ZA TRENUTNI ZID
+    ucitajTeksturuTusa(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
+                p.slikaTekstureTusa = e.target.result;
+                this.ucitajPovrsinuUUrednik(); 
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    },
+    ukloniTeksturuTusa() {
+        const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
+        p.slikaTekstureTusa = null;
+        document.getElementById('foto-tekstura-tusa').value = ''; 
+        this.ucitajPovrsinuUUrednik();
     },
 
     toggleRotacija(isRotated) {
@@ -302,45 +327,4 @@ const App = {
 
         Object.keys(this.projektObjekt.povrsine).forEach(key => {
             this.projektObjekt.povrsine[key].plocicaW = tekuciW;
-            this.projektObjekt.povrsine[key].plocicaH = tekuciH;
-            this.projektObjekt.povrsine[key].fuga = tekuciF;
-            MatematikaEngine.pokreniTihiZbirniProracun(this.projektObjekt.povrsine[key]);
-        });
-        MatematikaEngine.osvjeziIzObjekta(p);
-    },
-
-    spasiTrenutnoStanjeUBazu() {
-        this.sacuvajPoljaUObjekt();
-        let jedinstveniKljuc = 'BROKER_COMP_' + this.trenutniKlijent + '_' + this.trenutnaProstorija;
-        localStorage.setItem(jedinstveniKljuc, JSON.stringify(this.projektObjekt));
-        alert("Spremljeno!");
-    },
-
-    ucitajProjektIzBaze(idProjekta) {
-        const staro = BazaModul.dohvatiSveProjekte().find(proj => proj.id === idProjekta);
-        if (staro) {
-            this.trenutniKlijent = staro.klijent; this.trenutnaProstorija = staro.prostorija;
-            let napredni = localStorage.getItem('BROKER_COMP_' + staro.klijent + '_' + staro.prostorija);
-            if (napredni) this.projektObjekt = JSON.parse(napredni);
-            this.promijeniZaslon('zaslon-radni');
-        }
-    },
-
-    osvjeziListuSpremljenihProjekata() {
-        const el = document.getElementById('lista-projekata'); el.innerHTML = '';
-        const projekti = BazaModul.dohvatiSveProjekte();
-        projekti.forEach(p => {
-            const kartica = document.createElement('div'); kartica.className = 'alat-kartica';
-            kartica.innerHTML = `<div onclick="App.ucitajProjektIzBaze('${p.id}')" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;"><div style="font-weight:bold; color:var(--akcent-plavi); font-size:12px;">🚪 ${p.klijent} - ${p.prostorija}</div><span>›</span></div>`;
-            el.appendChild(kartica);
-        });
-    },
-
-    osvjeziSveKvadraturneProracune(proj) {
-        Object.keys(proj.povrsine).forEach(k => MatematikaEngine.pokreniTihiZbirniProracun(proj.povrsine[k])); return proj.povrsine;
-    },
-
-    otvoriDokumentaciju() { this.sacuvajPoljaUObjekt(); DokumentacijaModul.generisiZbirniTroskovnik(this.projektObjekt); }
-};
-window.onload = () => App.init();
-               
+            this.projektObjekt.povr
