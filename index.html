@@ -72,8 +72,7 @@
         <section id="zaslon-radni" class="zaslon">
             <div style="width:100%; margin-bottom: 12px;">
                 <label style="font-size:10px; color:var(--tekst-sporedni); font-weight:bold; display:block; margin-bottom:4px;">AKTIVNA POVRŠINA ZA OBRADU</label>
-                <select id="odabir-povrsine" style="width:100%; background:var(--bg-kartica); border:1px solid var(--boja-okvira); color:var(--akcent-plavi); padding:12px; font-weight:bold; font-size:13px; letter-spacing:1px;" onchange="App.promijeniAktivnuPovrsinu(this.value)">
-                </select>
+                <select id="odabir-povrsine" style="width:100%; background:var(--bg-kartica); border:1px solid var(--boja-okvira); color:var(--akcent-plavi); padding:12px; font-weight:bold; font-size:13px; letter-spacing:1px;" onchange="App.promijeniAktivnuPovrsinu(this.value)"></select>
             </div>
 
             <div class="alat-kartica" style="width:100%; margin-bottom: 8px;">
@@ -119,12 +118,21 @@
                 </div>
                 
                 <div style="display:flex; gap:8px; border-top:1px solid var(--boja-okvira); padding-top:10px; margin-top:5px; align-items:center; justify-content:space-between;">
-                    <span id="naziv-teksture-status" style="font-size:10px; font-weight:bold; color:var(--tekst-sporedni);">Nema aktivne teksture pločice</span>
+                    <span id="naziv-teksture-status" style="font-size:10px; font-weight:bold; color:var(--tekst-sporedni);">Zid: Nema teksture</span>
                     <div style="display:flex; gap:5px;">
-                        <button id="gumb-brisi-teksturu" class="gumb-ostri gumb-kontra" style="margin:0; padding:8px 12px; font-size:10px; display:none;" onclick="App.ukloniTeksturuPlocice()">✕ UKLONI</button>
-                        <button class="gumb-ostri gumb-potvrda" style="margin:0; padding:8px 16px; font-size:10px;" onclick="document.getElementById('foto-tekstura').click()">📷 TEKSTURA</button>
+                        <button id="gumb-brisi-teksturu" class="gumb-ostri gumb-kontra" style="margin:0; padding:8px 10px; font-size:10px; display:none;" onclick="App.ukloniTeksturuPlocice()">✕</button>
+                        <button class="gumb-ostri gumb-potvrda" style="margin:0; padding:8px 12px; font-size:10px;" onclick="document.getElementById('foto-tekstura').click()">📷 ZID/POD</button>
                     </div>
                     <input type="file" id="foto-tekstura" accept="image/*" style="display:none;" onchange="App.ucitajTeksturuPlocice(this)">
+                </div>
+
+                <div id="sekcija-tekstura-tusa" style="display:flex; gap:8px; border-top:1px dashed var(--boja-okvira); padding-top:10px; margin-top:10px; align-items:center; justify-content:space-between;">
+                    <span id="naziv-teksture-tusa-status" style="font-size:10px; font-weight:bold; color:var(--tekst-sporedni);">Tuš: Nema teksture</span>
+                    <div style="display:flex; gap:5px;">
+                        <button id="gumb-brisi-teksturu-tusa" class="gumb-ostri gumb-kontra" style="margin:0; padding:8px 10px; font-size:10px; display:none;" onclick="App.ukloniTeksturuTusa()">✕</button>
+                        <button class="gumb-ostri" style="margin:0; padding:8px 12px; font-size:10px; background:rgba(14,165,233,0.1); border-color:var(--akcent-plavi); color:var(--akcent-plavi);" onclick="document.getElementById('foto-tekstura-tusa').click()">📷 DEKOR TUŠA</button>
+                    </div>
+                    <input type="file" id="foto-tekstura-tusa" accept="image/*" style="display:none;" onchange="App.ucitajTeksturuTusa(this)">
                 </div>
             </div>
 
@@ -169,5 +177,4 @@
     <script src="js/kamera.js"></script>
     <script src="js/app.js"></script>
 </body>
-    </html>
-    
+</html>
