@@ -1,4 +1,11 @@
-const DokumentacijaModul = {
+// DEBUGER: Ako ovo vidiš u Alertu, znaš točno gdje je problem
+window.onerror = function(message, source, lineno, colno, error) {
+   alert("GREŠKA: " + message + " | Linija: " + lineno);
+};
+
+const DokumentacijaModul = { 
+    // ... (ostatak koda ostaje isti)
+    const DokumentacijaModul = {
     generirajSVGZid(p) {
         if (!p) return '';
         let mjerilo = 0.5;
