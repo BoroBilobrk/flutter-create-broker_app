@@ -89,7 +89,7 @@ const AIModul = {
         this.zatvoriFotogrametriju();
     },
 
-    pokreniAIDetekciju() {
+        pokreniAIDetekciju() {
         if (typeof cv === 'undefined' || !cv.Mat) {
             alert("🧠 AI mozak se još budi... Pričekaj par sekundi pa pokušaj ponovno.");
             return;
@@ -101,7 +101,7 @@ const AIModul = {
             return;
         }
 
-        alert("🧠 AI započinje skeniranje...\nPojačavam kontrast i tražim instalacije u žbuci.");
+        alert("🧠 AI pokreće dubinsko skeniranje...\nUključujem agresivni filter za žbuku!");
 
         const canvas = document.getElementById('ai-overlay');
         const ctx = canvas.getContext('2d');
@@ -110,15 +110,27 @@ const AIModul = {
         let mat = cv.imread(imgElement);
         let gray = new cv.Mat();
         
+        // 1. Pretvori u crno-bijelo
         cv.cvtColor(mat, gray, cv.COLOR_RGBA2GRAY, 0);
+        
+        // 2. KLJUČNO: Gaussovo zamućenje. Ovo "pegla" grubu žbuku tako da robot 
+        // prestane halucinirati od svake sitne sjene i fokusira se na veće oblike.
+        cv.GaussianBlur(gray, gray, new cv.Size(7, 7), 2, 2);
+        
+        // 3. Brutalni kontrast da rupe postanu jako crne, a zid jako bijel
         cv.equalizeHist(gray, gray);
-        cv.medianBlur(gray, gray, 5);
 
         let circles = new cv.Mat();
-        let minR = Math.floor(mat.cols / 80); 
-        let maxR = Math.floor(mat.cols / 10); 
+        
+        // Proširujemo domet: tražimo i jako male zelene čepove (1/2 cola) i veće odvode (50mm+)
+        let minR = Math.floor(mat.cols / 100); 
+        let maxR = Math.floor(mat.cols / 15); 
 
-        cv.HoughCircles(gray, circles, cv.HOUGH_GRADIENT, 1, mat.cols/20, 100, 20, minR, maxR);
+        // POJAČANJE: 
+        // param1 = 50 (bilo je 100). Smanjili smo prag za oštrinu ruba.
+        // param2 = 14 (bilo je 20). Ovo je osjetljivost. 14 znači da hvata i nesavršene, 
+        // malo oštećene rupe koje nisu idealan krug!
+        cv.HoughCircles(gray, circles, cv.HOUGH_GRADIENT, 1, mat.cols/25, 50, 14, minR, maxR);
 
         let pronadjeneKote = [];
         
@@ -131,7 +143,7 @@ const AIModul = {
                 ctx.beginPath();
                 ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
                 ctx.lineWidth = 4;
-                ctx.strokeStyle = '#0EA5E9';
+                ctx.strokeStyle = '#4EFA9E'; // Promijenio sam u neon zelenu da lakše vidiš!
                 ctx.stroke();
                 
                 ctx.beginPath();
@@ -153,7 +165,7 @@ const AIModul = {
             }
             
             setTimeout(() => {
-                let potvrda = confirm(`🧠 AI JE PRONAŠAO ${circles.cols} INSTALACIJA!\nJesu li plavi nišani pogodili rupe?\n\nKlikni 'OK' da ih zapišem u mrežu pločica.`);
+                let potvrda = confirm(`🧠 AI JE PRONAŠAO ${circles.cols} INSTALACIJA!\nProvjeri neon zelene krugove na slici.\n\nKlikni 'OK' da ih zapišem u mrežu pločica.`);
                 if(potvrda) {
                     const p = App.projektObjekt.povrsine[App.aktivnaPovrsinaKey];
                     if (!p.popisOtvora) p.popisOtvora = [];
@@ -173,10 +185,9 @@ const AIModul = {
             }, 300);
 
         } else {
-            alert("⚠️ AI ne može jasno raspoznati rupe na ovom zidu. Kamuflirane su u žbuku.\n\nSavjet: Učitaj oštriju sliku ili dodirni cijevi ručno prstom na ekranu (Tap-to-Drill).");
+            alert("⚠️ Žbuka je previše kamuflirala rupe.\n\nSavjet: Tapni prstom direktno na zeleni čep na ekranu (Ručna koda).");
         }
 
         mat.delete(); gray.delete(); circles.delete();
-    }
-};
-                 
+        }
+    
