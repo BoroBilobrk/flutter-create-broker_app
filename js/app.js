@@ -1,3 +1,7 @@
+window.onerror = function(message, source, lineno, colno, error) {
+    alert("GREŠKA: " + message + " | Linija: " + lineno);
+};
+
 const DokumentacijaModul = {
     generirajSVGZid(p) {
         if (!p) return '';
@@ -29,6 +33,24 @@ const DokumentacijaModul = {
         if (!projekt) return;
         const p = App.osvjeziSveKvadraturneProracune(projekt);
 
+        const generirajRedTable = (naziv, zid) => {
+            let kom = zid.izracunCijelih || 0;
+            let m2 = (zid.kvadratura || 0).toFixed(2);
+            let rezoviHtml = (zid.listaRezova && zid.listaRezova.length > 0) 
+                ? `<div style="font-size:9px; color:#475569; margin-top:6px; padding:6px; background:#F8FAFC; border-left:3px solid #0EA5E9; line-height:1.4;">
+                     <b style="color:#0F172A;">SPECIFIKACIJA REZANJA:</b><br>${zid.listaRezova.join('<br>')}
+                   </div>` 
+                : '';
+            
+            return `
+                <tr style="border-bottom:1px solid #E0E0E0;">
+                    <td style="padding:12px 8px; vertical-align:top;"><b>${naziv}</b>${rezoviHtml}</td>
+                    <td style="padding:12px 8px; vertical-align:top; font-size:14px;">${m2} m2</td>
+                    <td style="padding:12px 8px; vertical-align:top; font-weight:bold; font-size:14px;">${kom}</td>
+                </tr>
+            `;
+        };
+
         let htmlZidovi = '';
         if (projekt.konfiguracija.zidovi) {
             let m2Zidovi = (p.zid1.kvadratura||0) + (p.zid2.kvadratura||0) + (p.zid3.kvadratura||0) + (p.zid4.kvadratura||0);
@@ -37,14 +59,22 @@ const DokumentacijaModul = {
             htmlZidovi = `
                 <table style="width:100%; border-collapse:collapse; font-size:12px; margin-top:10px;">
                     <thead>
-                        <tr style="background:#2C3236; color:#FFFFFF;"><th style="padding:8px; text-align:left;">Površina</th><th style="padding:8px; text-align:left;">Neto kvadratura</th><th style="padding:8px; text-align:left;">Naručiti (kom) *Real-Cut</th></tr>
+                        <tr style="background:#2C3236; color:#FFFFFF;">
+                            <th style="padding:10px 8px; text-align:left;">Površina / Krojna Lista</th>
+                            <th style="padding:10px 8px; text-align:left; width:80px;">Neto kv.</th>
+                            <th style="padding:10px 8px; text-align:left; width:90px;">Naručiti (kom)</th>
+                        </tr>
                     </thead>
                     <tbody>
-                        <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:8px;">Zid 1 (Glavni)</td><td style="padding:8px;">${(p.zid1.kvadratura||0).toFixed(2)} m2</td><td style="padding:8px; font-weight:bold;">${p.zid1.izracunCijelih||0}</td></tr>
-                        <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:8px;">Zid 2 (Desni)</td><td style="padding:8px;">${(p.zid2.kvadratura||0).toFixed(2)} m2</td><td style="padding:8px; font-weight:bold;">${p.zid2.izracunCijelih||0}</td></tr>
-                        <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:8px;">Zid 3 (Stražnji)</td><td style="padding:8px;">${(p.zid3.kvadratura||0).toFixed(2)} m2</td><td style="padding:8px; font-weight:bold;">${p.zid3.izracunCijelih||0}</td></tr>
-                        <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:8px;">Zid 4 (Lijevi)</td><td style="padding:8px;">${(p.zid4.kvadratura||0).toFixed(2)} m2</td><td style="padding:8px; font-weight:bold;">${p.zid4.izracunCijelih||0}</td></tr>
-                        <tr style="background:#EAEDEF; font-weight:bold;"><td style="padding:8px;">UKUPNO ZIDOVI</td><td style="padding:8px;">${m2Zidovi.toFixed(2)} m2</td><td style="padding:8px; color:#0EA5E9;">${komZidovi} kom</td></tr>
+                        ${generirajRedTable('Zid 1 (Glavni)', p.zid1)}
+                        ${generirajRedTable('Zid 2 (Desni)', p.zid2)}
+                        ${generirajRedTable('Zid 3 (Stražnji)', p.zid3)}
+                        ${generirajRedTable('Zid 4 (Lijevi)', p.zid4)}
+                        <tr style="background:#EAEDEF; font-weight:bold;">
+                            <td style="padding:12px 8px; text-align:right;">UKUPNO ZIDOVI:</td>
+                            <td style="padding:12px 8px; font-size:14px;">${m2Zidovi.toFixed(2)} m2</td>
+                            <td style="padding:12px 8px; color:#0EA5E9; font-size:15px;">${komZidovi} kom</td>
+                        </tr>
                     </tbody>
                 </table>
             `;
@@ -52,12 +82,12 @@ const DokumentacijaModul = {
 
         let htmlPod = '';
         if (projekt.konfiguracija.pod || projekt.konfiguracija.sokl) {
-            htmlPod = `<table style="width:100%; border-collapse:collapse; font-size:12px; margin-top:10px;"><tbody>`;
+            htmlPod = `<table style="width:100%; border-collapse:collapse; font-size:12px; margin-top:20px;"><tbody>`;
             if (projekt.konfiguracija.pod) {
-                htmlPod += `<tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:8px; font-weight:bold;">Pod kupaonice</td><td style="padding:8px;">${(p.pod.kvadratura||0).toFixed(2)} m2</td><td style="padding:8px; font-weight:bold; color:#0EA5E9;">${p.pod.izracunCijelih||0} kom</td></tr>`;
+                htmlPod += generirajRedTable('Pod kupaonice', p.pod);
             }
             if (projekt.konfiguracija.sokl) {
-                htmlPod += `<tr><td style="padding:8px; font-weight:bold;">Sokl / Cokl</td><td style="padding:8px;">${((p.sokl.h||0)/100).toFixed(2)} m</td><td style="padding:8px; font-weight:bold; color:#0EA5E9;">${p.sokl.izracunCijelih||0} kom</td></tr>`;
+                htmlPod += `<tr><td style="padding:12px 8px; font-weight:bold;">Sokl / Cokl</td><td style="padding:12px 8px;">${((p.sokl.h||0)/100).toFixed(2)} m</td><td style="padding:12px 8px; font-weight:bold; color:#0EA5E9;">${p.sokl.izracunCijelih||0} kom</td></tr>`;
             }
             htmlPod += `</tbody></table>`;
         }
@@ -133,6 +163,9 @@ const DokumentacijaModul = {
         document.body.appendChild(document.getElementById('print-overlay'));
     }
 };
+
+// OVDJE DOLAZI "const App = {" KOJI NE DIRAS
+                                               
 
 const App = {
     trenutniKlijent: '', trenutnaProstorija: '', aktivnaPovrsinaKey: 'zid1', projektObjekt: null,
