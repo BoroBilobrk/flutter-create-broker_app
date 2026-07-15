@@ -168,10 +168,15 @@ const App = {
         select.value = this.aktivnaPovrsinaKey;
     },
 
-    kreirajNoviProjekt(modRada) {
+        kreirajNoviProjekt(modRada) {
+        console.log("Tipka stisnuta, mod: " + modRada); // OVO ĆE TI REĆI RADI LI TIPKA
         const klijentInput = document.getElementById('input-klijent').value.trim();
         const prostorijaInput = document.getElementById('input-prostorija').value.trim();
-        if (!klijentInput || !prostorijaInput) return alert("Unesite klijenta i prostoriju.");
+        
+        if (!klijentInput || !prostorijaInput) {
+            alert("Unesite klijenta i prostoriju.");
+            return;
+        }
 
         const hZidovi = document.getElementById('conf-zidovi').checked;
         const hPod = document.getElementById('conf-pod').checked;
@@ -180,7 +185,8 @@ const App = {
         const initH = parseFloat(document.getElementById('init-plocica-h').value) || 60;
         const initF = parseFloat(document.getElementById('init-fuga').value) || 2;
 
-        this.trenutniKlijent = klijentInput; this.trenutnaProstorija = prostorijaInput;
+        this.trenutniKlijent = klijentInput; 
+        this.trenutnaProstorija = prostorijaInput;
         this.aktivnaPovrsinaKey = hZidovi ? 'zid1' : (hPod ? 'pod' : 'sokl');
 
         this.projektObjekt = {
@@ -195,8 +201,16 @@ const App = {
                 sokl: { tip: 'Sokl', w: 8,    h: 0,   visinaOblaganja: 0, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: 8,  fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null, slikaTekstureTusa: null }
             }
         };
-        this.promijeniZaslon('zaslon-radni');
+
+        // AKO JE MOD KAMERA, UPALI KAMERU I PREBACI SE NA SKRIVENI ZASLON
+        if (modRada === 'kamera') {
+            this.promijeniZaslon('zaslon-kamera'); // Prebaci na prazan zaslon za kameru
+            Kamera.pokreni(); // OVO JE FALILO
+        } else {
+            this.promijeniZaslon('zaslon-radni');
+        }
     },
+    
 
     promijeniAktivnuPovrsinu(kljuc) {
         this.sacuvajPoljaUObjekt(); this.aktivnaPovrsinaKey = kljuc; this.ucitajPovrsinuUUrednik();
