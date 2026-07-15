@@ -4,8 +4,6 @@ window.onerror = function(message, source, lineno, colno, error) {
 };
 
 const DokumentacijaModul = { 
-    // ... (ostatak koda ostaje isti)
-    const DokumentacijaModul = {
     generirajSVGZid(p) {
         if (!p) return '';
         let mjerilo = 0.5;
@@ -44,14 +42,14 @@ const DokumentacijaModul = {
             htmlZidovi = `
                 <table style="width:100%; border-collapse:collapse; font-size:12px; margin-top:10px;">
                     <thead>
-                        <tr style="background:#2C3236; color:#FFFFFF;"><th style="padding:8px; text-align:left;">Površina</th><th style="padding:8px; text-align:left;">Neto kvadratura</th><th style="padding:8px; text-align:left;">Naručiti (kom) *Real-Cut</th></tr>
+                        <tr style="background:#2C3236; color:#FFFFFF;"><th style="padding:8px; text-align:left;">Površina</th><th style="padding:8px; text-align:left;">Neto kvadratura</th><th style="padding:8px; text-align:left;">Komada</th></tr>
                     </thead>
                     <tbody>
-                        <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:8px;">Zid 1 (Glavni)</td><td style="padding:8px;">${(p.zid1.kvadratura||0).toFixed(2)} m2</td><td style="padding:8px; font-weight:bold;">${p.zid1.izracunCijelih||0}</td></tr>
-                        <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:8px;">Zid 2 (Desni)</td><td style="padding:8px;">${(p.zid2.kvadratura||0).toFixed(2)} m2</td><td style="padding:8px; font-weight:bold;">${p.zid2.izracunCijelih||0}</td></tr>
-                        <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:8px;">Zid 3 (Stražnji)</td><td style="padding:8px;">${(p.zid3.kvadratura||0).toFixed(2)} m2</td><td style="padding:8px; font-weight:bold;">${p.zid3.izracunCijelih||0}</td></tr>
-                        <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:8px;">Zid 4 (Lijevi)</td><td style="padding:8px;">${(p.zid4.kvadratura||0).toFixed(2)} m2</td><td style="padding:8px; font-weight:bold;">${p.zid4.izracunCijelih||0}</td></tr>
-                        <tr style="background:#EAEDEF; font-weight:bold;"><td style="padding:8px;">UKUPNO ZIDOVI</td><td style="padding:8px;">${m2Zidovi.toFixed(2)} m2</td><td style="padding:8px; color:#0EA5E9;">${komZidovi} kom</td></tr>
+                        <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:8px;">Zid 1 (Glavni)</td><td style="padding:8px;">${(p.zid1.kvadratura||0).toFixed(2)} m2</td><td style="padding:8px;">${p.zid1.izracunCijelih||0}</td></tr>
+                        <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:8px;">Zid 2 (Desni)</td><td style="padding:8px;">${(p.zid2.kvadratura||0).toFixed(2)} m2</td><td style="padding:8px;">${p.zid2.izracunCijelih||0}</td></tr>
+                        <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:8px;">Zid 3 (Stražnji)</td><td style="padding:8px;">${(p.zid3.kvadratura||0).toFixed(2)} m2</td><td style="padding:8px;">${p.zid3.izracunCijelih||0}</td></tr>
+                        <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:8px;">Zid 4 (Lijevi)</td><td style="padding:8px;">${(p.zid4.kvadratura||0).toFixed(2)} m2</td><td style="padding:8px;">${p.zid4.izracunCijelih||0}</td></tr>
+                        <tr style="background:#EAEDEF; font-weight:bold;"><td style="padding:8px;">UKUPNO ZIDOVI</td><td style="padding:8px;">${m2Zidovi.toFixed(2)} m2</td><td style="padding:8px;">${komZidovi}</td></tr>
                     </tbody>
                 </table>
             `;
@@ -61,10 +59,10 @@ const DokumentacijaModul = {
         if (projekt.konfiguracija.pod || projekt.konfiguracija.sokl) {
             htmlPod = `<table style="width:100%; border-collapse:collapse; font-size:12px; margin-top:10px;"><tbody>`;
             if (projekt.konfiguracija.pod) {
-                htmlPod += `<tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:8px; font-weight:bold;">Pod kupaonice</td><td style="padding:8px;">${(p.pod.kvadratura||0).toFixed(2)} m2</td><td style="padding:8px; font-weight:bold; color:#0EA5E9;">${p.pod.izracunCijelih||0} kom</td></tr>`;
+                htmlPod += `<tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:8px; font-weight:bold;">Pod kupaonice</td><td style="padding:8px;">${(p.pod.kvadratura||0).toFixed(2)} m2</td><td style="padding:8px;">${p.pod.izracunCijelih||0}</td></tr>`;
             }
             if (projekt.konfiguracija.sokl) {
-                htmlPod += `<tr><td style="padding:8px; font-weight:bold;">Sokl / Cokl</td><td style="padding:8px;">${((p.sokl.h||0)/100).toFixed(2)} m</td><td style="padding:8px; font-weight:bold; color:#0EA5E9;">${p.sokl.izracunCijelih||0} kom</td></tr>`;
+                htmlPod += `<tr><td style="padding:8px; font-weight:bold;">Sokl / Cokl</td><td style="padding:8px;">${((p.sokl.h||0)/100).toFixed(2)} m</td><td style="padding:8px; font-weight:bold;">${p.sokl.izracunCijelih||0}</td></tr>`;
             }
             htmlPod += `</tbody></table>`;
         }
@@ -113,13 +111,12 @@ const DokumentacijaModul = {
         const overlay = document.createElement('div');
         overlay.id = 'print-overlay';
         
-        // CSS POPRAVAK: Ubijamo crni artefakt za print
         overlay.innerHTML = `
             <style>
                 @media print {
                     html, body { background-color: #FFFFFF !important; color: #000000 !important; margin: 0 !important; padding: 0 !important; height: auto !important; overflow: visible !important; }
                     body > *:not(#print-overlay) { display: none !important; }
-                    #print-overlay { display: block !important; position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; min-height: 100vh !important; background-color: #FFFFFF !important; margin: 0 !important; padding: 0 !important; z-index: 999999; }
+                    #print-overlay { display: block !important; position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; min-height: 100vh !important; background: white !important; }
                     .no-print { display: none !important; }
                     @page { margin: 1cm; }
                 }
@@ -137,7 +134,7 @@ const DokumentacijaModul = {
                 ${krizniPrikaz}
             </div>
         `;
-        document.body.appendChild(overlay.firstElementChild.nextElementSibling); // Append style and div
+        document.body.appendChild(overlay.firstElementChild.nextElementSibling);
         document.body.appendChild(document.getElementById('print-overlay'));
     }
 };
@@ -175,8 +172,8 @@ const App = {
         select.value = this.aktivnaPovrsinaKey;
     },
 
-        kreirajNoviProjekt(modRada) {
-        console.log("Tipka stisnuta, mod: " + modRada); // OVO ĆE TI REĆI RADI LI TIPKA
+    kreirajNoviProjekt(modRada) {
+        console.log("Tipka stisnuta, mod: " + modRada);
         const klijentInput = document.getElementById('input-klijent').value.trim();
         const prostorijaInput = document.getElementById('input-prostorija').value.trim();
         
@@ -200,25 +197,23 @@ const App = {
             klijent: klijentInput, prostorija: prostorijaInput,
             konfiguracija: { zidovi: hZidovi, pod: hPod, sokl: hSokl },
             povrsine: {
-                zid1: { tip: 'Zid', w: 240, h: 265, visinaOblaganja: 265, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null, slikaTekstureTusa: null },
-                zid2: { tip: 'Zid', w: 200, h: 265, visinaOblaganja: 120, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null, slikaTekstureTusa: null },
-                zid3: { tip: 'Zid', w: 240, h: 265, visinaOblaganja: 120, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null, slikaTekstureTusa: null },
-                zid4: { tip: 'Zid', w: 200, h: 265, visinaOblaganja: 120, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null, slikaTekstureTusa: null },
-                pod:  { tip: 'Pod',  w: 240, h: 200, visinaOblaganja: 0, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null, slikaTekstureTusa: null },
-                sokl: { tip: 'Sokl', w: 8,    h: 0,   visinaOblaganja: 0, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: 8,  fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null, slikaTekstureTusa: null }
+                zid1: { tip: 'Zid', w: 240, h: 265, visinaOblaganja: 265, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null, slikaTekstureTusa: null, izracunCijelih: 0, kvadratura: 0 },
+                zid2: { tip: 'Zid', w: 200, h: 265, visinaOblaganja: 120, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null, slikaTekstureTusa: null, izracunCijelih: 0, kvadratura: 0 },
+                zid3: { tip: 'Zid', w: 240, h: 265, visinaOblaganja: 120, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null, slikaTekstureTusa: null, izracunCijelih: 0, kvadratura: 0 },
+                zid4: { tip: 'Zid', w: 200, h: 265, visinaOblaganja: 120, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null, slikaTekstureTusa: null, izracunCijelih: 0, kvadratura: 0 },
+                pod:  { tip: 'Pod',  w: 240, h: 200, visinaOblaganja: 0, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: initH, fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null, slikaTekstureTusa: null, izracunCijelih: 0, kvadratura: 0 },
+                sokl: { tip: 'Sokl', w: 8,    h: 0,   visinaOblaganja: 0, tusZone: [], popisOtvora: [], plocicaW: initW, plocicaH: 8,  fuga: initF, odmakX: 0, odmakY: 0, rotacija: false, slikaTeksture: null, slikaTekstureTusa: null, izracunCijelih: 0, kvadratura: 0 }
             }
         };
 
-        // AKO JE MOD KAMERA, UPALI KAMERU I PREBACI SE NA SKRIVENI ZASLON
         if (modRada === 'kamera') {
-            this.promijeniZaslon('zaslon-kamera'); // Prebaci na prazan zaslon za kameru
-            Kamera.pokreni(); // OVO JE FALILO
+            this.promijeniZaslon('zaslon-kamera');
+            Kamera.pokreni();
         } else {
             this.promijeniZaslon('zaslon-radni');
         }
     },
     
-
     promijeniAktivnuPovrsinu(kljuc) {
         this.sacuvajPoljaUObjekt(); this.aktivnaPovrsinaKey = kljuc; this.ucitajPovrsinuUUrednik();
     },
@@ -245,7 +240,6 @@ const App = {
         const statusTekstureTusa = document.getElementById('naziv-teksture-tusa-status');
         const gumbBrisiTusa = document.getElementById('gumb-brisi-teksturu-tusa');
         
-        // Prikaz osnovne teksture ZA OVAJ ZID
         if (p.slikaTeksture) {
             statusTeksture.innerHTML = `<b style="color:var(--akcent-zeleni);">Učitana tekstura</b>`;
             gumbBrisi.style.display = 'inline-block';
@@ -254,7 +248,6 @@ const App = {
             gumbBrisi.style.display = 'none';
         }
 
-        // Prikaz teksture tuša ZA OVAJ ZID
         if (p.slikaTekstureTusa) {
             statusTekstureTusa.innerHTML = `<b style="color:var(--akcent-zeleni);">Učitan dekor</b>`;
             gumbBrisiTusa.style.display = 'inline-block';
@@ -280,7 +273,6 @@ const App = {
         MatematikaEngine.osvjeziIzObjekta(p);
     },
 
-    // UČITAVANJE SAMO ZA TRENUTNI ZID
     ucitajTeksturuPlocice(input) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
@@ -292,6 +284,7 @@ const App = {
             reader.readAsDataURL(input.files[0]);
         }
     },
+    
     ukloniTeksturuPlocice() {
         const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
         p.slikaTeksture = null;
@@ -299,7 +292,6 @@ const App = {
         this.ucitajPovrsinuUUrednik();
     },
 
-    // UČITAVANJE DEKORA (TUŠ) SAMO ZA TRENUTNI ZID
     ucitajTeksturuTusa(input) {
         if (input.files && input.files[0]) {
             const reader = new FileReader();
@@ -311,6 +303,7 @@ const App = {
             reader.readAsDataURL(input.files[0]);
         }
     },
+    
     ukloniTeksturuTusa() {
         const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
         p.slikaTekstureTusa = null;
@@ -318,11 +311,7 @@ const App = {
         this.ucitajPovrsinuUUrednik();
     },
 
-        // ==========================================
-    // FOTOGRAMETRIJA - TAP TO DRILL MODUL
-    // ==========================================
     otvoriFotogrametriju() {
-        // Okidamo skriveni input za kameru
         document.getElementById('input-slika-zida').click();
     },
 
@@ -354,23 +343,19 @@ const App = {
         const rect = img.getBoundingClientRect();
         const zoomFaktor = parseFloat(document.getElementById('zoom-slider').value);
         
-        // Moramo izračunati točan klik bez obzira na razinu zooma i scrolla
         const stvarnaSirinaSlike = rect.width / zoomFaktor;
         const stvarnaVisinaSlike = rect.height / zoomFaktor;
         
         const klikX = (e.clientX - rect.left) / zoomFaktor;
         const klikY = (e.clientY - rect.top) / zoomFaktor;
         
-        // Pretvori u postotak (od 0 do 1)
         const postotakX = klikX / stvarnaSirinaSlike;
         const postotakY = klikY / stvarnaVisinaSlike;
         
-        // Poveži s tvojim unesenim mjerama s laserskog metra
         const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
         const stvarniZidW = p.w || 240;
         const stvarniZidH = p.h || 265;
         
-        // Izračunaj centimetre. PAZI: Slika ide odozgo prema dolje, a naša mreža odozdo prema gore!
         let tockaX = postotakX * stvarniZidW;
         let tockaY = stvarniZidH - (postotakY * stvarniZidH);
 
@@ -385,7 +370,6 @@ const App = {
             rupH = parseFloat(prompt("Visina rupe (cm):", "10")) || 10;
         }
 
-        // Korekcija - mičemo X i Y za pola širine/visine kako bi tvoj klik ostao točno u centru rupe!
         let finalX = tockaX - (rupW / 2);
         let finalY = tockaY - (rupH / 2);
 
@@ -395,7 +379,6 @@ const App = {
         this.sacuvajPoljaUObjekt();
         alert(`Oznaka spremljena! Centar rupe nalazi se točno na: X = ${tockaX.toFixed(1)} cm, Y = ${tockaY.toFixed(1)} cm.`);
         
-        // Gasimo prozor i vraćamo te na radni prostor da vidiš rupu na mreži
         this.zatvoriFotogrametriju();
     },
     
@@ -429,4 +412,62 @@ const App = {
 
         Object.keys(this.projektObjekt.povrsine).forEach(key => {
             this.projektObjekt.povrsine[key].plocicaW = tekuciW;
-            this.projektObjekt.povr
+            this.projektObjekt.povrsine[key].plocicaH = tekuciH;
+            this.projektObjekt.povrsine[key].fuga = tekuciF;
+        });
+        
+        MatematikaEngine.osvjeziIzObjekta(p);
+    },
+
+    spasiTrenutnoStanjeUBazu() {
+        if (!this.projektObjekt) return;
+        BazaModul.spasiProjekt(this.projektObjekt);
+        alert("Projekt je uspješno spasen!");
+    },
+
+    osvjeziListuSpremljenihProjekata() {
+        const lista = document.getElementById('lista-projekata');
+        if (!lista) return;
+        lista.innerHTML = '';
+        
+        const projekti = BazaModul.dohvatiSveProjekte();
+        projekti.forEach(p => {
+            const kartaDiv = document.createElement('div');
+            kartaDiv.className = 'alat-kartica';
+            kartaDiv.innerHTML = `
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <div style="font-weight:bold; color:#4EFA9E;">${p.klijent} - ${p.prostorija}</div>
+                        <div style="font-size:10px; color:#8C9BA5;">${p.datum}</div>
+                    </div>
+                    <button style="background:#FF6B6B; color:#FFF; border:none; padding:6px 12px; cursor:pointer;" onclick="BazaModul.izbrisiProjekt('${p.id}'); App.osvjeziListuSpremljenihProjekata();">Briši</button>
+                </div>
+            `;
+            kartaDiv.onclick = () => {
+                this.projektObjekt = p;
+                this.trenutniKlijent = p.klijent;
+                this.trenutnaProstorija = p.prostorija;
+                this.promijeniZaslon('zaslon-radni');
+            };
+            lista.appendChild(kartaDiv);
+        });
+    },
+
+    otvoriDokumentaciju() {
+        if (!this.projektObjekt) {
+            alert("Nema učitanog projekta!");
+            return;
+        }
+        DokumentacijaModul.generisiZbirniTroskovnik(this.projektObjekt);
+    },
+
+    osvjeziSveKvadraturneProracune(projekt) {
+        if (!projekt || !projekt.povrsine) return projekt;
+        
+        Object.keys(projekt.povrsine).forEach(key => {
+            MatematikaEngine.pokreniTihiZbirniProracun(projekt.povrsine[key]);
+        });
+        
+        return projekt.povrsine;
+    }
+};

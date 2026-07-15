@@ -59,7 +59,7 @@ const DokumentacijaModul = {
             </style>
 
             <div class="no-print" style="display:flex; justify-content:space-between; margin-bottom:30px; background:#111417; padding:12px; margin:-24px -24px 24px -24px;">
-                <button style="background:#14281E; color:#4EFA9E; border:1px solid #2E5C43; padding:12px 20px; font-weight:bold; font-size:11px; letter-spacing:1px; cursor:pointer;" onclick="window.print()">🖨️ ISPISATI PDF</button>
+                <button style="background:#14281E; color:#4EFA9E; border:1px solid #2E5C43; padding:12px 20px; font-weight:bold; font-size:11px; letter-spacing:1px; cursor:pointer;" onclick="window.print()">🖨️ POKRENI PDF</button>
                 <button style="background:#2C3236; color:#8C9BA5; border:1px solid #343D44; padding:12px 20px; font-weight:bold; font-size:11px; letter-spacing:1px; cursor:pointer;" onclick="document.getElementById('print-overlay').remove()">✕ ZATVORI</button>
             </div>
 
@@ -78,25 +78,25 @@ const DokumentacijaModul = {
             <h3 style="font-size:13px; text-transform:uppercase; margin-top:30px; color:#111; letter-spacing:0.5px;">1. SPECIFIKACIJA ZIDOVA (Format: ${fmtZidW}x${fmtZidH} cm | Fuga: ${fgZid} mm)</h3>
             <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px;">
                 <thead>
-                    <tr style="background:#2C3236; color:#FFFFFF; text-transform:uppercase; font-size:10px; letter-spacing:0.5px;"><th style="padding:10px; text-align:left;">Opis povrsine</th><th style="padding:10px; text-align:left;">Kvadratura (m2)</th><th style="padding:10px; text-align:left;">Komadi</th></tr>
+                    <tr style="background:#2C3236; color:#FFFFFF; text-transform:uppercase; font-size:10px; letter-spacing:0.5px;"><th style="padding:10px; text-align:left;">Opis povrsine</th><th style="padding:10px; text-align:left;">Neto kvadratura</th><th style="padding:10px; text-align:left;">Komada</th></tr>
                 </thead>
                 <tbody>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 1 (Prednji / Glavni)</td><td style="padding:10px;">${qZid1.toFixed(2)} m2</td><td style="padding:10px;">${cZid1} kom</td></tr>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 2 (Desni)</td><td style="padding:10px;">${qZid2.toFixed(2)} m2</td><td style="padding:10px;">${cZid2} kom</td></tr>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 3 (Straznji)</td><td style="padding:10px;">${qZid3.toFixed(2)} m2</td><td style="padding:10px;">${cZid3} kom</td></tr>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 4 (Lijevi)</td><td style="padding:10px;">${qZid4.toFixed(2)} m2</td><td style="padding:10px;">${cZid4} kom</td></tr>
-                    <tr style="background:#EAEDEF; font-weight:bold; color:#000;"><td style="padding:10px;">UKUPNO ZIDOVI</td><td style="padding:10px;">${m2Zidovi.toFixed(2)} m2</td><td style="padding:10px;">${komZidovi} kom</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 1 (Prednji / Glavni)</td><td style="padding:10px;">${qZid1.toFixed(2)} m2</td><td style="padding:10px;">${cZid1}</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 2 (Desni)</td><td style="padding:10px;">${qZid2.toFixed(2)} m2</td><td style="padding:10px;">${cZid2}</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 3 (Straznji)</td><td style="padding:10px;">${qZid3.toFixed(2)} m2</td><td style="padding:10px;">${cZid3}</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Zid 4 (Lijevi)</td><td style="padding:10px;">${qZid4.toFixed(2)} m2</td><td style="padding:10px;">${cZid4}</td></tr>
+                    <tr style="background:#EAEDEF; font-weight:bold; color:#000;"><td style="padding:10px;">UKUPNO ZIDOVI</td><td style="padding:10px;">${m2Zidovi.toFixed(2)} m2</td><td style="padding:10px;">${komZidovi}</td></tr>
                 </tbody>
             </table>
 
             <h3 style="font-size:13px; text-transform:uppercase; margin-top:30px; color:#111; letter-spacing:0.5px;">2. SPECIFIKACIJA PODA I SOKLA</h3>
             <table style="width:100%; border-collapse:collapse; font-size:13px; margin-top:10px; margin-bottom:40px;">
                 <thead>
-                    <tr style="background:#2C3236; color:#FFFFFF; text-transform:uppercase; font-size:10px; letter-spacing:0.5px;"><th style="padding:10px; text-align:left;">Tip povrsine</th><th style="padding:10px; text-align:left;">Vrijednost</th></tr>
+                    <tr style="background:#2C3236; color:#FFFFFF; text-transform:uppercase; font-size:10px; letter-spacing:0.5px;"><th style="padding:10px; text-align:left;">Tip povrsine</th><th style="padding:10px; text-align:left;">Kvadratura / Dužina</th><th style="padding:10px; text-align:left;">Komada</th></tr>
                 </thead>
                 <tbody>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Podna povrsina (Neto format: ${p.pod.plocicaW || 60}x${p.pod.plocicaH || 60} cm)</td><td style="padding:10px;">${m2Pod.toFixed(2)} m2 (${komPod} kom)</td></tr>
-                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Sokl (Linearni metri oko sobe)</td><td style="padding:10px;">Opseg kupaonice: ${(duzinaSokla/100).toFixed(2)} m (${komSokla} kom)</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Podna povrsina (Neto format: ${p.pod.plocicaW || 60}x${p.pod.plocicaH || 60} cm)</td><td style="padding:10px;">${m2Pod.toFixed(2)} m2</td><td style="padding:10px;">${komPod}</td></tr>
+                    <tr style="border-bottom:1px solid #E0E0E0;"><td style="padding:10px;">Sokl (Linearni metri oko sobe)</td><td style="padding:10px;">Opseg kupaonice: ${(duzinaSokla/100).toFixed(2)} m</td><td style="padding:10px;">${komSokla}</td></tr>
                 </tbody>
             </table>
 
