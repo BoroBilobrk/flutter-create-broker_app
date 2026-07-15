@@ -1,8 +1,3 @@
-// DEBUGER: Javlja greške na ekran ako pukne kod
-window.onerror = function(message, source, lineno, colno, error) {
-    alert("GREŠKA: " + message + " | Linija: " + lineno);
-};
-
 const DokumentacijaModul = {
     generirajSVGZid(p) {
         if (!p) return '';
@@ -271,7 +266,7 @@ const App = {
                 sekPodOpcije.style.display = 'none';
             }
         }
-        MatematikaEngine.osvjeziIzObjekta(p);
+        if (typeof MatematikaEngine !== 'undefined') MatematikaEngine.osvjeziIzObjekta(p);
     },
 
     ucitajTeksturuPlocice(input) {
@@ -318,12 +313,14 @@ const App = {
 
     promijeniOdmakX(v) {
         const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey]; p.odmakX = parseFloat(v);
-        document.getElementById('prikaz-odmaka-x').innerText = `${v} cm`; MatematikaEngine.osvjeziIzObjekta(p);
+        document.getElementById('prikaz-odmaka-x').innerText = `${v} cm`; 
+        if (typeof MatematikaEngine !== 'undefined') MatematikaEngine.osvjeziIzObjekta(p);
     },
 
     promijeniOdmakY(v) {
         const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey]; p.odmakY = parseFloat(v);
-        document.getElementById('prikaz-odmaka-y').innerText = `${v} cm`; MatematikaEngine.osvjeziIzObjekta(p);
+        document.getElementById('prikaz-odmaka-y').innerText = `${v} cm`; 
+        if (typeof MatematikaEngine !== 'undefined') MatematikaEngine.osvjeziIzObjekta(p);
     },
 
     sacuvajPoljaUObjekt() {
@@ -335,4 +332,226 @@ const App = {
         }
         
         let tekuciW = parseFloat(document.getElementById('input-plocica-w').value) || 120;
-        let
+        let tekuciH = parseFloat(document.getElementById('input-plocica-h').value) || 60;
+        let tekuciF = parseFloat(document.getElementById('input-fuga').value) || 2;
+
+        Object.keys(this.projektObjekt.povrsine).forEach(key => {
+            this.projektObjekt.povrsine[key].plocicaW = tekuciW;
+            this.projektObjekt.povrsine[key].plocicaH = tekuciH;
+            this.projektObjekt.povrsine[key].fuga = tekuciF;
+            if (typeof MatematikaEngine !== 'undefined') MatematikaEngine.pokreniTihiZbirniProracun(this.projektObjekt.povrsine[key]);
+        });
+        if (typeof MatematikaEngine !== 'undefined') MatematikaEngine.osvjeziIzObjekta(p);
+    },
+
+    spasiTrenutnoStanjeUBazu() {
+        this.sacuvajPoljaUObjekt();
+        let jedinstveniKljuc = 'BROKER_COMP_' + this.trenutniKlijent + '_' + this.trenutnaProstorija;
+        localStorage.setItem(jedinstveniKljuc, JSON.stringify(this.projektObjekt));
+        alert("Spremljeno!");
+    },
+
+    ucitajProjektIzBaze(idProjekta) {
+        if(typeof BazaModul === 'undefined') return;
+        const staro = BazaModul.dohvatiSveProjekte().find(proj => proj.id === idProjekta);
+        if (staro) {
+            this.trenutniKlijent = staro.klijent; this.trenutnaProstorija = staro.prostorija;
+            let napredni = localStorage.getItem('BROKER_COMP_' + staro.klijent + '_' + staro.prostorija);
+            if (napredni) this.projektObjekt = JSON.parse(napredni);
+            this.promijeniZaslon('zaslon-radni');
+        }
+    },
+
+    osvjeziListuSpremljenihProjekata() {
+        const el = document.getElementById('lista-projekata'); 
+        if(!el) return;
+        el.innerHTML = '';
+        if(typeof BazaModul === 'undefined') return;
+        const projekti = BazaModul.dohvatiSveProjekte();
+        projekti.forEach(p => {
+            const kartica = document.createElement('div'); kartica.className = 'alat-kartica';
+            kartica.innerHTML = `<div onclick="App.ucitajProjektIzBaze('${p.id}')" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;"><div style="font-weight:bold; color:var(--akcent-plavi); font-size:12px;">🚪 ${p.klijent} - ${p.prostorija}</div><span>›</span></div>`;
+            el.appendChild(kartica);
+        });
+    },
+
+    osvjeziSveKvadraturneProracune(proj) {
+        if (typeof MatematikaEngine !== 'undefined') {
+            Object.keys(proj.povrsine).forEach(k => MatematikaEngine.pokreniTihiZbirniProracun(proj.povrsine[k])); 
+        }
+        return proj.povrsine;
+    },
+
+    otvoriDokumentaciju() { 
+        this.sacuvajPoljaUObjekt(); 
+        DokumentacijaModul.generisiZbirniTroskovnik(this.projektObjekt); 
+    },
+
+    otvoriFotogrametriju() {
+        document.getElementById('input-slika-zida').click();
+    },
+
+    ucitajSlikuZidaZaBusenje(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const img = document.getElementById('foto-zid');
+                img.onload = () => {
+                    const canvas = document.getElementById('ai-overlay');
+                    if(canvas) {
+                        canvas.width = img.naturalWidth;
+                        canvas.height = img.naturalHeight;
+                        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+                    }
+                };
+                img.src = e.target.result;
+                document.getElementById('modal-fotogrametrija').style.display = 'flex';
+                document.getElementById('zoom-slider').value = 1;
+                this.zumirajSliku(1);
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    },
+
+    zatvoriFotogrametriju() {
+        document.getElementById('modal-fotogrametrija').style.display = 'none';
+        document.getElementById('input-slika-zida').value = '';
+    },
+
+    zumirajSliku(val) {
+        document.getElementById('zoom-prikaz').innerText = parseFloat(val).toFixed(1) + 'x';
+        document.getElementById('zoom-wrapper').style.transform = `scale(${val})`;
+    },
+
+    klikniNaSliku(e) {
+        const img = document.getElementById('foto-zid');
+        const rect = img.getBoundingClientRect();
+        const zoomFaktor = parseFloat(document.getElementById('zoom-slider').value);
+        
+        const klikX = (e.clientX - rect.left) / zoomFaktor;
+        const klikY = (e.clientY - rect.top) / zoomFaktor;
+        
+        const stvarnaSirinaSlike = img.clientWidth;
+        const stvarnaVisinaSlike = img.clientHeight;
+        
+        const postotakX = klikX / stvarnaSirinaSlike;
+        const postotakY = klikY / stvarnaVisinaSlike;
+        
+        const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
+        const stvarniZidW = p.w || 240;
+        const stvarniZidH = p.h || 265;
+        
+        let tockaX = postotakX * stvarniZidW;
+        let tockaY = stvarniZidH - (postotakY * stvarniZidH);
+
+        let rupW = parseFloat(prompt("Unesi širinu otvora za bušenje u cm (npr. dozna=5, odvod=10):", "5"));
+        let rupH = parseFloat(prompt("Unesi visinu otvora za bušenje u cm:", "5"));
+
+        if (!rupW || !rupH) return;
+
+        let finalX = tockaX - (rupW / 2);
+        let finalY = tockaY - (rupH / 2);
+
+        if (!p.popisOtvora) p.popisOtvora = [];
+        p.popisOtvora.push({ tip: "Ručna koda", w: rupW, h: rupH, x: finalX, y: finalY });
+        
+        this.sacuvajPoljaUObjekt();
+        alert(`Oznaka spremljena! Centar rupe: X=${tockaX.toFixed(1)} cm, Y=${tockaY.toFixed(1)} cm.`);
+        this.zatvoriFotogrametriju();
+    },
+
+    pokreniAIDetekciju() {
+        if (typeof cv === 'undefined' || !cv.Mat) {
+            alert("OpenCV AI modul se još učitava. Pričekajte 5 sekundi pa pokušajte ponovno.");
+            return;
+        }
+
+        const imgElement = document.getElementById('foto-zid');
+        if (!imgElement || !imgElement.src) {
+            alert("Prvo učitajte fotografiju zida!");
+            return;
+        }
+
+        const canvas = document.getElementById('ai-overlay');
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        let mat = cv.imread(imgElement);
+        let gray = new cv.Mat();
+        
+        cv.cvtColor(mat, gray, cv.COLOR_RGBA2GRAY, 0);
+        cv.medianBlur(gray, gray, 5);
+
+        let circles = new cv.Mat();
+        let minR = Math.floor(mat.cols / 60); 
+        let maxR = Math.floor(mat.cols / 10); 
+
+        cv.HoughCircles(gray, circles, cv.HOUGH_GRADIENT, 1, mat.cols/15, 100, 30, minR, maxR);
+
+        let pronadjeneKote = [];
+        
+        if (circles.cols > 0) {
+            for (let i = 0; i < circles.cols; ++i) {
+                let x = circles.data32F[i * 3];
+                let y = circles.data32F[i * 3 + 1];
+                let radius = circles.data32F[i * 3 + 2];
+
+                ctx.beginPath();
+                ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
+                ctx.lineWidth = 4;
+                ctx.strokeStyle = '#0EA5E9';
+                ctx.stroke();
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 6, 0, 2 * Math.PI, false);
+                ctx.fillStyle = '#FF4C4C';
+                ctx.fill();
+
+                const postotakX = x / imgElement.naturalWidth;
+                const postotakY = y / imgElement.naturalHeight;
+
+                const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
+                const stvarniZidW = p.w || 240;
+                const stvarniZidH = p.h || 265;
+                
+                let tockaX = postotakX * stvarniZidW;
+                let tockaY = stvarniZidH - (postotakY * stvarniZidH);
+
+                pronadjeneKote.push({x: tockaX, y: tockaY});
+            }
+            
+            setTimeout(() => {
+                let potvrda = confirm(`🧠 AI JE PRONAŠAO ${circles.cols} INSTALACIJA!\nVidite li plave nišane na slici?\nŽelite li da program automatski upiše ove kote u mrežu pločica?`);
+                if(potvrda) {
+                    const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
+                    if (!p.popisOtvora) p.popisOtvora = [];
+                    
+                    pronadjeneKote.forEach(kota => {
+                        let finalX = kota.x - 2.5; 
+                        let finalY = kota.y - 2.5;
+                        p.popisOtvora.push({ tip: "AI Kalibrirano", w: 5, h: 5, x: finalX, y: finalY });
+                    });
+                    
+                    this.sacuvajPoljaUObjekt();
+                    alert("AI je uspješno preslikao i kalibrirao sve rupe na mrežni nacrt!");
+                    this.zatvoriFotogrametriju();
+                } else {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height); 
+                }
+            }, 200);
+
+        } else {
+            alert("AI nije uspio detektirati pravilne geometrijske krugove na ovoj fotografiji. Pokušajte izoštriti sliku ili koristite ručni Tap-to-Drill klikom na cijev.");
+        }
+
+        mat.delete(); gray.delete(); circles.delete();
+    }
+};
+
+window.onload = () => {
+    try {
+        App.init();
+    } catch(e) {
+        alert("SISTEMSKA GREŠKA PRI PALJENJU:\n" + e.message);
+    }
+};
