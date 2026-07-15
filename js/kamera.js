@@ -60,17 +60,14 @@ const Kamera = {
             return;
         }
 
-        const elW = document.getElementById('input-zid-w');
-        const elH = document.getElementById('input-zid-h');
-        if (elW) elW.value = rezultat.w;
-        if (elH) elH.value = rezultat.h;
-
-        // PRETPOSTAVKA KOJU TREBA PROVJERITI: App.sacuvajPoljaUObjekt() i
-        // App.promijeniZaslon() postoje u app.js (nisam ga vidio) - koriste se
-        // ovdje na isti nacin kao sto ih vec pozivaju index.html i matematika.js.
-        if (typeof App !== 'undefined' && App.sacuvajPoljaUObjekt) App.sacuvajPoljaUObjekt();
-        if (typeof MatematikaEngine !== 'undefined' && typeof App !== 'undefined' && App.projektObjekt) {
-            MatematikaEngine.osvjeziIzObjekta(App.projektObjekt.povrsine[App.aktivnaPovrsinaKey || 'zid1']);
+        // ArucoModul.zakljucajMjere() je vec direktno upisao p.w/p.h/popisOtvora
+        // u App.projektObjekt. Ovdje samo osvjezavamo izracun kvadrature/komada
+        // za tu povrsinu (App.sacuvajPoljaUObjekt() to ne bi smio raditi ovdje
+        // jer bi procitao JOS uvijek stare vrijednosti iz input polja i time
+        // prepisao upravo upisane AR vrijednosti).
+        if (typeof App !== 'undefined' && App.projektObjekt && typeof MatematikaEngine !== 'undefined') {
+            const p = App.projektObjekt.povrsine[App.aktivnaPovrsinaKey];
+            MatematikaEngine.pokreniTihiZbirniProracun(p);
         }
 
         if (status) {
