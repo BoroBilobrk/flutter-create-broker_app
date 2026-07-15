@@ -259,3 +259,10 @@ window.onload = () => {
         console.error("Greska pri paljenju: ", e);
     }
 };
+
+// MOST ZA BACKWARD KOMPATIBILNOST (U slučaju da HTML drži staru predmemoriju)
+App.ucitajSlikuZidaZaBusenje = function(input) { if(typeof AIModul !== 'undefined') AIModul.ucitajSlikuZidaZaBusenje(input); };
+App.zatvoriFotogrametriju = function() { if(typeof AIModul !== 'undefined') AIModul.zatvoriFotogrametriju(); };
+App.zumirajSliku = function(val) { if(typeof AIModul !== 'undefined') AIModul.zumirajSliku(val); };
+App.klikniNaSliku = function(e) { if(typeof AIModul !== 'undefined') AIModul.klikniNaSliku(e); };
+App.pokreniAIDetekciju = function() { if(typeof AIModul !== 'undefined') AIModul.pokreniAIDetekciju(); };
