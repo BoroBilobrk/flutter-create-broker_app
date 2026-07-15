@@ -57,11 +57,9 @@ const MatematikaEngine = {
                 tzDiv.style.width = (tz.w * scale) + 'px';
                 tzDiv.style.height = (tz.h * scale) + 'px';
                 
-                // NOVO: Ako zid ima definiranu teksturu za tuš, koristi nju!
                 if (p.slikaTekstureTusa) {
                     tzDiv.style.backgroundColor = 'transparent';
                     tzDiv.style.backgroundImage = gridLines + `, url(${p.slikaTekstureTusa})`;
-                    // Poravnanje fuga sa zidom (čak i kod druge teksture fuge se gađaju)
                     tzDiv.style.backgroundPosition = `${bgX - (tz.x * scale)}px ${bgY + (tz.y * scale)}px`;
                 } else if (p.slikaTeksture) {
                     tzDiv.style.backgroundColor = 'transparent';
@@ -95,6 +93,7 @@ const MatematikaEngine = {
         }
     },
 
+    // NOVI REAL-CUT ALGORITAM (BEST-FIT S OSTATCIMA)
     izracunajPrecizniSkart(p) {
         let plW = p.rotacija ? p.plocicaH : p.plocicaW;
         let plH = p.rotacija ? p.plocicaW : p.plocicaH;
@@ -102,7 +101,9 @@ const MatematikaEngine = {
         let oblH = (p.tip === 'Zid') ? (p.visinaOblaganja || p.h) : p.h;
 
         let brojRedova = Math.ceil(oblH / (plH + f));
-        let ukupnoPlocica = 0;
+        let iskoristeniCijeliKomadi = 0;
+        let ostatci = []; // Skladište za preostale komade keramike
+        let specifikacijaPoRedovima = []; // Za ispis u PDF
 
         for (let r = 0; r < brojRedova; r++) {
             let odmakEfektivni = (p.odmakX || 0) % (plW + f);
@@ -118,21 +119,63 @@ const MatematikaEngine = {
                 zadnjiRez = preostaloS - (brojCijelih * (plW + f));
             }
 
-            let plocicaURedu = brojCijelih;
-            
-            if (prviRez > 0 && zadnjiRez > 0) {
-                if ((prviRez + zadnjiRez) <= plW) {
-                    plocicaURedu += 1; 
-                } else {
-                    plocicaURedu += 2; 
+            let infoReda = [];
+
+            // Funkcija koja pametno kopa po kanti za smeće
+            const uzmiKomad = (potrebnaDuzina) => {
+                if (potrebnaDuzina <= 1) return; // Ignoriraj milimetarske slivere
+                let nadjenIndeks = -1;
+                
+                // Sortiraj ostatke od najmanjeg prema najvećem (Best-Fit)
+                ostatci.sort((a, b) => a - b);
+                for (let i = 0; i < ostatci.length; i++) {
+                    if (ostatci[i] >= potrebnaDuzina) {
+                        nadjenIndeks = i;
+                        break;
+                    }
                 }
-            } else {
-                if (prviRez > 0) plocicaURedu += 1;
-                if (zadnjiRez > 0) plocicaURedu += 1;
+
+                if (nadjenIndeks !== -1) {
+                    // Našli smo ostatak!
+                    let iskoristenoS = ostatci[nadjenIndeks];
+                    let preostaloOdSkarta = iskoristenoS - potrebnaDuzina - f;
+                    ostatci.splice(nadjenIndeks, 1); // Vadi iz kante
+                    if (preostaloOdSkarta > 5) ostatci.push(preostaloOdSkarta); // Ako je kusur veći od 5cm, vrati u kantu
+                    infoReda.push(`<b>${potrebnaDuzina.toFixed(1)}cm</b> <span style="color:#10B981;">(iz ostatka)</span>`);
+                } else {
+                    // Moramo rezati novu pločicu
+                    iskoristeniCijeliKomadi++;
+                    let noviOstatak = plW - potrebnaDuzina - f;
+                    if (noviOstatak > 5) ostatci.push(noviOstatak); // Spremi ostatak u kantu
+                    infoReda.push(`<b>${potrebnaDuzina.toFixed(1)}cm</b> <span style="color:#0EA5E9;">(nova pločica)</span>`);
+                }
+            };
+
+            // 1. LIJEVI REZ
+            if (prviRez > 0 && prviRez < (plW - 0.5)) {
+                uzmiKomad(prviRez);
+            } else if (prviRez >= (plW - 0.5)) {
+                iskoristeniCijeliKomadi++;
+                infoReda.push(`Cijela`);
             }
-            ukupnoPlocica += plocicaURedu;
+
+            // 2. CIJELE PLOČICE U SREDINI
+            if (brojCijelih > 0) {
+                iskoristeniCijeliKomadi += brojCijelih;
+                infoReda.push(`${brojCijelih}x Cijela`);
+            }
+
+            // 3. DESNI REZ
+            if (zadnjiRez > 0.5) {
+                uzmiKomad(zadnjiRez);
+            }
+            
+            specifikacijaPoRedovima.push(`R${r+1}: ` + infoReda.join(' + '));
         }
-        return ukupnoPlocica;
+        
+        // Spremi specifikaciju kako bi je PDF generator mogao izvući
+        p.listaRezova = specifikacijaPoRedovima;
+        return iskoristeniCijeliKomadi;
     },
     
     pokreniTihiZbirniProracun(p) {
@@ -201,3 +244,4 @@ const MatematikaEngine = {
         App.sacuvajPoljaUObjekt();
     }
 };
+                    
