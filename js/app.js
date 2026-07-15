@@ -297,6 +297,87 @@ const App = {
         this.ucitajPovrsinuUUrednik();
     },
 
+        // ==========================================
+    // FOTOGRAMETRIJA - TAP TO DRILL MODUL
+    // ==========================================
+    otvoriFotogrametriju() {
+        // Okidamo skriveni input za kameru
+        document.getElementById('input-slika-zida').click();
+    },
+
+    ucitajSlikuZidaZaBusenje(input) {
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('foto-zid').src = e.target.result;
+                document.getElementById('modal-fotogrametrija').style.display = 'flex';
+                document.getElementById('zoom-slider').value = 1;
+                this.zumirajSliku(1);
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    },
+
+    zatvoriFotogrametriju() {
+        document.getElementById('modal-fotogrametrija').style.display = 'none';
+        document.getElementById('input-slika-zida').value = '';
+    },
+
+    zumirajSliku(val) {
+        document.getElementById('zoom-prikaz').innerText = parseFloat(val).toFixed(1) + 'x';
+        document.getElementById('foto-zid').style.transform = `scale(${val})`;
+    },
+
+    klikniNaSliku(e) {
+        const img = document.getElementById('foto-zid');
+        const rect = img.getBoundingClientRect();
+        const zoomFaktor = parseFloat(document.getElementById('zoom-slider').value);
+        
+        // Moramo izračunati točan klik bez obzira na razinu zooma i scrolla
+        const stvarnaSirinaSlike = rect.width / zoomFaktor;
+        const stvarnaVisinaSlike = rect.height / zoomFaktor;
+        
+        const klikX = (e.clientX - rect.left) / zoomFaktor;
+        const klikY = (e.clientY - rect.top) / zoomFaktor;
+        
+        // Pretvori u postotak (od 0 do 1)
+        const postotakX = klikX / stvarnaSirinaSlike;
+        const postotakY = klikY / stvarnaVisinaSlike;
+        
+        // Poveži s tvojim unesenim mjerama s laserskog metra
+        const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
+        const stvarniZidW = p.w || 240;
+        const stvarniZidH = p.h || 265;
+        
+        // Izračunaj centimetre. PAZI: Slika ide odozgo prema dolje, a naša mreža odozdo prema gore!
+        let tockaX = postotakX * stvarniZidW;
+        let tockaY = stvarniZidH - (postotakY * stvarniZidH);
+
+        let odabir = prompt("Koja je veličina otvora oko ove točke (centra)?\n1 - Instalacijska cijev / Dozna (rupa 5x5 cm)\n2 - Odvod za školjku (rupa 12x12 cm)\n3 - Unesi ručno", "1");
+        if (!odabir) return;
+
+        let rupW = 5, rupH = 5;
+        if (odabir === "2") {
+            rupW = 12; rupH = 12;
+        } else if (odabir === "3") {
+            rupW = parseFloat(prompt("Širina rupe (cm):", "10")) || 10;
+            rupH = parseFloat(prompt("Visina rupe (cm):", "10")) || 10;
+        }
+
+        // Korekcija - mičemo X i Y za pola širine/visine kako bi tvoj klik ostao točno u centru rupe!
+        let finalX = tockaX - (rupW / 2);
+        let finalY = tockaY - (rupH / 2);
+
+        if (!p.popisOtvora) p.popisOtvora = [];
+        p.popisOtvora.push({ tip: "Precizna Rupa", w: rupW, h: rupH, x: finalX, y: finalY });
+        
+        this.sacuvajPoljaUObjekt();
+        alert(`Oznaka spremljena! Centar rupe nalazi se točno na: X = ${tockaX.toFixed(1)} cm, Y = ${tockaY.toFixed(1)} cm.`);
+        
+        // Gasimo prozor i vraćamo te na radni prostor da vidiš rupu na mreži
+        this.zatvoriFotogrametriju();
+    },
+    
     toggleRotacija(isRotated) {
         const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
         p.rotacija = isRotated;
