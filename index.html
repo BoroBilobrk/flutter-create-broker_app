@@ -157,12 +157,18 @@
                 <div id="mreza-zida" class="zid-mreza-kontejner"></div>
             </div>
 
-            <button id="gumb-dodaj-otvor" class="gumb-ostri gumb-potvrda" style="margin-bottom: 10px;" onclick="MatematikaEngine.prikaziDijalogZaOtvor()">
-                ➕ DODAJ OTVOR / TUŠ ZONU
-            </button>
-            <button class="gumb-ostri" style="margin-bottom: 20px; border-color: var(--akcent-zeleni); color: var(--akcent-zeleni);" onclick="App.spasiTrenutnoStanjeUBazu()">
+                        <div style="display:flex; gap:10px; margin-bottom: 10px;">
+                <button id="gumb-dodaj-otvor" class="gumb-ostri gumb-potvrda" style="flex:1;" onclick="MatematikaEngine.prikaziDijalogZaOtvor()">
+                    ➕ DODAJ RUČNO
+                </button>
+                <button class="gumb-ostri" style="flex:2; background:rgba(14,165,233,0.1); border-color:var(--akcent-plavi); color:var(--akcent-plavi);" onclick="App.otvoriFotogrametriju()">
+                    🎯 FOTOGRAMETRIJA (TAP-TO-DRILL)
+                </button>
+            </div>
+            <button class="gumb-ostri" style="margin-bottom: 20px; width:100%; border-color: var(--akcent-zeleni); color: var(--akcent-zeleni);" onclick="App.spasiTrenutnoStanjeUBazu()">
                 💾 SPREMI ZASLON U PROJEKT
             </button>
+            
 
             <div class="kontrole-radne">
                 <button class="gumb-ostri gumb-sekundarni" onclick="App.promijeniZaslon('zaslon-izbornik')">ZATVORI</button>
@@ -171,6 +177,27 @@
         </section>
     </main>
     <section id="zaslon-kamera" style="display:none;"></section>
+
+        <!-- MODAL ZA FOTOGRAMETRIJU I ZUMIRANJE -->
+    <div id="modal-fotogrametrija" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#111417; z-index:99999999; flex-direction:column;">
+        <div style="padding:15px; background:#1A1D20; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #343D44;">
+            <h3 style="color:var(--akcent-plavi); margin:0; font-size:13px; letter-spacing:1px;">🎯 TAP-TO-DRILL KALIBRACIJA</h3>
+            <button class="gumb-ostri gumb-kontra" style="margin:0; padding:8px 12px; font-size:10px;" onclick="App.zatvoriFotogrametriju()">ZATVORI</button>
+        </div>
+        <div style="padding:15px; background:#2C3236; display:flex; gap:10px; align-items:center; border-bottom:1px solid #343D44;">
+            <span style="color:#FFF; font-size:10px; font-weight:bold;">ZUMIRAJ SLIKU:</span>
+            <input type="range" id="zoom-slider" min="1" max="5" step="0.1" value="1" style="flex:1; accent-color:var(--akcent-plavi);" oninput="App.zumirajSliku(this.value)">
+            <span id="zoom-prikaz" style="color:var(--akcent-plavi); font-size:12px; font-weight:bold; min-width:35px; text-align:right;">1.0x</span>
+        </div>
+        <div style="padding:10px; background:#111417; color:#8C9BA5; font-size:10px; text-align:center; font-weight:bold;">
+            Pronađi cijev/doznu i tapni prstom točno u njezin centar.
+        </div>
+        <div id="foto-kontejner" style="flex:1; overflow:auto; position:relative; display:flex; align-items:flex-start; justify-content:flex-start; background:#000;">
+            <img id="foto-zid" style="max-width:100%; transform-origin: top left; transition: transform 0.1s ease-out; cursor:crosshair;" onclick="App.klikniNaSliku(event)">
+        </div>
+        <!-- Skriveni okidač kamere -->
+        <input type="file" id="input-slika-zida" accept="image/*" capture="environment" style="display:none;" onchange="App.ucitajSlikuZidaZaBusenje(this)">
+    </div>
     
     <script src="js/baza.js"></script>
     <script src="js/matematika.js"></script>
