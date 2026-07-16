@@ -73,7 +73,9 @@ const App = {
     },
 
     promijeniAktivnuPovrsinu(kljuc) {
-        this.sacuvajPoljaUObjekt(); this.aktivnaPovrsinaKey = kljuc; this.ucitajPovrsinuUUrednik();
+        this.sacuvajPoljaUObjekt(); 
+        this.aktivnaPovrsinaKey = kljuc; 
+        this.ucitajPovrsinuUUrednik();
     },
 
     ucitajPovrsinuUUrednik() {
@@ -187,25 +189,24 @@ const App = {
         if (typeof MatematikaEngine !== 'undefined') MatematikaEngine.osvjeziIzObjekta(p);
     },
 
+    // KLJUČNA PROMJENA: Sada se podaci zapisuju ISKLJUČIVO u aktivnu površinu!
     sacuvajPoljaUObjekt() {
         const p = this.projektObjekt.povrsine[this.aktivnaPovrsinaKey];
         p.w = parseFloat(document.getElementById('input-zid-w').value) || 0;
+        
         if (p.tip === 'Zid') {
             p.h = parseFloat(document.getElementById('input-zid-h').value) || 265;
             p.visinaOblaganja = parseFloat(document.getElementById('input-oblaganje-h').value) || 120;
         }
         
-        let tekuciW = parseFloat(document.getElementById('input-plocica-w').value) || 120;
-        let tekuciH = parseFloat(document.getElementById('input-plocica-h').value) || 60;
-        let tekuciF = parseFloat(document.getElementById('input-fuga').value) || 2;
+        p.plocicaW = parseFloat(document.getElementById('input-plocica-w').value) || 120;
+        p.plocicaH = parseFloat(document.getElementById('input-plocica-h').value) || 60;
+        p.fuga = parseFloat(document.getElementById('input-fuga').value) || 2;
 
-        Object.keys(this.projektObjekt.povrsine).forEach(key => {
-            this.projektObjekt.povrsine[key].plocicaW = tekuciW;
-            this.projektObjekt.povrsine[key].plocicaH = tekuciH;
-            this.projektObjekt.povrsine[key].fuga = tekuciF;
-            if (typeof MatematikaEngine !== 'undefined') MatematikaEngine.pokreniTihiZbirniProracun(this.projektObjekt.povrsine[key]);
-        });
-        if (typeof MatematikaEngine !== 'undefined') MatematikaEngine.osvjeziIzObjekta(p);
+        if (typeof MatematikaEngine !== 'undefined') {
+            MatematikaEngine.pokreniTihiZbirniProracun(p);
+            MatematikaEngine.osvjeziIzObjekta(p);
+        }
     },
 
     spasiTrenutnoStanjeUBazu() {
@@ -252,6 +253,13 @@ const App = {
     }
 };
 
+// SIGURNOSNI MOST ZA AI MODUL
+App.ucitajSlikuZidaZaBusenje = function(input) { if(typeof AIModul !== 'undefined') AIModul.ucitajSlikuZidaZaBusenje(input); };
+App.zatvoriFotogrametriju = function() { if(typeof AIModul !== 'undefined') AIModul.zatvoriFotogrametriju(); };
+App.zumirajSliku = function(val) { if(typeof AIModul !== 'undefined') AIModul.zumirajSliku(val); };
+App.klikniNaSliku = function(e) { if(typeof AIModul !== 'undefined') AIModul.klikniNaSliku(e); };
+App.pokreniAIDetekciju = function() { if(typeof AIModul !== 'undefined') AIModul.pokreniAIDetekciju(); };
+
 window.onload = () => {
     try {
         App.init();
@@ -259,10 +267,4 @@ window.onload = () => {
         console.error("Greska pri paljenju: ", e);
     }
 };
-
-// MOST ZA BACKWARD KOMPATIBILNOST (U slučaju da HTML drži staru predmemoriju)
-App.ucitajSlikuZidaZaBusenje = function(input) { if(typeof AIModul !== 'undefined') AIModul.ucitajSlikuZidaZaBusenje(input); };
-App.zatvoriFotogrametriju = function() { if(typeof AIModul !== 'undefined') AIModul.zatvoriFotogrametriju(); };
-App.zumirajSliku = function(val) { if(typeof AIModul !== 'undefined') AIModul.zumirajSliku(val); };
-App.klikniNaSliku = function(e) { if(typeof AIModul !== 'undefined') AIModul.klikniNaSliku(e); };
-App.pokreniAIDetekciju = function() { if(typeof AIModul !== 'undefined') AIModul.pokreniAIDetekciju(); };
+    
