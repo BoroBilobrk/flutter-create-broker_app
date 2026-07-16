@@ -95,8 +95,9 @@ const AIModul = {
         p.popisOtvora.push({ tip: "Ručna koda", w: rupW, h: rupH, x: finalX, y: finalY });
         
         App.sacuvajPoljaUObjekt();
-        alert(`Oznaka spremljena! Centar rupe: X=${tockaX.toFixed(1)} cm, Y=${tockaY.toFixed(1)} cm.`);
-        AIModul.zatvoriFotogrametriju();
+        
+        // Značajna promjena: Ne zatvaramo prozor! Možeš klikati dalje.
+        alert(`Oznaka spremljena!\nCentar: X=${tockaX.toFixed(1)} cm, Y=${tockaY.toFixed(1)} cm.\n\nMožeš nastaviti klikati na iduću cijev. Kad završiš, stisni 'ZATVORI' na vrhu.`);
     },
 
     pokreniAIDetekciju() {
@@ -111,7 +112,14 @@ const AIModul = {
             return;
         }
 
-        alert("🧠 AI pokreće dubinsko skeniranje...\nUključujem agresivni filter za žbuku!");
+        // ZONIRANJE ZIDA (NOVO)
+        let stropPosto = prompt("ZONIRANJE ZIDA:\nKoliko % slike na vrhu (strop/cijevi) želiš da AI ignorira?\n(Unesi 0 ako želiš skenirati sve)", "20");
+        if (stropPosto === null) return; 
+        stropPosto = parseInt(stropPosto) || 0;
+
+        let podPosto = prompt("Koliko % slike na dnu (pod/šuta) želiš da AI ignorira?", "10");
+        if (podPosto === null) return;
+        podPosto = parseInt(podPosto) || 0;
 
         const canvas = document.getElementById('ai-overlay');
         const ctx = canvas.getContext('2d');
@@ -121,6 +129,33 @@ const AIModul = {
         let gray = new cv.Mat();
         
         cv.cvtColor(mat, gray, cv.COLOR_RGBA2GRAY, 0);
+
+        // Brisanje stropa iz pamćenja AI-a
+        if (stropPosto > 0) {
+            let startY = Math.floor(gray.rows * (stropPosto / 100));
+            let rectStrop = new cv.Rect(0, 0, gray.cols, startY);
+            let roiStrop = gray.roi(rectStrop);
+            roiStrop.setTo(new cv.Scalar(255)); // Farba u bijelo
+            roiStrop.delete();
+            
+            // Vizualizacija na ekranu da korisnik vidi što je odrezano
+            ctx.fillStyle = "rgba(0,0,0,0.5)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height * (stropPosto / 100));
+        }
+
+        // Brisanje poda iz pamćenja AI-a
+        if (podPosto > 0) {
+            let startY = Math.floor(gray.rows * (1 - (podPosto / 100)));
+            let h = gray.rows - startY;
+            let rectPod = new cv.Rect(0, startY, gray.cols, h);
+            let roiPod = gray.roi(rectPod);
+            roiPod.setTo(new cv.Scalar(255)); 
+            roiPod.delete();
+            
+            ctx.fillStyle = "rgba(0,0,0,0.5)";
+            ctx.fillRect(0, canvas.height * (1 - (podPosto / 100)), canvas.width, canvas.height);
+        }
+
         cv.GaussianBlur(gray, gray, new cv.Size(7, 7), 2, 2);
         cv.equalizeHist(gray, gray);
 
@@ -163,7 +198,7 @@ const AIModul = {
             }
             
             setTimeout(() => {
-                let potvrda = confirm(`🧠 AI JE PRONAŠAO ${circles.cols} INSTALACIJA!\nProvjeri neon zelene krugove na slici.\n\nKlikni 'OK' da ih zapišem u mrežu pločica.`);
+                let potvrda = confirm(`🧠 AI JE PRONAŠAO ${circles.cols} INSTALACIJA!\nProvjeri neon zelene krugove na slici.\nZatamnjeni dijelovi gore i dolje su uspješno ignorirani.\n\nKlikni 'OK' da ih zapišem u mrežu pločica.`);
                 if(potvrda) {
                     const p = App.projektObjekt.povrsine[App.aktivnaPovrsinaKey];
                     if (!p.popisOtvora) p.popisOtvora = [];
@@ -184,9 +219,10 @@ const AIModul = {
 
         } else {
             alert("⚠️ Žbuka je previše kamuflirala rupe.\n\nSavjet: Tapni prstom direktno na zeleni čep na ekranu (Ručna koda).");
+            // Uklanjamo zatamnjenje da korisnik može ručno klikati ako treba
+            ctx.clearRect(0, 0, canvas.width, canvas.height); 
         }
 
         mat.delete(); gray.delete(); circles.delete();
     }
 };
-            
