@@ -1,4 +1,7 @@
 const AIModul = {
+    rezimKalibracije: false,
+    tockeZida: [],
+
     ucitajSlikuZidaZaBusenje(input) {
         try {
             if (input.files && input.files[0]) {
@@ -30,13 +33,17 @@ const AIModul = {
                                 canvasOverlay.height = imgElement.naturalHeight;
                                 canvasOverlay.getContext('2d').clearRect(0, 0, canvasOverlay.width, canvasOverlay.height);
                             }
+                            
+                            this.rezimKalibracije = true;
+                            this.tockeZida = [];
+                            alert("📍 KALIBRACIJA ZIDA:\nDa bismo izbjegli distorziju kamere, molim te tapni točno na 4 KUTA ZIDA na slici.\n\nKlikaj redom u krug:\n1. Gore-Lijevo\n2. Gore-Desno\n3. Dolje-Desno\n4. Dolje-Lijevo");
                         };
                         imgElement.src = komprimiranaSlika;
                         
                         document.getElementById('modal-fotogrametrija').style.display = 'flex';
                         const zoomSl = document.getElementById('zoom-slider');
                         if(zoomSl) zoomSl.value = 1;
-                        AIModul.zumirajSliku(1);
+                        this.zumirajSliku(1);
                     };
                     imgObj.src = e.target.result;
                 };
@@ -51,6 +58,8 @@ const AIModul = {
         document.getElementById('modal-fotogrametrija').style.display = 'none';
         const inp = document.getElementById('input-slika-zida');
         if (inp) inp.value = '';
+        this.rezimKalibracije = false;
+        this.tockeZida = [];
     },
 
     zumirajSliku(val) {
@@ -68,10 +77,46 @@ const AIModul = {
         
         const klikX = (e.clientX - rect.left) / zoomFaktor;
         const klikY = (e.clientY - rect.top) / zoomFaktor;
-        
+
         const stvarnaSirinaSlike = img.clientWidth;
         const stvarnaVisinaSlike = img.clientHeight;
-        
+
+        const canvasOverlay = document.getElementById('ai-overlay');
+        const ctx = canvasOverlay.getContext('2d');
+
+        if (this.rezimKalibracije) {
+            this.tockeZida.push({x: klikX, y: klikY});
+            
+            ctx.beginPath();
+            ctx.arc(klikX, klikY, 8, 0, 2 * Math.PI, false);
+            ctx.fillStyle = '#FF4C4C';
+            ctx.fill();
+            ctx.strokeStyle = '#FFFFFF';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            if (this.tockeZida.length > 1) {
+                ctx.beginPath();
+                ctx.moveTo(this.tockeZida[this.tockeZida.length - 2].x, this.tockeZida[this.tockeZida.length - 2].y);
+                ctx.lineTo(klikX, klikY);
+                ctx.strokeStyle = '#FF4C4C';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            if (this.tockeZida.length === 4) {
+                ctx.beginPath();
+                ctx.moveTo(this.tockeZida[3].x, this.tockeZida[3].y);
+                ctx.lineTo(this.tockeZida[0].x, this.tockeZida[0].y);
+                ctx.stroke();
+
+                setTimeout(() => {
+                    this.izravnajSliku(img, stvarnaSirinaSlike, stvarnaVisinaSlike);
+                }, 300);
+            }
+            return; 
+        }
+
         const postotakX = klikX / stvarnaSirinaSlike;
         const postotakY = klikY / stvarnaVisinaSlike;
         
@@ -96,11 +141,76 @@ const AIModul = {
         
         App.sacuvajPoljaUObjekt();
         
-        // Značajna promjena: Ne zatvaramo prozor! Možeš klikati dalje.
-        alert(`Oznaka spremljena!\nCentar: X=${tockaX.toFixed(1)} cm, Y=${tockaY.toFixed(1)} cm.\n\nMožeš nastaviti klikati na iduću cijev. Kad završiš, stisni 'ZATVORI' na vrhu.`);
+        ctx.beginPath();
+        ctx.arc(klikX, klikY, 6, 0, 2 * Math.PI, false);
+        ctx.fillStyle = '#FF4C4C';
+        ctx.fill();
+
+        alert(`Oznaka spremljena!\nCentar: X=${tockaX.toFixed(1)} cm, Y=${tockaY.toFixed(1)} cm.\n\nMožeš nastaviti klikati na iduću cijev.`);
+    },
+
+    izravnajSliku(imgElement, trenutnaSirina, trenutnaVisina) {
+        if (typeof cv === 'undefined' || !cv.Mat) {
+            alert("OpenCV još nije spreman. Pokušaj ponovno.");
+            return;
+        }
+
+        const p = App.projektObjekt.povrsine[App.aktivnaPovrsinaKey];
+        const stvarniZidW = p.w || 240;
+        const stvarniZidH = p.h || 265;
+
+        const ratio = stvarniZidH / stvarniZidW;
+        const finalnaSirina = 1000; 
+        const finalnaVisina = Math.round(1000 * ratio);
+
+        let mat = cv.imread(imgElement);
+
+        let scaleX = mat.cols / trenutnaSirina;
+        let scaleY = mat.rows / trenutnaVisina;
+
+        let srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
+            this.tockeZida[0].x * scaleX, this.tockeZida[0].y * scaleY, 
+            this.tockeZida[1].x * scaleX, this.tockeZida[1].y * scaleY, 
+            this.tockeZida[2].x * scaleX, this.tockeZida[2].y * scaleY, 
+            this.tockeZida[3].x * scaleX, this.tockeZida[3].y * scaleY  
+        ]);
+
+        let dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [
+            0, 0,
+            finalnaSirina, 0,
+            finalnaSirina, finalnaVisina,
+            0, finalnaVisina
+        ]);
+
+        let M = cv.getPerspectiveTransform(srcTri, dstTri);
+        let ravniZid = new cv.Mat();
+        cv.warpPerspective(mat, ravniZid, M, new cv.Size(finalnaSirina, finalnaVisina));
+
+        const canvasTmp = document.createElement('canvas');
+        cv.imshow(canvasTmp, ravniZid);
+        
+        imgElement.onload = () => {
+            const canvasOverlay = document.getElementById('ai-overlay');
+            if(canvasOverlay) {
+                canvasOverlay.width = imgElement.naturalWidth;
+                canvasOverlay.height = imgElement.naturalHeight;
+                canvasOverlay.getContext('2d').clearRect(0, 0, canvasOverlay.width, canvasOverlay.height);
+            }
+            this.rezimKalibracije = false; 
+            alert("🛠️ Zid je uspješno izravnat u savršen 2D tlocrt!\n\nSada možeš stisnuti AI skeniranje ili ručno tapkati instalacije.");
+        };
+        
+        imgElement.src = canvasTmp.toDataURL('image/jpeg', 0.9);
+
+        mat.delete(); srcTri.delete(); dstTri.delete(); M.delete(); ravniZid.delete();
     },
 
     pokreniAIDetekciju() {
+        if (this.rezimKalibracije) {
+            alert("Prvo moraš dovršiti kalibraciju zida (označiti sva 4 kuta)!");
+            return;
+        }
+
         if (typeof cv === 'undefined' || !cv.Mat) {
             alert("🧠 AI mozak se još budi... Pričekaj par sekundi pa pokušaj ponovno.");
             return;
@@ -112,14 +222,7 @@ const AIModul = {
             return;
         }
 
-        // ZONIRANJE ZIDA (NOVO)
-        let stropPosto = prompt("ZONIRANJE ZIDA:\nKoliko % slike na vrhu (strop/cijevi) želiš da AI ignorira?\n(Unesi 0 ako želiš skenirati sve)", "20");
-        if (stropPosto === null) return; 
-        stropPosto = parseInt(stropPosto) || 0;
-
-        let podPosto = prompt("Koliko % slike na dnu (pod/šuta) želiš da AI ignorira?", "10");
-        if (podPosto === null) return;
-        podPosto = parseInt(podPosto) || 0;
+        alert("🧠 AI pokreće skeniranje instalacija na izravnatom zidu...");
 
         const canvas = document.getElementById('ai-overlay');
         const ctx = canvas.getContext('2d');
@@ -129,33 +232,6 @@ const AIModul = {
         let gray = new cv.Mat();
         
         cv.cvtColor(mat, gray, cv.COLOR_RGBA2GRAY, 0);
-
-        // Brisanje stropa iz pamćenja AI-a
-        if (stropPosto > 0) {
-            let startY = Math.floor(gray.rows * (stropPosto / 100));
-            let rectStrop = new cv.Rect(0, 0, gray.cols, startY);
-            let roiStrop = gray.roi(rectStrop);
-            roiStrop.setTo(new cv.Scalar(255)); // Farba u bijelo
-            roiStrop.delete();
-            
-            // Vizualizacija na ekranu da korisnik vidi što je odrezano
-            ctx.fillStyle = "rgba(0,0,0,0.5)";
-            ctx.fillRect(0, 0, canvas.width, canvas.height * (stropPosto / 100));
-        }
-
-        // Brisanje poda iz pamćenja AI-a
-        if (podPosto > 0) {
-            let startY = Math.floor(gray.rows * (1 - (podPosto / 100)));
-            let h = gray.rows - startY;
-            let rectPod = new cv.Rect(0, startY, gray.cols, h);
-            let roiPod = gray.roi(rectPod);
-            roiPod.setTo(new cv.Scalar(255)); 
-            roiPod.delete();
-            
-            ctx.fillStyle = "rgba(0,0,0,0.5)";
-            ctx.fillRect(0, canvas.height * (1 - (podPosto / 100)), canvas.width, canvas.height);
-        }
-
         cv.GaussianBlur(gray, gray, new cv.Size(7, 7), 2, 2);
         cv.equalizeHist(gray, gray);
 
@@ -198,7 +274,7 @@ const AIModul = {
             }
             
             setTimeout(() => {
-                let potvrda = confirm(`🧠 AI JE PRONAŠAO ${circles.cols} INSTALACIJA!\nProvjeri neon zelene krugove na slici.\nZatamnjeni dijelovi gore i dolje su uspješno ignorirani.\n\nKlikni 'OK' da ih zapišem u mrežu pločica.`);
+                let potvrda = confirm(`🧠 AI JE PRONAŠAO ${circles.cols} INSTALACIJA!\nProvjeri neon zelene krugove na slici.\n\nKlikni 'OK' da ih zapišem u mrežu pločica.`);
                 if(potvrda) {
                     const p = App.projektObjekt.povrsine[App.aktivnaPovrsinaKey];
                     if (!p.popisOtvora) p.popisOtvora = [];
@@ -211,7 +287,7 @@ const AIModul = {
                     
                     App.sacuvajPoljaUObjekt();
                     alert("✅ AI je uspješno kalibrirao rupe!");
-                    AIModul.zatvoriFotogrametriju();
+                    this.zatvoriFotogrametriju();
                 } else {
                     ctx.clearRect(0, 0, canvas.width, canvas.height); 
                 }
@@ -219,7 +295,6 @@ const AIModul = {
 
         } else {
             alert("⚠️ Žbuka je previše kamuflirala rupe.\n\nSavjet: Tapni prstom direktno na zeleni čep na ekranu (Ručna koda).");
-            // Uklanjamo zatamnjenje da korisnik može ručno klikati ako treba
             ctx.clearRect(0, 0, canvas.width, canvas.height); 
         }
 
